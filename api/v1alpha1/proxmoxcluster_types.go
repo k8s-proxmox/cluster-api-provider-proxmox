@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -25,8 +26,9 @@ import (
 
 // ProxmoxClusterSpec defines the desired state of ProxmoxCluster
 type ProxmoxClusterSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+	// +optional
+	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 
 	// Foo is an example field of ProxmoxCluster. Edit proxmoxcluster_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
@@ -34,8 +36,14 @@ type ProxmoxClusterSpec struct {
 
 // ProxmoxClusterStatus defines the observed state of ProxmoxCluster
 type ProxmoxClusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Ready
+	Ready bool `json:"ready"`
+
+	// FailureDomains
+	FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`
+
+	// Conditions
+	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true

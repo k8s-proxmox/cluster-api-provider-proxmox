@@ -18,6 +18,8 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/errors"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -28,14 +30,45 @@ type ProxmoxMachineSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// ProviderID
+	ProviderID *string `json:"providerID,omitempty"`
+
+	// CloudInit defines options related to the bootstrapping systems where
+	// CloudInit is used.
+	// +optional
+	CloudInit CloudInit `json:"cloudInit,omitempty"`
+
+	// FailureDomain is the failure domain unique identifier this Machine should be attached to, as defined in Cluster API.
+	// For this infrastructure provider, the ID is equivalent to an AWS Availability Zone.
+	// If multiple subnets are matched for the availability zone, the first one returned is picked.
+	FailureDomain *string `json:"failureDomain,omitempty"`
+
 	// Foo is an example field of ProxmoxMachine. Edit proxmoxmachine_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
 }
 
+// CloudInit defines options related to the bootstrapping systems where
+// CloudInit is used.
+type CloudInit struct {
+}
+
 // ProxmoxMachineStatus defines the observed state of ProxmoxMachine
 type ProxmoxMachineStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Ready is true when the provider resource is ready.
+	// +optional
+	Ready bool `json:"ready"`
+
+	// FailureReason
+	FailureReason *errors.MachineStatusError `json:"failureReason,omitempty"`
+
+	// FailureMessage
+	FailureMessage *string `json:"failureMessage,omitempty"`
+
+	// Addresses contains the AWS instance associated addresses.
+	Addresses []clusterv1.MachineAddress `json:"addresses,omitempty"`
+
+	// Conditions
+	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
