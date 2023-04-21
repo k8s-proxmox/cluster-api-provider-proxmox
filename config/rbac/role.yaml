@@ -1,0 +1,59 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - infrastructure.cluser.x-k8s.io
+  resources:
+  - proxmoxclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - infrastructure.cluser.x-k8s.io
+  resources:
+  - proxmoxclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - infrastructure.cluser.x-k8s.io
+  resources:
+  - proxmoxclusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - infrastructure.cluser.x-k8s.io
+  resources:
+  - proxmoxmachines
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - infrastructure.cluser.x-k8s.io
+  resources:
+  - proxmoxmachines/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - infrastructure.cluser.x-k8s.io
+  resources:
+  - proxmoxmachines/status
+  verbs:
+  - get
+  - patch
+  - update
