@@ -4,4 +4,4 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: CERTIFICATE_NAMESPACE/CERTIFICATE_NAME
-  name: proxmoxmachines.infrastructure.cluser.x-k8s.io
+  name: proxmoxmachines.infrastructure.cluster.x-k8s.io

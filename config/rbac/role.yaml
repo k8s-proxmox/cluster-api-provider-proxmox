@@ -6,7 +6,44 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cluster.x-k8s.io
+  resources:
+  - clusters
+  - clusters/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cluster.x-k8s.io
+  resources:
+  - machines
+  - machines/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxclusters
   verbs:
@@ -18,13 +55,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxclusters/finalizers
   verbs:
   - update
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxclusters/status
   verbs:
@@ -32,7 +69,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxmachines
   verbs:
@@ -44,13 +81,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxmachines/finalizers
   verbs:
   - update
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxmachines/status
   verbs:

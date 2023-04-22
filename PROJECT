@@ -2,28 +2,44 @@
 # This file is used to track the info used to scaffold your project
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
-domain: cluser.x-k8s.io
+domain: cluster.x-k8s.io
 layout:
 - go.kubebuilder.io/v4
 projectName: cluster-api-provider-proxmox
 repo: github.com/sp-yduck/cluster-api-provider-proxmox
 resources:
+# - api:
+#     crdVersion: v1
+#     namespaced: true
+#   controller: true
+#   domain: cluster.x-k8s.io
+#   group: infrastructure
+#   kind: ProxmoxMachine
+#   path: github.com/sp-yduck/cluster-api-provider-proxmox/api/v1alpha1
+#   version: v1alpha1
+# - api:
+#     crdVersion: v1
+#     namespaced: true
+#   controller: true
+#   domain: cluster.x-k8s.io
+#   group: infrastructure
+#   kind: ProxmoxCluster
+#   path: github.com/sp-yduck/cluster-api-provider-proxmox/api/v1alpha1
+#   version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
-  controller: true
-  domain: cluser.x-k8s.io
+  domain: cluster.x-k8s.io
   group: infrastructure
   kind: ProxmoxMachine
-  path: github.com/sp-yduck/cluster-api-provider-proxmox/api/v1alpha1
-  version: v1alpha1
+  path: github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1
+  version: v1beta1
 - api:
     crdVersion: v1
     namespaced: true
-  controller: true
-  domain: cluser.x-k8s.io
+  domain: cluster.x-k8s.io
   group: infrastructure
   kind: ProxmoxCluster
-  path: github.com/sp-yduck/cluster-api-provider-proxmox/api/v1alpha1
-  version: v1alpha1
+  path: github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1
+  version: v1beta1
 version: "3"

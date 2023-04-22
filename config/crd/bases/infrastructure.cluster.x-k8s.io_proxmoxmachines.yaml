@@ -5,20 +5,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.3
   creationTimestamp: null
-  name: proxmoxclusters.infrastructure.cluser.x-k8s.io
+  name: proxmoxmachines.infrastructure.cluster.x-k8s.io
 spec:
-  group: infrastructure.cluser.x-k8s.io
+  group: infrastructure.cluster.x-k8s.io
   names:
-    kind: ProxmoxCluster
-    listKind: ProxmoxClusterList
-    plural: proxmoxclusters
-    singular: proxmoxcluster
+    kind: ProxmoxMachine
+    listKind: ProxmoxMachineList
+    plural: proxmoxmachines
+    singular: proxmoxmachine
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: ProxmoxCluster is the Schema for the proxmoxclusters API
+        description: ProxmoxMachine is the Schema for the proxmoxmachines API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,31 +33,48 @@ spec:
           metadata:
             type: object
           spec:
-            description: ProxmoxClusterSpec defines the desired state of ProxmoxCluster
+            description: ProxmoxMachineSpec defines the desired state of ProxmoxMachine
             properties:
-              controlPlaneEndpoint:
-                description: ControlPlaneEndpoint represents the endpoint used to
-                  communicate with the control plane.
-                properties:
-                  host:
-                    description: The hostname on which the API server is serving.
-                    type: string
-                  port:
-                    description: The port on which the API server is serving.
-                    format: int32
-                    type: integer
-                required:
-                - host
-                - port
+              cloudInit:
+                description: CloudInit defines options related to the bootstrapping
+                  systems where CloudInit is used.
                 type: object
+              failureDomain:
+                description: FailureDomain is the failure domain unique identifier
+                  this Machine should be attached to, as defined in Cluster API. For
+                  this infrastructure provider, the ID is equivalent to an AWS Availability
+                  Zone. If multiple subnets are matched for the availability zone,
+                  the first one returned is picked.
+                type: string
               foo:
-                description: Foo is an example field of ProxmoxCluster. Edit proxmoxcluster_types.go
+                description: Foo is an example field of ProxmoxMachine. Edit proxmoxmachine_types.go
                   to remove/update
+                type: string
+              providerID:
+                description: ProviderID
                 type: string
             type: object
           status:
-            description: ProxmoxClusterStatus defines the observed state of ProxmoxCluster
+            description: ProxmoxMachineStatus defines the observed state of ProxmoxMachine
             properties:
+              addresses:
+                description: Addresses contains the AWS instance associated addresses.
+                items:
+                  description: MachineAddress contains information for the node's
+                    address.
+                  properties:
+                    address:
+                      description: The machine address.
+                      type: string
+                    type:
+                      description: Machine address type, one of Hostname, ExternalIP,
+                        InternalIP, ExternalDNS or InternalDNS.
+                      type: string
+                  required:
+                  - address
+                  - type
+                  type: object
+                type: array
               conditions:
                 description: Conditions
                 items:
@@ -103,30 +120,15 @@ spec:
                   - type
                   type: object
                 type: array
-              failureDomains:
-                additionalProperties:
-                  description: FailureDomainSpec is the Schema for Cluster API failure
-                    domains. It allows controllers to understand how many failure
-                    domains a cluster can optionally span across.
-                  properties:
-                    attributes:
-                      additionalProperties:
-                        type: string
-                      description: Attributes is a free form map of attributes an
-                        infrastructure provider might use or require.
-                      type: object
-                    controlPlane:
-                      description: ControlPlane determines if this failure domain
-                        is suitable for use by control plane machines.
-                      type: boolean
-                  type: object
-                description: FailureDomains
-                type: object
+              failureMessage:
+                description: FailureMessage
+                type: string
+              failureReason:
+                description: FailureReason
+                type: string
               ready:
-                description: Ready
+                description: Ready is true when the provider resource is ready.
                 type: boolean
-            required:
-            - ready
             type: object
         type: object
     served: true

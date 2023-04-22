@@ -12,7 +12,7 @@ metadata:
   name: proxmoxcluster-viewer-role
 rules:
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxclusters
   verbs:
@@ -20,7 +20,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxclusters/status
   verbs:

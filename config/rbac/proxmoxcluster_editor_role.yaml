@@ -12,7 +12,7 @@ metadata:
   name: proxmoxcluster-editor-role
 rules:
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxclusters
   verbs:
@@ -24,7 +24,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - infrastructure.cluser.x-k8s.io
+  - infrastructure.cluster.x-k8s.io
   resources:
   - proxmoxclusters/status
   verbs:
