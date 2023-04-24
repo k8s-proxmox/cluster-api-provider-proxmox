@@ -19,12 +19,17 @@ package controller
 import (
 	"context"
 
+	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/annotations"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	infrastructurev1beta1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
 // ProxmoxMachineReconciler reconciles a ProxmoxMachine object
@@ -42,17 +47,101 @@ type ProxmoxMachineReconciler struct {
 
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
-func (r *ProxmoxMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+func (r *ProxmoxMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	proxmoxMachine := &infrav1.ProxmoxMachine{}
+	err := r.Get(ctx, req.NamespacedName, proxmoxMachine)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
 
+		return ctrl.Result{}, err
+	}
+
+	machine, err := util.GetOwnerMachine(ctx, r.Client, proxmoxMachine.ObjectMeta)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	if machine == nil {
+		log.Info("Machine Controller has not yet set OwnerRef")
+		return ctrl.Result{}, nil
+	}
+
+	log = log.WithValues("machine", machine.Name)
+	cluster, err := util.GetClusterFromMetadata(ctx, r.Client, machine.ObjectMeta)
+	if err != nil {
+		log.Info("Machine is missing cluster label or cluster does not exist")
+
+		return ctrl.Result{}, nil
+	}
+
+	if annotations.IsPaused(cluster, proxmoxMachine) {
+		log.Info("ProxmoxMachine or linked Cluster is marked as paused. Won't reconcile")
+		return ctrl.Result{}, nil
+	}
+
+	log = log.WithValues("cluster", cluster.Name)
+	proxmoxCluster := &infrav1.ProxmoxCluster{}
+	proxmoxClusterKey := client.ObjectKey{
+		Namespace: proxmoxMachine.Namespace,
+		Name:      cluster.Spec.InfrastructureRef.Name,
+	}
+	if err := r.Client.Get(ctx, proxmoxClusterKey, proxmoxCluster); err != nil {
+		log.Info("ProxmoxCluster is not available yet")
+		return ctrl.Result{}, nil
+	}
+
+	// Create the cluster scope
+	clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
+		Client:         r.Client,
+		Cluster:        cluster,
+		ProxmoxCluster: proxmoxCluster,
+	})
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Create the machine scope
+	machineScope, err := scope.NewMachineScope(scope.MachineScopeParams{
+		Client:         r.Client,
+		Machine:        machine,
+		ProxmoxMachine: proxmoxMachine,
+		ClusterGetter:  clusterScope,
+	})
+	if err != nil {
+		return ctrl.Result{}, errors.Errorf("failed to create scope: %+v", err)
+	}
+
+	// Always close the scope when exiting this function so we can persist any GCPMachine changes.
+	defer func() {
+		if err := machineScope.Close(); err != nil && reterr == nil {
+			reterr = err
+		}
+	}()
+
+	// Handle deleted machines
+	if !proxmoxMachine.ObjectMeta.DeletionTimestamp.IsZero() {
+		return r.reconcileDelete(ctx, machineScope)
+	}
+
+	// Handle non-deleted machines
+	return r.reconcile(ctx, machineScope)
+}
+
+func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, scope *scope.MachineScope) (ctrl.Result, error) {
+
+	return ctrl.Result{}, nil
+}
+
+func (r *ProxmoxMachineReconciler) reconcileDelete(ctx context.Context, scope *scope.MachineScope) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ProxmoxMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&infrastructurev1beta1.ProxmoxMachine{}).
+		For(&infrav1.ProxmoxMachine{}).
 		Complete(r)
 }
