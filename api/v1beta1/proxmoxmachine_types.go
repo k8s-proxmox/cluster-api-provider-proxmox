@@ -25,6 +25,11 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+const (
+	// MachineFinalizer
+	MachineFinalizer = "proxmoxmachine.infrastructure.cluster.x-k8s.io"
+)
+
 // ProxmoxMachineSpec defines the desired state of ProxmoxMachine
 type ProxmoxMachineSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -69,6 +74,10 @@ type ProxmoxMachineStatus struct {
 
 	// Conditions
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// InstanceStatus is the status of the GCP instance for this machine.
+	// +optional
+	InstanceStatus *InstanceStatus `json:"instanceState,omitempty"` // InstanceStatus
 }
 
 //+kubebuilder:object:root=true

@@ -20,7 +20,10 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/controllers/noderefutil"
+	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -80,6 +83,37 @@ func (scope *MachineScope) Close() error {
 	// to do
 
 	return nil
+}
+
+func (m *MachineScope) GetInstanceStatus() *infrav1.InstanceStatus {
+	return m.ProxmoxMachine.Status.InstanceStatus
+}
+
+func (m *MachineScope) GetInstanceID() *string {
+	parsed, err := noderefutil.NewProviderID(m.GetProviderID())
+	if err != nil {
+		return nil
+	}
+	return pointer.StringPtr(parsed.ID())
+}
+
+func (m *MachineScope) GetProviderID() string {
+	if m.ProxmoxMachine.Spec.ProviderID != nil {
+		return *m.ProxmoxMachine.Spec.ProviderID
+	}
+	return ""
+}
+
+func (m *MachineScope) SetReady() {
+	m.ProxmoxMachine.Status.Ready = true
+}
+
+func (m *MachineScope) SetFailureMessage(v error) {
+	m.ProxmoxMachine.Status.FailureMessage = pointer.StringPtr(v.Error())
+}
+
+func (m *MachineScope) SetFailureReason(v capierrors.MachineStatusError) {
+	m.ProxmoxMachine.Status.FailureReason = &v
 }
 
 // PatchObject persists the cluster configuration and status.

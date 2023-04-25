@@ -18,18 +18,24 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
+	"sigs.k8s.io/cluster-api/util/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute"
 )
 
 // ProxmoxMachineReconciler reconciles a ProxmoxMachine object
@@ -114,7 +120,7 @@ func (r *ProxmoxMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, errors.Errorf("failed to create scope: %+v", err)
 	}
 
-	// Always close the scope when exiting this function so we can persist any GCPMachine changes.
+	// Always close the scope when exiting this function so we can persist any ProxmoxMachine changes.
 	defer func() {
 		if err := machineScope.Close(); err != nil && reterr == nil {
 			reterr = err
@@ -130,9 +136,40 @@ func (r *ProxmoxMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return r.reconcile(ctx, machineScope)
 }
 
-func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, scope *scope.MachineScope) (ctrl.Result, error) {
+func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
+	log.Info("Reconciling ProxmoxMachine")
 
-	return ctrl.Result{}, nil
+	if ok := controllerutil.AddFinalizer(machineScope.ProxmoxMachine, infrav1.MachineFinalizer); ok {
+		log.Info("update finalizer to ProxmoxMachine")
+	}
+
+	reconcilers := []cloud.Reconciler{
+		compute.NewService(machineScope),
+	}
+
+	for _, r := range reconcilers {
+		if err := r.Reconcile(ctx); err != nil {
+			log.Error(err, "Reconcile error")
+			record.Warnf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "Reconcile error - %v", err)
+			return ctrl.Result{RequeueAfter: 5 * time.Second}, err
+		}
+	}
+
+	instanceState := *machineScope.GetInstanceStatus()
+	switch instanceState {
+	case infrav1.InstanceStatusRunning:
+		log.Info("ProxmoxMachine instance is running", "instance-id", *machineScope.GetInstanceID())
+		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is running - instance-id: %s", *machineScope.GetInstanceID())
+		record.Event(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "Reconciled")
+		machineScope.SetReady()
+		return ctrl.Result{}, nil
+	default:
+		machineScope.SetFailureReason(capierrors.UpdateMachineError)
+		machineScope.SetFailureMessage(errors.Errorf("ProxmoxMachine instance state %s is unexpected", instanceState))
+		return ctrl.Result{Requeue: true}, nil
+	}
+
 }
 
 func (r *ProxmoxMachineReconciler) reconcileDelete(ctx context.Context, scope *scope.MachineScope) (ctrl.Result, error) {
