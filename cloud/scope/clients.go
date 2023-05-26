@@ -46,22 +46,27 @@ func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectRefere
 	secret := &corev1.Secret{}
 	key := client.ObjectKey{Namespace: credentialsRef.Namespace, Name: credentialsRef.Name}
 	if err := crClient.Get(ctx, key, secret); err != nil {
-		return &Compute{}, err
+		return nil, err
 	}
 
 	proxmoxUrl, ok := secret.Data["PROXMOX_URL"]
 	if !ok {
-		return &Compute{}, errors.Errorf("failed to fetch PROXMOX_URL from Secret : %v", key)
+		return nil, errors.Errorf("failed to fetch PROXMOX_URL from Secret : %v", key)
 	}
 	proxmoxUser, ok := secret.Data["PROXMOX_USER"]
 	if !ok {
-		return &Compute{}, errors.Errorf("failed to fetch PROXMOX_USER from Secret : %v", key)
+		return nil, errors.Errorf("failed to fetch PROXMOX_USER from Secret : %v", key)
 	}
 	proxmoxPassword, ok := secret.Data["PROXMOX_PASSWORD"]
 	if !ok {
-		return &Compute{}, errors.Errorf("failed to fetch PROXMOX_PASSWORD from Secret : %v", key)
+		return nil, errors.Errorf("failed to fetch PROXMOX_PASSWORD from Secret : %v", key)
 	}
 
+	return newProxmoxClient(string(proxmoxUrl), string(proxmoxUser), string(proxmoxPassword))
+}
+
+// to do : support APIToken login
+func newProxmoxClient(url, user, password string) (*proxmox.Client, error) {
 	baseClient := http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -69,9 +74,9 @@ func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectRefere
 			},
 		},
 	}
-	client := proxmox.NewClient(fmt.Sprintf("https://%s/api2/json", string(proxmoxUrl)), proxmox.WithClient(&baseClient))
-	if err := client.Login(string(proxmoxUser), string(proxmoxPassword)); err != nil {
-		return &Compute{}, err
+	client := proxmox.NewClient(fmt.Sprintf("https://%s/api2/json", url), proxmox.WithClient(&baseClient))
+	if err := client.Login(user, password); err != nil {
+		return nil, errors.Errorf("failed to login proxmox: %v", err)
 	}
 	return client, nil
 }
