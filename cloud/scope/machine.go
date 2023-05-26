@@ -18,6 +18,7 @@ package scope
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"k8s.io/utils/pointer"
@@ -70,15 +71,19 @@ type MachineScope struct {
 	ClusterGetter  *ClusterScope
 }
 
-func (scope *MachineScope) Name() string {
-	return scope.ProxmoxMachine.Name
+func (m *MachineScope) Name() string {
+	return m.ProxmoxMachine.Name
 }
 
-func (scope *MachineScope) Client() Compute {
-	return scope.ClusterGetter.Client()
+func (m *MachineScope) Namespace() string {
+	return m.ProxmoxMachine.Namespace
 }
 
-func (scope *MachineScope) Close() error {
+func (m *MachineScope) Client() Compute {
+	return m.ClusterGetter.Client()
+}
+
+func (m *MachineScope) Close() error {
 
 	// to do
 
@@ -87,6 +92,11 @@ func (scope *MachineScope) Close() error {
 
 func (m *MachineScope) GetInstanceStatus() *infrav1.InstanceStatus {
 	return m.ProxmoxMachine.Status.InstanceStatus
+}
+
+// SetInstanceStatus sets the ProxmoxMachine instance status.
+func (m *MachineScope) SetInstanceStatus(v infrav1.InstanceStatus) {
+	m.ProxmoxMachine.Status.InstanceStatus = &v
 }
 
 func (m *MachineScope) GetInstanceID() *string {
@@ -102,6 +112,12 @@ func (m *MachineScope) GetProviderID() string {
 		return *m.ProxmoxMachine.Spec.ProviderID
 	}
 	return ""
+}
+
+// SetProviderID sets the ProxmoxMachine providerID in spec.
+func (m *MachineScope) SetProviderID() {
+	providerid := fmt.Sprintf("proxmox://%s", m.Name())
+	m.ProxmoxMachine.Spec.ProviderID = pointer.StringPtr(providerid)
 }
 
 func (m *MachineScope) SetReady() {

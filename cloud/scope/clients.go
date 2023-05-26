@@ -39,7 +39,12 @@ type ProxmoxServices struct {
 
 type ProxmoxScope interface {
 	Name() string
+	Namespace() string
 	Client() Compute
+	GetInstanceID() *string
+	SetProviderID()
+	SetReady()
+	SetInstanceStatus(infrav1.InstanceStatus)
 }
 
 func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*Compute, error) {
