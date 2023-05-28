@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/luthermonson/go-proxmox"
 	"github.com/pkg/errors"
+	"github.com/sp-yduck/proxmox"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -39,7 +41,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 func (s *Service) createOrGetInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	instance, err := s.GetInstance(ctx)
 	if err != nil {
-		if IsNotFoundError(err) {
+		if IsNotFound(err) {
 			instance, err = s.CreateInstance(ctx)
 			if err != nil {
 				return nil, err
@@ -53,17 +55,29 @@ func (s *Service) createOrGetInstance(ctx context.Context) (*proxmox.VirtualMach
 
 func (s *Service) GetInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	instanceID := s.scope.GetInstanceID()
-	nodes, err := s.GetNodes()
+	vm, err := s.getVirtualMachineFromInstanceID(*instanceID)
+	if err != nil && !proxmox.IsNotFound(err) {
+		return nil, err
+	} else if proxmox.IsNotFound(err) {
+		return nil, errors.New("no resource found")
+	}
+	return vm, nil
+}
+
+func fetchVMIDFromInstanceID(instanceID string) (string, int) {
+	s := strings.Split(instanceID, "/")
+	nodeName := s[0]
+	vmid, _ := strconv.Atoi(s[1])
+	return nodeName, vmid
+}
+
+func (s *Service) getVirtualMachineFromInstanceID(instanceID string) (*proxmox.VirtualMachine, error) {
+	nodeName, vmid := fetchVMIDFromInstanceID(instanceID)
+	node, err := s.client.Node(nodeName)
 	if err != nil {
 		return nil, err
 	}
-	for _, node := range nodes {
-		vm, err := getInstanceFromInstanceID(*node, *instanceID)
-		if err == nil && vm != nil {
-			return vm, nil
-		}
-	}
-	return nil, errors.New("no resource found")
+	return node.VirtualMachine(vmid)
 }
 
 func (s *Service) CreateInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
@@ -74,25 +88,16 @@ func (s *Service) CreateInstance(ctx context.Context) (*proxmox.VirtualMachine, 
 
 	// temp solution
 	vmid := rand.Int()
-	option := proxmox.VirtualMachineOption{
-		Name: *s.scope.GetInstanceID(),
-	}
-
-	_, err = node.NewVirtualMachine(vmid, option)
+	vm, err := node.CreateVirtualMachine(vmid)
 	if err != nil {
 		return nil, err
 	}
 
-	vm, err := getInstanceFromVMID(*node, vmid)
-	if err != nil {
-
-		return nil, err
-	}
 	return vm, nil
 }
 
-func IsNotFoundError(err error) bool {
-	return err.Error() == "no resource found"
+func IsNotFound(err error) bool {
+	return proxmox.IsNotFound(err)
 }
 
 func (s *Service) GetCluster() (*proxmox.Cluster, error) {
@@ -100,36 +105,7 @@ func (s *Service) GetCluster() (*proxmox.Cluster, error) {
 }
 
 func (s *Service) GetNodes() ([]*proxmox.Node, error) {
-	ns, err := s.client.Nodes()
-	if err != nil {
-		return nil, err
-	}
-	var nodes []*proxmox.Node
-	for _, n := range ns {
-		node, err := s.client.Node(n.Node)
-		if err != nil {
-			return nil, err
-		}
-		nodes = append(nodes, node)
-	}
-	return nodes, nil
-}
-
-func getInstanceFromVMID(node proxmox.Node, vmid int) (*proxmox.VirtualMachine, error) {
-	return node.VirtualMachine(vmid)
-}
-
-func getInstanceFromInstanceID(node proxmox.Node, instanceID string) (*proxmox.VirtualMachine, error) {
-	vms, err := node.VirtualMachines()
-	if err != nil {
-		return nil, err
-	}
-	for _, vm := range vms {
-		if vm.Name == instanceID {
-			return vm, nil
-		}
-	}
-	return nil, errors.New("no resource found")
+	return s.client.Nodes()
 }
 
 // GetRandomNode returns a node chosen randomly
@@ -143,12 +119,22 @@ func (s *Service) GetRandomNode() (*proxmox.Node, error) {
 	}
 	src := rand.NewSource(time.Now().Unix())
 	r := rand.New(src)
-	node := nodes[r.Intn(len(nodes))]
-	return node, nil
+	return nodes[r.Intn(len(nodes))], nil
 }
 
 // wip
 func (s *Service) Delete(ctx context.Context) error {
+	instance, err := s.GetInstance(ctx)
+	if err != nil {
+		if !IsNotFound(err) {
+			return err
+		}
+		return nil
+	}
+	_, err = instance.Delete()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

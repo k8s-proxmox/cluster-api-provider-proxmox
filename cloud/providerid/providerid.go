@@ -3,6 +3,7 @@ package providerid
 import (
 	"fmt"
 	"path"
+	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -10,51 +11,40 @@ import (
 const Prefix = "proxmox://"
 
 type ProviderID interface {
-	Cluster() string
 	Node() string
-	Name() string
+	VMID() int
 	fmt.Stringer
 }
 
 type providerID struct {
-	// proxmox cluster name
-	cluster string
 	// proxmox node name
 	node string
-	// proxmox vm name
-	name string
+	// proxmox vmid
+	vmid int
 }
 
-func New(cluster, node, name string) (ProviderID, error) {
-	if cluster == "" {
-		return nil, errors.New("project required for provider id")
-	}
+func New(node string, vmid int) (ProviderID, error) {
 	if node == "" {
 		return nil, errors.New("location required for provider id")
 	}
-	if name == "" {
-		return nil, errors.New("name required for provider id")
+	if vmid == 0 {
+		return nil, errors.New("vmid required for provider id")
 	}
 
 	return &providerID{
-		cluster: cluster,
-		node:    node,
-		name:    name,
+		node: node,
+		vmid: vmid,
 	}, nil
-}
-
-func (p *providerID) Cluster() string {
-	return p.cluster
 }
 
 func (p *providerID) Node() string {
 	return p.node
 }
 
-func (p *providerID) Name() string {
-	return p.name
+func (p *providerID) VMID() int {
+	return p.vmid
 }
 
 func (p *providerID) String() string {
-	return Prefix + path.Join(p.cluster, p.node, p.name)
+	return Prefix + path.Join(p.node, strconv.Itoa(p.vmid))
 }

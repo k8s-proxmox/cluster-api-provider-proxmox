@@ -100,6 +100,7 @@ func (m *MachineScope) SetInstanceStatus(v infrav1.InstanceStatus) {
 }
 
 func (m *MachineScope) GetInstanceID() *string {
+
 	parsed, err := noderefutil.NewProviderID(m.GetProviderID())
 	if err != nil {
 		return nil
