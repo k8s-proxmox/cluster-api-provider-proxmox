@@ -28,23 +28,11 @@ import (
 	// "github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/vm"
 )
 
-type Compute = service.Service
-
 type ProxmoxServices struct {
-	Compute Compute
+	Compute *service.Service
 }
 
-type ProxmoxScope interface {
-	Name() string
-	Namespace() string
-	Client() Compute
-	GetInstanceID() *string
-	SetProviderID()
-	SetReady()
-	SetInstanceStatus(infrav1.InstanceStatus)
-}
-
-func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*Compute, error) {
+func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*service.Service, error) {
 	secret := &corev1.Secret{}
 	key := client.ObjectKey{Namespace: credentialsRef.Namespace, Name: credentialsRef.Name}
 	if err := crClient.Get(ctx, key, secret); err != nil {

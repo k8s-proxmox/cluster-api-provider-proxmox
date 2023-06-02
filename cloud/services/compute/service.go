@@ -13,14 +13,19 @@ import (
 	"github.com/sp-yduck/proxmox/pkg/service"
 	"github.com/sp-yduck/proxmox/pkg/service/node"
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
+
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 )
 
+type Scope interface {
+	cloud.Machine
+}
+
 type Service struct {
-	scope  scope.ProxmoxScope
+	scope  Scope
 	client service.Service
 }
 
@@ -142,9 +147,9 @@ func (s *Service) Delete(ctx context.Context) error {
 	return nil
 }
 
-func NewService(s scope.ProxmoxScope) *Service {
+func NewService(s Scope) *Service {
 	return &Service{
 		scope:  s,
-		client: s.Client(),
+		client: *s.CloudClient(),
 	}
 }

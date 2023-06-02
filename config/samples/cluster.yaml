@@ -13,3 +13,6 @@ spec:
     apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
     kind: ProxmoxCluster
     name: proxmoxcluster-sample
+  controlPlaneEndpoint:
+    host: ""
+    port: 0

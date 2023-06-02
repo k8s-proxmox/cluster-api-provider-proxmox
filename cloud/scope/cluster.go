@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/proxmox/pkg/service"
 )
 
 type ClusterScopeParams struct {
@@ -42,13 +43,13 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 		return nil, errors.New("failed to generate new scope from nil ProxmoxCluster")
 	}
 
-	// if params.ProxmoxServices.Compute == nil {
-	computeSvc, err := newComputeService(ctx, params.ProxmoxCluster.Spec.CredentialsRef, params.Client)
-	if err != nil {
-		return nil, errors.Errorf("failed to create proxmox compute client: %v", err)
+	if params.ProxmoxServices.Compute == nil {
+		computeSvc, err := newComputeService(ctx, params.ProxmoxCluster.Spec.CredentialsRef, params.Client)
+		if err != nil {
+			return nil, errors.Errorf("failed to create proxmox compute client: %v", err)
+		}
+		params.ProxmoxServices.Compute = computeSvc
 	}
-	params.ProxmoxServices.Compute = *computeSvc
-	// }
 
 	helper, err := patch.NewHelper(params.ProxmoxCluster, params.Client)
 	if err != nil {
@@ -72,19 +73,23 @@ type ClusterScope struct {
 	ProxmoxCluster *infrav1.ProxmoxCluster
 }
 
-func (scope ClusterScope) Name() string {
-	return scope.Cluster.Name
+func (s *ClusterScope) Name() string {
+	return s.Cluster.Name
 }
 
-func (scope ClusterScope) Client() Compute {
-	return scope.ProxmoxServices.Compute
+func (s *ClusterScope) CloudClient() *service.Service {
+	return s.ProxmoxServices.Compute
 }
 
-func (scope ClusterScope) Close() error {
+func (s *ClusterScope) Close() error {
 
 	// to do
 
 	return nil
+}
+
+func (s *ClusterScope) SetReady() {
+	s.ProxmoxCluster.Status.Ready = true
 }
 
 // PatchObject persists the cluster configuration and status.

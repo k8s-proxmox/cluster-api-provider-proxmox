@@ -35,7 +35,7 @@ type ProxmoxClusterSpec struct {
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 
-	CredentialsRef *ObjectReference `json:"credentialsRef,omitempty"`
+	CredentialsRef *ObjectReference `json:"credentialsRef"`
 
 	// Foo is an example field of ProxmoxCluster. Edit proxmoxcluster_types.go to remove/update
 	Foo string `json:"foo,omitempty"`

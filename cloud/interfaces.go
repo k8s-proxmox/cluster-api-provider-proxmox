@@ -3,7 +3,10 @@ package cloud
 import (
 	"context"
 
+	"github.com/sp-yduck/proxmox/pkg/service"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+
+	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 )
 
 type Reconciler interface {
@@ -12,6 +15,7 @@ type Reconciler interface {
 }
 
 type Client interface {
+	CloudClient() *service.Service
 }
 
 type Cluster interface {
@@ -19,12 +23,50 @@ type Cluster interface {
 	ClusterSettter
 }
 
+// ClusterGetter is an interface which can get cluster information.
 type ClusterGetter interface {
 	Client
+	// Region() string
 	Name() string
 	Namespace() string
+	// NetworkName() string
+	// Network() *infrav1.Network
+	// AdditionalLabels() infrav1.Labels
+	// FailureDomains() clusterv1.FailureDomains
+	// ControlPlaneEndpoint() clusterv1.APIEndpoint
 }
 
 type ClusterSettter interface {
 	SetControlPlaneEndpoint(endpoint clusterv1.APIEndpoint)
+}
+
+// MachineGetter is an interface which can get machine information.
+type MachineGetter interface {
+	Client
+	Name() string
+	Namespace() string
+	// Zone() string
+	// Role() string
+	// IsControlPlane() bool
+	// ControlPlaneGroupName() string
+	GetInstanceID() *string
+	GetProviderID() string
+	// GetBootstrapData() (string, error)
+	GetInstanceStatus() *infrav1.InstanceStatus
+}
+
+// MachineSetter is an interface which can set machine information.
+type MachineSetter interface {
+	SetProviderID()
+	SetInstanceStatus(v infrav1.InstanceStatus)
+	// SetFailureMessage(v error)
+	// SetFailureReason(v capierrors.MachineStatusError)
+	// SetAnnotation(key, value string)
+	// SetAddresses(addressList []corev1.NodeAddress)
+}
+
+// Machine is an interface which can get and set machine information.
+type Machine interface {
+	MachineGetter
+	MachineSetter
 }

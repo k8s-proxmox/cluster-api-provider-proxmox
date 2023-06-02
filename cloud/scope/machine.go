@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/proxmox/pkg/service"
 )
 
 type MachineScopeParams struct {
@@ -71,6 +72,10 @@ type MachineScope struct {
 	ClusterGetter  *ClusterScope
 }
 
+func (m *MachineScope) CloudClient() *service.Service {
+	return m.ClusterGetter.CloudClient()
+}
+
 func (m *MachineScope) Name() string {
 	return m.ProxmoxMachine.Name
 }
@@ -79,9 +84,9 @@ func (m *MachineScope) Namespace() string {
 	return m.ProxmoxMachine.Namespace
 }
 
-func (m *MachineScope) Client() Compute {
-	return m.ClusterGetter.Client()
-}
+// func (m *MachineScope) Client() Compute {
+// 	return m.ClusterGetter.Client()
+// }
 
 func (m *MachineScope) Close() error {
 

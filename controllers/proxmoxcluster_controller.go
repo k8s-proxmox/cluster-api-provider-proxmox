@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	capiannotations "sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/record"
@@ -131,6 +132,8 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 
 	// controlPlaneEndpoint := clusterScope.ControlPlaneEndpoint()
 	controlPlaneEndpoint := clusterScope.Cluster.Spec.ControlPlaneEndpoint
+	// tbd : actual endpoint should be set in cloud.Reconciler logic
+	controlPlaneEndpoint = v1beta1.APIEndpoint{Host: "controlplane.dummyendpoint.local", Port: 443}
 	if controlPlaneEndpoint.Host == "" {
 		log.Info("ProxmoxCluster does not have control-plane endpoint yet. Reconciling")
 		record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Waiting for control-plane endpoint")
@@ -138,8 +141,7 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 	}
 
 	record.Eventf(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Got control-plane endpoint - %s", controlPlaneEndpoint.Host)
-	// clusterScope.SetReady()
-	clusterScope.ProxmoxCluster.Status.Ready = true
+	clusterScope.SetReady()
 	record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Reconciled")
 	return ctrl.Result{}, nil
 }
@@ -148,9 +150,20 @@ func (r *ProxmoxClusterReconciler) reconcileDelete(ctx context.Context, clusterS
 	log := log.FromContext(ctx)
 	log.Info("Reconciling Delete ProxmoxCluster")
 
-	// to do
-	// reconcile delete logic here
+	reconcilers := []cloud.Reconciler{
+		// to do
+	}
 
+	for _, r := range reconcilers {
+		if err := r.Delete(ctx); err != nil {
+			log.Error(err, "Reconcile error")
+			record.Warnf(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Reconcile error - %v", err)
+			return ctrl.Result{RequeueAfter: 5 * time.Second}, err
+		}
+	}
+
+	controllerutil.RemoveFinalizer(clusterScope.ProxmoxCluster, infrav1.ClusterFinalizer)
+	record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Reconciled")
 	return ctrl.Result{}, nil
 }
 

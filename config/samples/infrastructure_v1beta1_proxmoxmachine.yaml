@@ -9,4 +9,5 @@ metadata:
     app.kubernetes.io/created-by: cluster-api-provider-proxmox
   name: proxmoxmachine-sample
 spec:
-  # TODO(user): Add fields here
+  providerID: ""
+  FailureDomain: ""
