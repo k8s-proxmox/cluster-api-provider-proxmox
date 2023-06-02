@@ -18,12 +18,9 @@ package scope
 
 import (
 	"context"
-	"crypto/tls"
-	"fmt"
-	"net/http"
 
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox"
+	"github.com/sp-yduck/proxmox/pkg/service"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -31,7 +28,7 @@ import (
 	// "github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/vm"
 )
 
-type Compute = proxmox.Client
+type Compute = service.Service
 
 type ProxmoxServices struct {
 	Compute Compute
@@ -67,21 +64,5 @@ func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectRefere
 		return nil, errors.Errorf("failed to fetch PROXMOX_PASSWORD from Secret : %v", key)
 	}
 
-	return newProxmoxClient(string(proxmoxUrl), string(proxmoxUser), string(proxmoxPassword))
-}
-
-// to do : support APIToken login
-func newProxmoxClient(url, user, password string) (*proxmox.Client, error) {
-	baseClient := http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
-	}
-	client := proxmox.NewClient(fmt.Sprintf("https://%s/api2/json", url), proxmox.WithClient(&baseClient))
-	if err := client.Login(user, password); err != nil {
-		return nil, errors.Errorf("failed to login proxmox: %v", err)
-	}
-	return client, nil
+	return service.NewServiceWithLogin(string(proxmoxUrl), string(proxmoxUser), string(proxmoxPassword))
 }

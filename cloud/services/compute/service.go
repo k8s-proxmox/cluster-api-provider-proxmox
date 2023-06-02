@@ -9,7 +9,10 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox"
+	"github.com/sp-yduck/proxmox/pkg/api"
+	"github.com/sp-yduck/proxmox/pkg/service"
+	"github.com/sp-yduck/proxmox/pkg/service/node"
+	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -18,7 +21,7 @@ import (
 
 type Service struct {
 	scope  scope.ProxmoxScope
-	client proxmox.Client
+	client service.Service
 }
 
 // wip
@@ -38,7 +41,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 }
 
 // wip
-func (s *Service) createOrGetInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
+func (s *Service) createOrGetInstance(ctx context.Context) (*vm.VirtualMachine, error) {
 	instance, err := s.GetInstance(ctx)
 	if err != nil {
 		if IsNotFound(err) {
@@ -53,12 +56,12 @@ func (s *Service) createOrGetInstance(ctx context.Context) (*proxmox.VirtualMach
 	return instance, err
 }
 
-func (s *Service) GetInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
+func (s *Service) GetInstance(ctx context.Context) (*vm.VirtualMachine, error) {
 	instanceID := s.scope.GetInstanceID()
 	vm, err := s.getVirtualMachineFromInstanceID(*instanceID)
-	if err != nil && !proxmox.IsNotFound(err) {
+	if err != nil && !api.IsNotFound(err) {
 		return nil, err
-	} else if proxmox.IsNotFound(err) {
+	} else if api.IsNotFound(err) {
 		return nil, errors.New("no resource found")
 	}
 	return vm, nil
@@ -71,7 +74,7 @@ func fetchVMIDFromInstanceID(instanceID string) (string, int) {
 	return nodeName, vmid
 }
 
-func (s *Service) getVirtualMachineFromInstanceID(instanceID string) (*proxmox.VirtualMachine, error) {
+func (s *Service) getVirtualMachineFromInstanceID(instanceID string) (*vm.VirtualMachine, error) {
 	nodeName, vmid := fetchVMIDFromInstanceID(instanceID)
 	node, err := s.client.Node(nodeName)
 	if err != nil {
@@ -80,7 +83,7 @@ func (s *Service) getVirtualMachineFromInstanceID(instanceID string) (*proxmox.V
 	return node.VirtualMachine(vmid)
 }
 
-func (s *Service) CreateInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
+func (s *Service) CreateInstance(ctx context.Context) (*vm.VirtualMachine, error) {
 	node, err := s.GetRandomNode()
 	if err != nil {
 		return nil, err
@@ -88,7 +91,8 @@ func (s *Service) CreateInstance(ctx context.Context) (*proxmox.VirtualMachine, 
 
 	// temp solution
 	vmid := rand.Int()
-	vm, err := node.CreateVirtualMachine(vmid)
+	vmoption := vm.VirtualMachineCreateOptions{}
+	vm, err := node.CreateVirtualMachine(vmid, vmoption)
 	if err != nil {
 		return nil, err
 	}
@@ -97,19 +101,19 @@ func (s *Service) CreateInstance(ctx context.Context) (*proxmox.VirtualMachine, 
 }
 
 func IsNotFound(err error) bool {
-	return proxmox.IsNotFound(err)
+	return api.IsNotFound(err)
 }
 
-func (s *Service) GetCluster() (*proxmox.Cluster, error) {
-	return s.client.Cluster()
-}
+// func (s *Service) GetCluster() (*service.Cluster, error) {
+// 	return s.client.Cluster()
+// }
 
-func (s *Service) GetNodes() ([]*proxmox.Node, error) {
+func (s *Service) GetNodes() ([]*node.Node, error) {
 	return s.client.Nodes()
 }
 
 // GetRandomNode returns a node chosen randomly
-func (s *Service) GetRandomNode() (*proxmox.Node, error) {
+func (s *Service) GetRandomNode() (*node.Node, error) {
 	nodes, err := s.GetNodes()
 	if err != nil {
 		return nil, err
