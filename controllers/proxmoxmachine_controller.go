@@ -172,7 +172,24 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 
 }
 
-func (r *ProxmoxMachineReconciler) reconcileDelete(ctx context.Context, scope *scope.MachineScope) (ctrl.Result, error) {
+func (r *ProxmoxMachineReconciler) reconcileDelete(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
+	log.Info("Reconciling Delete ProxmoxMachine")
+
+	reconcilers := []cloud.Reconciler{
+		compute.NewService(machineScope),
+	}
+
+	for _, r := range reconcilers {
+		if err := r.Delete(ctx); err != nil {
+			log.Error(err, "Reconcile error")
+			record.Warnf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "Reconcile error - %v", err)
+			return ctrl.Result{RequeueAfter: 5 * time.Second}, err
+		}
+	}
+
+	controllerutil.RemoveFinalizer(machineScope.ProxmoxMachine, infrav1.MachineFinalizer)
+	record.Event(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "Reconciled")
 	return ctrl.Result{}, nil
 }
 
