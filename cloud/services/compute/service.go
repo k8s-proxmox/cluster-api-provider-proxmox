@@ -11,9 +11,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox/pkg/api"
 	"github.com/sp-yduck/proxmox/pkg/service"
+	"github.com/sp-yduck/proxmox/pkg/service/cluster"
 	"github.com/sp-yduck/proxmox/pkg/service/node"
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
-	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -93,9 +93,10 @@ func (s *Service) CreateInstance(ctx context.Context) (*vm.VirtualMachine, error
 		return nil, err
 	}
 
-	// temp solution
-	vmid := rand.Intn(99999)
-	klog.Infof("vmid : %d", vmid)
+	vmid, err := s.GetNextID()
+	if err != nil {
+		return nil, err
+	}
 	vmoption := vm.VirtualMachineCreateOptions{}
 	vm, err := node.CreateVirtualMachine(vmid, vmoption)
 	if err != nil {
@@ -108,9 +109,17 @@ func IsNotFound(err error) bool {
 	return api.IsNotFound(err)
 }
 
-// func (s *Service) GetCluster() (*service.Cluster, error) {
-// 	return s.client.Cluster()
-// }
+func (s *Service) GetCluster() (*cluster.Cluster, error) {
+	return s.client.Cluster()
+}
+
+func (s *Service) GetNextID() (int, error) {
+	c, err := s.GetCluster()
+	if err != nil {
+		return 0, err
+	}
+	return c.NextID()
+}
 
 func (s *Service) GetNodes() ([]*node.Node, error) {
 	return s.client.Nodes()
