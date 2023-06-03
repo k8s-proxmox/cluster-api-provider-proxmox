@@ -121,7 +121,7 @@ func (m *MachineScope) GetProviderID() string {
 
 // SetProviderID sets the ProxmoxMachine providerID in spec.
 func (m *MachineScope) SetProviderID(instance *vm.VirtualMachine) error {
-	providerid, err := providerid.New(instance.Node, instance.VMID)
+	providerid, err := providerid.New(instance.Node.Name(), instance.VMID)
 	if err != nil {
 		return err
 	}

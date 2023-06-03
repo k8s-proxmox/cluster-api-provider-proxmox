@@ -31,6 +31,22 @@ func (s *Service) Reconcile(ctx context.Context) error {
 
 	s.scope.SetProviderID(instance)
 	s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.Status))
+
+	// ensure power on
+	switch instance.Status {
+	case vm.ProcessStatusRunning:
+		return nil
+	case vm.ProcessStatusStopped:
+		if err := instance.Start(vm.StartOption{}); err != nil {
+			return err
+		}
+	case vm.ProcessStatusPaused:
+		if err := instance.Resume(vm.ResumeOption{}); err != nil {
+			return err
+		}
+	default:
+		return errors.Errorf("unexpected status : %s", instance.Status)
+	}
 	return nil
 }
 
@@ -137,9 +153,5 @@ func (s *Service) Delete(ctx context.Context) error {
 		}
 		return nil
 	}
-	_, err = instance.Delete()
-	if err != nil {
-		return err
-	}
-	return nil
+	return instance.Delete()
 }
