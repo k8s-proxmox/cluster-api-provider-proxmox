@@ -13,6 +13,7 @@ import (
 	"github.com/sp-yduck/proxmox/pkg/service"
 	"github.com/sp-yduck/proxmox/pkg/service/node"
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
+	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -39,26 +40,24 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	}
 	log.Info(fmt.Sprintf("instance : %v", instance))
 
-	s.scope.SetProviderID()
+	s.scope.SetProviderID(instance)
 	s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.Status))
-
 	return nil
 }
 
 // wip
 func (s *Service) createOrGetInstance(ctx context.Context) (*vm.VirtualMachine, error) {
+	if s.scope.GetInstanceID() == nil {
+		return s.CreateInstance(ctx)
+	}
 	instance, err := s.GetInstance(ctx)
 	if err != nil {
 		if IsNotFound(err) {
-			instance, err = s.CreateInstance(ctx)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
+			return s.CreateInstance(ctx)
 		}
+		return nil, err
 	}
-	return instance, err
+	return instance, nil
 }
 
 func (s *Service) GetInstance(ctx context.Context) (*vm.VirtualMachine, error) {
@@ -95,13 +94,13 @@ func (s *Service) CreateInstance(ctx context.Context) (*vm.VirtualMachine, error
 	}
 
 	// temp solution
-	vmid := rand.Int()
+	vmid := rand.Intn(99999)
+	klog.Infof("vmid : %d", vmid)
 	vmoption := vm.VirtualMachineCreateOptions{}
 	vm, err := node.CreateVirtualMachine(vmid, vmoption)
 	if err != nil {
 		return nil, err
 	}
-
 	return vm, nil
 }
 

@@ -10,4 +10,4 @@ metadata:
   name: proxmoxmachine-sample
 spec:
   providerID: ""
-  FailureDomain: ""
+  failureDomain: ""

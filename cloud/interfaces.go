@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/sp-yduck/proxmox/pkg/service"
+	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -57,7 +58,7 @@ type MachineGetter interface {
 
 // MachineSetter is an interface which can set machine information.
 type MachineSetter interface {
-	SetProviderID()
+	SetProviderID(instance *vm.VirtualMachine) error
 	SetInstanceStatus(v infrav1.InstanceStatus)
 	// SetFailureMessage(v error)
 	// SetFailureReason(v capierrors.MachineStatusError)

@@ -82,10 +82,7 @@ func (s *ClusterScope) CloudClient() *service.Service {
 }
 
 func (s *ClusterScope) Close() error {
-
-	// to do
-
-	return nil
+	return s.PatchObject()
 }
 
 func (s *ClusterScope) SetReady() {

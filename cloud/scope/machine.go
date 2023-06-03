@@ -18,9 +18,9 @@ package scope
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/providerid"
 	"github.com/sp-yduck/proxmox/pkg/service"
 )
 
@@ -61,6 +62,7 @@ func NewMachineScope(params MachineScopeParams) (*MachineScope, error) {
 		Machine:        params.Machine,
 		ProxmoxMachine: params.ProxmoxMachine,
 		patchHelper:    helper,
+		ClusterGetter:  params.ClusterGetter,
 	}, err
 }
 
@@ -89,10 +91,7 @@ func (m *MachineScope) Namespace() string {
 // }
 
 func (m *MachineScope) Close() error {
-
-	// to do
-
-	return nil
+	return m.PatchObject()
 }
 
 func (m *MachineScope) GetInstanceStatus() *infrav1.InstanceStatus {
@@ -121,9 +120,13 @@ func (m *MachineScope) GetProviderID() string {
 }
 
 // SetProviderID sets the ProxmoxMachine providerID in spec.
-func (m *MachineScope) SetProviderID() {
-	providerid := fmt.Sprintf("proxmox://%s", m.Name())
-	m.ProxmoxMachine.Spec.ProviderID = pointer.StringPtr(providerid)
+func (m *MachineScope) SetProviderID(instance *vm.VirtualMachine) error {
+	providerid, err := providerid.New(instance.Node, instance.VMID)
+	if err != nil {
+		return err
+	}
+	m.ProxmoxMachine.Spec.ProviderID = pointer.StringPtr(providerid.String())
+	return nil
 }
 
 func (m *MachineScope) SetReady() {
