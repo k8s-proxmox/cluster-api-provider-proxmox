@@ -164,6 +164,14 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 		record.Event(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "Reconciled")
 		machineScope.SetReady()
 		return ctrl.Result{}, nil
+	case infrav1.InstanceStatusStopped:
+		log.Info("ProxmoxMachine instance is stopped", "instance-id", *machineScope.GetInstanceID())
+		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is stopped - instance-id: %s", *machineScope.GetInstanceID())
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+	case infrav1.InstanceStatusPaused:
+		log.Info("ProxmoxMachine instance is paused", "instance-id", *machineScope.GetInstanceID())
+		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is paused - instance-id: %s", *machineScope.GetInstanceID())
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	default:
 		machineScope.SetFailureReason(capierrors.UpdateMachineError)
 		machineScope.SetFailureMessage(errors.Errorf("ProxmoxMachine instance state %s is unexpected", instanceState))

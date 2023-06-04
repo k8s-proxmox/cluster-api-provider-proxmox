@@ -153,6 +153,7 @@ func (s *Service) GetRandomNode() (*node.Node, error) {
 	return nodes[r.Intn(len(nodes))], nil
 }
 
+// wip
 func (s *Service) Delete(ctx context.Context) error {
 	instance, err := s.GetInstance(ctx)
 	if err != nil {
@@ -161,5 +162,6 @@ func (s *Service) Delete(ctx context.Context) error {
 		}
 		return nil
 	}
+	// to do : stop instance before deletion
 	return instance.Delete()
 }
