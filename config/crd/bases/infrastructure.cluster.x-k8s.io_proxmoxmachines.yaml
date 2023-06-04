@@ -126,6 +126,10 @@ spec:
               failureReason:
                 description: FailureReason
                 type: string
+              instanceState:
+                description: InstanceStatus is the status of the GCP instance for
+                  this machine.
+                type: string
               ready:
                 description: Ready is true when the provider resource is ready.
                 type: boolean

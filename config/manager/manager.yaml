@@ -70,7 +70,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: spyduck/cluster-api-provider-proxmox:dev-0.0.4
+        image: controller:latest
         name: manager
         securityContext:
           allowPrivilegeEscalation: false

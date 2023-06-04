@@ -68,6 +68,8 @@ spec:
                 description: Foo is an example field of ProxmoxCluster. Edit proxmoxcluster_types.go
                   to remove/update
                 type: string
+            required:
+            - credentialsRef
             type: object
           status:
             description: ProxmoxClusterStatus defines the observed state of ProxmoxCluster
