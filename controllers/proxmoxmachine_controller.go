@@ -144,6 +144,10 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 		log.Info("update finalizer to ProxmoxMachine")
 	}
 
+	if err := machineScope.PatchObject(); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	reconcilers := []cloud.Reconciler{
 		compute.NewService(machineScope),
 	}
@@ -177,7 +181,6 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 		machineScope.SetFailureMessage(errors.Errorf("ProxmoxMachine instance state %s is unexpected", instanceState))
 		return ctrl.Result{Requeue: true}, nil
 	}
-
 }
 
 func (r *ProxmoxMachineReconciler) reconcileDelete(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
