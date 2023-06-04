@@ -51,6 +51,9 @@ func NewMachineScope(params MachineScopeParams) (*MachineScope, error) {
 	if params.ProxmoxMachine == nil {
 		return nil, errors.New("failed to generate new scope from nil ProxmoxMachine")
 	}
+	if params.ClusterGetter == nil {
+		return nil, errors.New("failed to generate new scope form nil ClusterScope")
+	}
 
 	helper, err := patch.NewHelper(params.ProxmoxMachine, params.Client)
 	if err != nil {

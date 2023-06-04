@@ -33,6 +33,10 @@ type ProxmoxServices struct {
 }
 
 func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*service.Service, error) {
+	if credentialsRef == nil {
+		return nil, errors.New("failed to get proxmox client form nil credentialsRef")
+	}
+
 	var secret corev1.Secret
 	key := client.ObjectKey{Namespace: credentialsRef.Namespace, Name: credentialsRef.Name}
 	if err := crClient.Get(ctx, key, &secret); err != nil {

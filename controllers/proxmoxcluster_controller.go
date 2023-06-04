@@ -24,7 +24,6 @@ import (
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	capiannotations "sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/record"
@@ -132,8 +131,6 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 
 	// controlPlaneEndpoint := clusterScope.ControlPlaneEndpoint()
 	controlPlaneEndpoint := clusterScope.Cluster.Spec.ControlPlaneEndpoint
-	// tbd : actual endpoint should be set in cloud.Reconciler logic
-	controlPlaneEndpoint = v1beta1.APIEndpoint{Host: "controlplane.dummyendpoint.local", Port: 443}
 	if controlPlaneEndpoint.Host == "" {
 		log.Info("ProxmoxCluster does not have control-plane endpoint yet. Reconciling")
 		record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Waiting for control-plane endpoint")
