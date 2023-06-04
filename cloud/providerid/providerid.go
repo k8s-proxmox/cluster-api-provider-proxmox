@@ -46,5 +46,6 @@ func (p *providerID) VMID() int {
 }
 
 func (p *providerID) String() string {
+	// provider ID : proxmox://<node name>/<vmid>
 	return Prefix + path.Join(p.node, strconv.Itoa(p.vmid))
 }
