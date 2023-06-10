@@ -51,6 +51,14 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 		params.ProxmoxServices.Compute = computeSvc
 	}
 
+	if params.ProxmoxServices.Remote == nil {
+		remote, err := newRemoteClient(ctx, params.ProxmoxCluster.Spec.CredentialsRef, params.Client)
+		if err != nil {
+			return nil, errors.Errorf("failed to create remote client: %v", err)
+		}
+		params.ProxmoxServices.Remote = remote
+	}
+
 	helper, err := patch.NewHelper(params.ProxmoxCluster, params.Client)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to init patch helper")

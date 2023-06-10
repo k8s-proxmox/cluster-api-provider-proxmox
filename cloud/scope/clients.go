@@ -30,6 +30,7 @@ import (
 
 type ProxmoxServices struct {
 	Compute *service.Service
+	Remote  *SSHClient
 }
 
 func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*service.Service, error) {
@@ -57,4 +58,31 @@ func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectRefere
 	}
 
 	return service.NewServiceWithLogin(string(proxmoxUrl), string(proxmoxUser), string(proxmoxPassword))
+}
+
+func newRemoteClient(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*SSHClient, error) {
+	if credentialsRef == nil {
+		return nil, errors.New("failed to get proxmox client form nil credentialsRef")
+	}
+
+	var secret corev1.Secret
+	key := client.ObjectKey{Namespace: credentialsRef.Namespace, Name: credentialsRef.Name}
+	if err := crClient.Get(ctx, key, &secret); err != nil {
+		return nil, err
+	}
+
+	nodeurl, ok := secret.Data["NODE_URL"]
+	if !ok {
+		return nil, errors.Errorf("failed to fetch NODE_URL from Secret : %v", key)
+	}
+	nodeuser, ok := secret.Data["NODE_USER"]
+	if !ok {
+		return nil, errors.Errorf("failed to fetch PROXMOX_USER from Secret : %v", key)
+	}
+	nodepassword, ok := secret.Data["NODE_PASSWORD"]
+	if !ok {
+		return nil, errors.Errorf("failed to fetch PROXMOX_PASSWORD from Secret : %v", key)
+	}
+
+	return NewSSHClient(string(nodeurl), string(nodeuser), string(nodepassword))
 }

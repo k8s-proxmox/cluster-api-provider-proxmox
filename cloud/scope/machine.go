@@ -21,6 +21,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
@@ -81,6 +83,10 @@ func (m *MachineScope) CloudClient() *service.Service {
 	return m.ClusterGetter.CloudClient()
 }
 
+func (m *MachineScope) RemoteClient() *SSHClient {
+	return m.ClusterGetter.Remote
+}
+
 func (m *MachineScope) Name() string {
 	return m.ProxmoxMachine.Name
 }
@@ -92,6 +98,25 @@ func (m *MachineScope) Namespace() string {
 // func (m *MachineScope) Client() Compute {
 // 	return m.ClusterGetter.Client()
 // }
+
+func (m *MachineScope) GetBootstrapData() (string, error) {
+	if m.Machine.Spec.Bootstrap.DataSecretName == nil {
+		return "", errors.New("error retrieving bootstrap data: linked Machine's bootstrap.dataSecretName is nil")
+	}
+
+	secret := &corev1.Secret{}
+	key := types.NamespacedName{Namespace: m.Namespace(), Name: *m.Machine.Spec.Bootstrap.DataSecretName}
+	if err := m.client.Get(context.TODO(), key, secret); err != nil {
+		return "", errors.Wrapf(err, "failed to retrieve bootstrap data secret for ProxmoxMachine %s/%s", m.Namespace(), m.Name())
+	}
+
+	value, ok := secret.Data["value"]
+	if !ok {
+		return "", errors.New("error retrieving bootstrap data: secret value key is missing")
+	}
+
+	return string(value), nil
+}
 
 func (m *MachineScope) Close() error {
 	return m.PatchObject()

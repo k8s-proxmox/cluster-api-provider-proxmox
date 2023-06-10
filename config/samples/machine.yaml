@@ -2,6 +2,9 @@ apiVersion: cluster.x-k8s.io/v1beta1
 kind: Machine
 metadata:
   name: proxmoxmachine-sample
+  labels:
+    # cluster.x-k8s.io/control-plane: true
+    cluster.x-k8s.io/cluster-name: proxmoxcluster-sample
 spec:
   clusterName: proxmoxcluster-sample
   infrastructureRef:
@@ -12,5 +15,4 @@ spec:
     configRef:
       apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
       kind: KubeadmConfig
-      name: proxmoxcluster-sample
-    dataSecretName: "proxmoxcluster-sample-datasecret"
+      name: proxmoxmachine-sample

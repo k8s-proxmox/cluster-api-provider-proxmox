@@ -8,6 +8,7 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
 type Reconciler interface {
@@ -17,6 +18,7 @@ type Reconciler interface {
 
 type Client interface {
 	CloudClient() *service.Service
+	RemoteClient() *scope.SSHClient
 }
 
 type Cluster interface {
@@ -52,7 +54,7 @@ type MachineGetter interface {
 	// ControlPlaneGroupName() string
 	GetInstanceID() *string
 	GetProviderID() string
-	// GetBootstrapData() (string, error)
+	GetBootstrapData() (string, error)
 	GetInstanceStatus() *infrav1.InstanceStatus
 }
 
