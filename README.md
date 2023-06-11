@@ -39,14 +39,16 @@ kubectl apply -f config/samples/infrastructure_v1beta1_proxmoxcluster.yaml
 kubetl apply -f <your-proxmox-config-secret>.yaml
 ```
 
-You need to provider your proxmox information through secret. 
+You need to provide your proxmox information through secret. 
 ```yaml
 # <your-proxmox-config-secret>.yaml
 apiVersion: v1
 data:
+  # for proxmox API
   PROXMOX_PASSWORD: "<base 64>"
   PROXMOX_USER: "<base 64>"
   PROXMOX_URL: "<base 64>"
+  # for ssh into the node to bootstrapping VMs
   NODE_URL: "<base 64>"
   NODE_USER: "<base 64>"
   NODE_PASSWORD: "<base 64>"
@@ -61,25 +63,25 @@ This project aims to follow the Cluster API [Provider contract](https://cluster-
 
 ### Proxmox Cluster Controller
 
-[ ] Create controlplane load balancer
+- [ ] Create controlplane load balancer
 
-[ ] Create proxmox storage
+- [ ] Create proxmox storage
 
-[ ] Delete controlplane load balancer
+- [ ] Delete controlplane load balancer
 
-[ ] Delete proxmox storage
+- [ ] Delete proxmox storage
 
 ### Proxmox Machine Controller
 
-[x] Create virtual machine instance
+- [x] Create virtual machine instance
 
-[x] Boot virtual machine instance with provided bootstrap secret (see: [bootstrap provider specificatio](https://cluster-api.sigs.k8s.io/developer/providers/bootstrap.html#bootstrap-provider-specification) for how bootstrap works)
+- [x] Boot virtual machine instance with provided bootstrap secret (see: [bootstrap provider specificatio](https://cluster-api.sigs.k8s.io/developer/providers/bootstrap.html#bootstrap-provider-specification) for how bootstrap works)
 
-[ ] Register virtual machine instance with Controlplane load balancer
+- [ ] Register virtual machine instance with Controlplane load balancer
 
-[ ] Delete virtual machine instance
+- [ ] Delete virtual machine instance
 
-[ ] Un-register virtual machine instance with Controlplane load balancer
+- [ ] Un-register virtual machine instance with Controlplane load balancer
 
 ## Contributing
 // TODO(user): Add detailed information on how you would like others to contribute to this project
