@@ -1,69 +1,88 @@
 # cluster-api-provider-proxmox
-// TODO(user): Add simple overview of use/purpose
+
+cluster-api-provider-proxmox is a Cluster API [infrastructure provider](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html) implementation for [Proxmox VE](https://pve.proxmox.com/wiki/Main_Page).
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+cluster-api-provider-proxmox provides only infrastructure controller (`ProxmoxCluster` and `ProxmoxMachine`). To bootstrap your cluster/machine you need to provide [Control Plane provider](https://cluster-api.sigs.k8s.io/developer/architecture/controllers/control-plane.html#crd-contracts) and [Bootstrap provider](https://cluster-api.sigs.k8s.io/developer/providers/bootstrap.html). For example [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
 
-## Getting Started
+## Quick Start
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
 ### Running on the cluster
-1. Install Instances of Custom Resources:
+1. Initialize Management cluster
+
+for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#initialize-the-management-cluster
 
 ```sh
-kubectl apply -f config/samples/
+# install cluster-api crd including controlplane provider & bootstrap provider
+clusterctl init
+
+# install cluster-api-provider-proxmox crd & controller
+make deploy
 ```
-
-2. Build and push your image to the location specified by `IMG`:
-
+2. Create your first workload cluster
 ```sh
-make docker-build docker-push IMG=<some-registry>/cluster-api-provider-proxmox:tag
+# cluster & infra cluster
+kubectl apply -f config/samples/cluster.yaml
+kubectl apply -f config/samples/infrastructure_v1beta1_proxmoxcluster.yaml
+
+# controlplane
+kubectl apply -f config/samples/controlplane.yaml
+
+# machine & bootstrap & infra machine
+kubectl apply -f config/samples/machine.yaml
+kubectl apply -f config/samples/bootstrap.yaml
+kubectl apply -f config/samples/infrastructure_v1beta1_proxmoxcluster.yaml
+
+# proxmox configs
+kubetl apply -f <your-proxmox-config-secret>.yaml
 ```
 
-3. Deploy the controller to the cluster with the image specified by `IMG`:
-
-```sh
-make deploy IMG=<some-registry>/cluster-api-provider-proxmox:tag
+You need to provider your proxmox information through secret. 
+```yaml
+# <your-proxmox-config-secret>.yaml
+apiVersion: v1
+data:
+  PROXMOX_PASSWORD: "<base 64>"
+  PROXMOX_USER: "<base 64>"
+  PROXMOX_URL: "<base 64>"
+  NODE_URL: "<base 64>"
+  NODE_USER: "<base 64>"
+  NODE_PASSWORD: "<base 64>"
+kind: Secret
+metadata:
+  name: proxmoxcluster-sample
+type: Opaque
 ```
 
-### Uninstall CRDs
-To delete the CRDs from the cluster:
+## How it works
+This project aims to follow the Cluster API [Provider contract](https://cluster-api.sigs.k8s.io/developer/providers/contracts.html).
 
-```sh
-make uninstall
-```
+### Proxmox Cluster Controller
 
-### Undeploy controller
-UnDeploy the controller from the cluster:
+[ ] Create controlplane load balancer
 
-```sh
-make undeploy
-```
+[ ] Create proxmox storage
+
+[ ] Delete controlplane load balancer
+
+[ ] Delete proxmox storage
+
+### Proxmox Machine Controller
+
+[x] Create virtual machine instance
+
+[x] Boot virtual machine instance with provided bootstrap secret (see: [bootstrap provider specificatio](https://cluster-api.sigs.k8s.io/developer/providers/bootstrap.html#bootstrap-provider-specification) for how bootstrap works)
+
+[ ] Register virtual machine instance with Controlplane load balancer
+
+[ ] Delete virtual machine instance
+
+[ ] Un-register virtual machine instance with Controlplane load balancer
 
 ## Contributing
 // TODO(user): Add detailed information on how you would like others to contribute to this project
-
-### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
-
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/),
-which provide a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster.
-
-### Test It Out
-1. Install the CRDs into the cluster:
-
-```sh
-make install
-```
-
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
-
-```sh
-make run
-```
-
-**NOTE:** You can also run this in one step by running: `make install run`
 
 ### Modifying the API definitions
 If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
