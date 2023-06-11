@@ -65,7 +65,7 @@ This project aims to follow the Cluster API [Provider contract](https://cluster-
 
 - [ ] Create controlplane load balancer
 
-- [ ] Create proxmox storage
+- [x] Create proxmox storage
 
 - [ ] Delete controlplane load balancer
 
