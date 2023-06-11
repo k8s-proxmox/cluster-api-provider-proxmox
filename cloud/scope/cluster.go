@@ -85,8 +85,24 @@ func (s *ClusterScope) Name() string {
 	return s.Cluster.Name
 }
 
+func (s *ClusterScope) Namespace() string {
+	return s.Cluster.Namespace
+}
+
+func (s *ClusterScope) ControlPlaneEndpoint() clusterv1.APIEndpoint {
+	return s.ProxmoxCluster.Spec.ControlPlaneEndpoint
+}
+
+func (s *ClusterScope) Storage() infrav1.Storage {
+	return s.ProxmoxCluster.Spec.Storage
+}
+
 func (s *ClusterScope) CloudClient() *service.Service {
 	return s.ProxmoxServices.Compute
+}
+
+func (s *ClusterScope) RemoteClient() *SSHClient {
+	return s.ProxmoxServices.Remote
 }
 
 func (s *ClusterScope) Close() error {
@@ -95,6 +111,10 @@ func (s *ClusterScope) Close() error {
 
 func (s *ClusterScope) SetReady() {
 	s.ProxmoxCluster.Status.Ready = true
+}
+
+func (s *ClusterScope) SetControlPlaneEndpoint(endpoint clusterv1.APIEndpoint) {
+	s.ProxmoxCluster.Spec.ControlPlaneEndpoint = endpoint
 }
 
 // PatchObject persists the cluster configuration and status.

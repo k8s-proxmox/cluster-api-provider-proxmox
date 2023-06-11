@@ -20,10 +20,6 @@ import (
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
-const (
-	vmStorage = "local-capi" // to do
-)
-
 func (s *Service) Reconcile(ctx context.Context) error {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling instance resources")
@@ -119,23 +115,23 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 	}
 
 	// cloud init snippet // to do ssh key
-	if err := setCloudConfig(ctx, s.scope.Name(), bootstrap, s.remote); err != nil {
+	if err := setCloudConfig(ctx, s.scope.Name(), s.scope.GetStorage().Name, bootstrap, s.remote); err != nil {
 		return nil, err
 	}
 
 	// create vm
-	vmoption := generateVMOptions(s.scope.Name(), vmStorage)
+	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name)
 	vm, err := node.CreateVirtualMachine(vmid, vmoption)
 	if err != nil {
 		log.Error(err, "failed to create virtual machine")
 		return nil, err
 	}
 
-	if err := applyCICustom(vmid, s.scope.Name(), vmStorage, s.remote); err != nil {
+	if err := applyCICustom(vmid, s.scope.Name(), s.scope.GetStorage().Name, s.remote); err != nil {
 		return nil, err
 	}
 
-	if err := setCloudImage(ctx, vmid, s.remote); err != nil {
+	if err := setCloudImage(ctx, vmid, s.scope.GetStorage().Name, s.remote); err != nil {
 		return nil, err
 	}
 
@@ -188,7 +184,7 @@ func (s *Service) Delete(ctx context.Context) error {
 	return instance.Delete()
 }
 
-func setCloudImage(ctx context.Context, vmid int, ssh scope.SSHClient) error {
+func setCloudImage(ctx context.Context, vmid int, storageName string, ssh scope.SSHClient) error {
 	log := log.FromContext(ctx)
 	log.Info("setting cloud image")
 
@@ -199,7 +195,7 @@ func setCloudImage(ctx context.Context, vmid int, ssh scope.SSHClient) error {
 	// 	return nil, errors.Errorf("failed to download image")
 	// }
 
-	destPath := fmt.Sprintf("/var/lib/vz/%s/images/%d/vm-%d-disk-0.raw", vmStorage, vmid, vmid)
+	destPath := fmt.Sprintf("/var/lib/vz/%s/images/%d/vm-%d-disk-0.raw", storageName, vmid, vmid)
 	out, err = ssh.RunCommand(fmt.Sprintf("/usr/bin/qemu-img convert -O raw /root/jammy-server-cloudimg-amd64-disk-kvm.img %s", destPath))
 	if err != nil {
 		return err
@@ -209,7 +205,7 @@ func setCloudImage(ctx context.Context, vmid int, ssh scope.SSHClient) error {
 	return nil
 }
 
-func setCloudConfig(ctx context.Context, vmName, bootstrap string, ssh scope.SSHClient) error {
+func setCloudConfig(ctx context.Context, vmName, storageName, bootstrap string, ssh scope.SSHClient) error {
 	log := log.FromContext(ctx)
 	log.Info("setting cloud config")
 
@@ -226,7 +222,7 @@ func setCloudConfig(ctx context.Context, vmName, bootstrap string, ssh scope.SSH
 	log.Info(configYaml)
 
 	// to do: should be set via API
-	out, err := ssh.RunWithStdin(fmt.Sprintf("tee /var/lib/vz/%s/snippets/%s.yml", vmStorage, vmName), configYaml)
+	out, err := ssh.RunWithStdin(fmt.Sprintf("tee /var/lib/vz/%s/snippets/%s.yml", storageName, vmName), configYaml)
 	if err != nil {
 		return errors.Errorf("ssh command error : %s : %v", out, err)
 	}

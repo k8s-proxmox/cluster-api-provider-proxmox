@@ -87,6 +87,10 @@ func (m *MachineScope) RemoteClient() *SSHClient {
 	return m.ClusterGetter.Remote
 }
 
+func (m *MachineScope) GetStorage() infrav1.Storage {
+	return m.ClusterGetter.ProxmoxCluster.Spec.Storage
+}
+
 func (m *MachineScope) Name() string {
 	return m.ProxmoxMachine.Name
 }

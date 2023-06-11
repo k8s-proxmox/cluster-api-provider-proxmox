@@ -52,11 +52,6 @@ type ProxmoxMachineSpec struct {
 	Foo string `json:"foo,omitempty"`
 }
 
-// CloudInit defines options related to the bootstrapping systems where
-// CloudInit is used.
-type CloudInit struct {
-}
-
 // ProxmoxMachineStatus defines the observed state of ProxmoxMachine
 type ProxmoxMachineStatus struct {
 	// Ready is true when the provider resource is ready.

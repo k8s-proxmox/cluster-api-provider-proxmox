@@ -16,6 +16,16 @@ type ObjectReference struct {
 	Name string `json:"name"`
 }
 
+// CloudInit defines options related to the bootstrapping systems where
+// CloudInit is used.
+type CloudInit struct {
+}
+
+type Storage struct {
+	Name string `json:"name"`
+	Path string `json:"path,omitempty"`
+}
+
 type InstanceStatus string
 
 var (

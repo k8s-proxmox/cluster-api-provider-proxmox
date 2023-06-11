@@ -35,7 +35,8 @@ import (
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
-	// "github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/vm"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/loadbalancer"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/storage"
 )
 
 // ProxmoxClusterReconciler reconciles a ProxmoxCluster object
@@ -118,7 +119,8 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 	// to do
 
 	reconcilers := []cloud.Reconciler{
-		// to do
+		storage.NewService(clusterScope),
+		loadbalancer.NewService(clusterScope),
 	}
 
 	for _, r := range reconcilers {
@@ -129,8 +131,7 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 		}
 	}
 
-	// controlPlaneEndpoint := clusterScope.ControlPlaneEndpoint()
-	controlPlaneEndpoint := clusterScope.Cluster.Spec.ControlPlaneEndpoint
+	controlPlaneEndpoint := clusterScope.ControlPlaneEndpoint()
 	if controlPlaneEndpoint.Host == "" {
 		log.Info("ProxmoxCluster does not have control-plane endpoint yet. Reconciling")
 		record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Waiting for control-plane endpoint")

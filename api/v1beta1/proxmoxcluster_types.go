@@ -37,8 +37,8 @@ type ProxmoxClusterSpec struct {
 
 	CredentialsRef *ObjectReference `json:"credentialsRef"`
 
-	// Foo is an example field of ProxmoxCluster. Edit proxmoxcluster_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// storage is for proxmox storage used by vm instances
+	Storage Storage `json:"storage"`
 }
 
 // ProxmoxClusterStatus defines the observed state of ProxmoxCluster

@@ -36,7 +36,8 @@ type ClusterGetter interface {
 	// Network() *infrav1.Network
 	// AdditionalLabels() infrav1.Labels
 	// FailureDomains() clusterv1.FailureDomains
-	// ControlPlaneEndpoint() clusterv1.APIEndpoint
+	ControlPlaneEndpoint() clusterv1.APIEndpoint
+	Storage() infrav1.Storage
 }
 
 type ClusterSettter interface {
@@ -56,6 +57,7 @@ type MachineGetter interface {
 	GetProviderID() string
 	GetBootstrapData() (string, error)
 	GetInstanceStatus() *infrav1.InstanceStatus
+	GetStorage() infrav1.Storage
 }
 
 // MachineSetter is an interface which can set machine information.

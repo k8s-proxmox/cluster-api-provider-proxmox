@@ -36,7 +36,6 @@ import (
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/instance"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/storage"
 )
 
 // ProxmoxMachineReconciler reconciles a ProxmoxMachine object
@@ -150,7 +149,6 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 	}
 
 	reconcilers := []cloud.Reconciler{
-		storage.NewService(machineScope),
 		instance.NewService(machineScope),
 	}
 
