@@ -139,6 +139,10 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 		return nil, err
 	}
 
+	if err := vm.ResizeVolume("scsi0", "+30G"); err != nil {
+		return nil, err
+	}
+
 	if err := ensureRunning(*vm); err != nil {
 		return nil, err
 	}
