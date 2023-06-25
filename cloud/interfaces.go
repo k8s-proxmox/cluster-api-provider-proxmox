@@ -38,10 +38,12 @@ type ClusterGetter interface {
 	// FailureDomains() clusterv1.FailureDomains
 	ControlPlaneEndpoint() clusterv1.APIEndpoint
 	Storage() infrav1.Storage
+	LoadBalancer() infrav1.LoadBalancer
 }
 
 type ClusterSettter interface {
 	SetControlPlaneEndpoint(endpoint clusterv1.APIEndpoint)
+	SetStorage(storage infrav1.Storage)
 }
 
 // MachineGetter is an interface which can get machine information.

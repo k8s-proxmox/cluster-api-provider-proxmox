@@ -31,50 +31,49 @@ func (s *Service) Delete(ctx context.Context) error {
 func (s *Service) createOrGetStorage(ctx context.Context) error {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling vm storage")
-	if err := s.getStorage(); err != nil {
+
+	opts := generateVMStorageOptions(s.scope)
+	if err := s.getStorage(opts.Storage); err != nil {
 		if api.IsNotFound(err) {
-			if err := s.createStorage(); err != nil {
+			if err := s.createStorage(opts); err != nil {
 				return err
 			}
 		}
 		return err
 	}
+
+	s.scope.SetStorage(infrav1.Storage{Name: opts.Storage, Path: opts.Path})
 	return nil
 }
 
-func (s *Service) getStorage() error {
-	storageSpec := s.scope.Storage()
-	if _, err := s.client.Storage(storageSpec.Name); err != nil {
+func (s *Service) getStorage(name string) error {
+	if _, err := s.client.Storage(name); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Service) createStorage() error {
-	storageSpec := s.scope.Storage()
-	opts := storage.StorageCreateOptions{
-		Content: "images,snippets",
-		Mkdir:   true,
-		Path:    generateStoragePath(storageSpec),
-	}
-	if _, err := s.client.CreateStorage(storageSpec.Name, "dif", opts); err != nil {
+func (s *Service) createStorage(options storage.StorageCreateOptions) error {
+	if _, err := s.client.CreateStorage(options.Storage, options.StorageType, options); err != nil {
 		return err
 	}
 	return nil
 }
 
-func generateStoragePath(storage infrav1.Storage) string {
-	if storage.Path == "" {
-		return fmt.Sprintf("%s/%s", defaultBasePath, storage.Name)
-	}
-	return storage.Path
-}
-
-func defaultVMStorageOptions(name string) storage.StorageCreateOptions {
+func generateVMStorageOptions(scope Scope) storage.StorageCreateOptions {
+	storageSpec := scope.Storage()
 	options := storage.StorageCreateOptions{
-		Content: "images,snippets",
-		Mkdir:   true,
-		Path:    defaultBasePath + "/" + name,
+		Storage:     storageSpec.Name,
+		StorageType: "dir",
+		Content:     "images,snippets",
+		Mkdir:       true,
+		Path:        storageSpec.Path,
+	}
+	if options.Storage == "" {
+		options.Storage = fmt.Sprintf("local-dir-%s", scope.Name())
+	}
+	if options.Path == "" {
+		options.Path = fmt.Sprintf("%s/%s", defaultBasePath, options.Storage)
 	}
 	return options
 }
