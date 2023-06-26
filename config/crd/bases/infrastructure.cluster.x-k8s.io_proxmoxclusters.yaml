@@ -64,12 +64,19 @@ spec:
                 - name
                 - namespace
                 type: object
-              foo:
-                description: Foo is an example field of ProxmoxCluster. Edit proxmoxcluster_types.go
-                  to remove/update
-                type: string
+              storage:
+                description: storage is for proxmox storage used by vm instances
+                properties:
+                  name:
+                    type: string
+                  path:
+                    type: string
+                required:
+                - name
+                type: object
             required:
             - credentialsRef
+            - storage
             type: object
           status:
             description: ProxmoxClusterStatus defines the observed state of ProxmoxCluster

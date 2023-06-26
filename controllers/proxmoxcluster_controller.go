@@ -35,7 +35,6 @@ import (
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/loadbalancer"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/storage"
 )
 
@@ -115,12 +114,8 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 		return ctrl.Result{}, err
 	}
 
-	// failure domains
-	// to do
-
 	reconcilers := []cloud.Reconciler{
 		storage.NewService(clusterScope),
-		loadbalancer.NewService(clusterScope),
 	}
 
 	for _, r := range reconcilers {

@@ -97,10 +97,6 @@ func (s *ClusterScope) Storage() infrav1.Storage {
 	return s.ProxmoxCluster.Spec.Storage
 }
 
-func (s *ClusterScope) LoadBalancer() infrav1.LoadBalancer {
-	return s.ProxmoxCluster.Spec.LoadBalancer
-}
-
 func (s *ClusterScope) CloudClient() *service.Service {
 	return s.ProxmoxServices.Compute
 }

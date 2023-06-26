@@ -127,11 +127,11 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 		return nil, err
 	}
 
-	if err := applyCICustom(vmid, s.scope.Name(), s.scope.GetStorage().Name, s.remote); err != nil {
+	if err := ApplyCICustom(vmid, s.scope.Name(), s.scope.GetStorage().Name, s.remote); err != nil {
 		return nil, err
 	}
 
-	if err := setCloudImage(ctx, vmid, s.scope.GetStorage().Name, s.remote); err != nil {
+	if err := SetCloudImage(ctx, vmid, s.scope.GetStorage().Name, s.remote); err != nil {
 		return nil, err
 	}
 
@@ -139,7 +139,7 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 		return nil, err
 	}
 
-	if err := ensureRunning(*vm); err != nil {
+	if err := EnsureRunning(*vm); err != nil {
 		return nil, err
 	}
 	return vm, nil
@@ -184,7 +184,7 @@ func (s *Service) Delete(ctx context.Context) error {
 	return instance.Delete()
 }
 
-func setCloudImage(ctx context.Context, vmid int, storageName string, ssh scope.SSHClient) error {
+func SetCloudImage(ctx context.Context, vmid int, storageName string, ssh scope.SSHClient) error {
 	log := log.FromContext(ctx)
 	log.Info("setting cloud image")
 
@@ -229,7 +229,7 @@ func setCloudConfig(ctx context.Context, vmName, storageName, bootstrap string, 
 	return nil
 }
 
-func applyCICustom(vmid int, vmName, storageName string, ssh scope.SSHClient) error {
+func ApplyCICustom(vmid int, vmName, storageName string, ssh scope.SSHClient) error {
 	cicustom := fmt.Sprintf("user=%s:snippets/%s.yml", storageName, vmName)
 	out, err := ssh.RunCommand(fmt.Sprintf("qm set %d --cicustom '%s'", vmid, cicustom))
 	if err != nil {
@@ -241,19 +241,19 @@ func applyCICustom(vmid int, vmName, storageName string, ssh scope.SSHClient) er
 
 func generateVMOptions(vmName, storageName string) vm.VirtualMachineCreateOptions {
 	vmoptions := vm.VirtualMachineCreateOptions{
-		Agent:    "enabled=1",
-		Cores:    2,
-		Memory:   1024 * 4,
-		Name:     vmName,
-		Boot:     "order=scsi0",
-		Ide:      vm.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
-		IPConfig: vm.IPConfig{IPConfig0: "ip=dhcp"},
-		OSType:   vm.L26,
-		Net:      vm.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
-		Scsi:     vm.Scsi{Scsi0: fmt.Sprintf("file=%s:16", storageName)},
-		ScsiHw:   vm.VirtioScsiPci,
-		Serial:   vm.Serial{Serial0: "socket"},
-		VGA:      "serial0",
+		Agent:  "enabled=1",
+		Cores:  2,
+		Memory: 1024 * 4,
+		Name:   vmName,
+		Boot:   "order=scsi0",
+		Ide:    vm.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
+		// IPConfig: vm.IPConfig{IPConfig0: "ip=dhcp"},
+		OSType: vm.L26,
+		Net:    vm.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
+		Scsi:   vm.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},
+		ScsiHw: vm.VirtioScsiPci,
+		Serial: vm.Serial{Serial0: "socket"},
+		VGA:    "serial0",
 	}
 	return vmoptions
 }
@@ -267,7 +267,7 @@ func sshKeyUrlEncode(keys string) (encodedKeys string) {
 	return
 }
 
-func ensureRunning(instance vm.VirtualMachine) error {
+func EnsureRunning(instance vm.VirtualMachine) error {
 	// ensure instance is running
 	switch instance.Status {
 	case vm.ProcessStatusRunning:
@@ -286,6 +286,6 @@ func ensureRunning(instance vm.VirtualMachine) error {
 	return nil
 }
 
-// func ensureStopped(instance vm.VirtualMachine) error {
+// func EnsureStopped(instance vm.VirtualMachine) error {
 // 	return nil
 // }

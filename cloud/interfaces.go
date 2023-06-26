@@ -38,7 +38,6 @@ type ClusterGetter interface {
 	// FailureDomains() clusterv1.FailureDomains
 	ControlPlaneEndpoint() clusterv1.APIEndpoint
 	Storage() infrav1.Storage
-	LoadBalancer() infrav1.LoadBalancer
 }
 
 type ClusterSettter interface {
