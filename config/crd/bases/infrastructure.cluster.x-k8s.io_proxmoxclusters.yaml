@@ -16,7 +16,7 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.controlPlaneEndpoint
+    - jsonPath: .spec.controlPlaneEndpoint.host
       name: ControlPlaneEndpoint
       type: string
     - jsonPath: .status.ready

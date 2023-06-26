@@ -46,6 +46,10 @@ type ProxmoxMachineSpec struct {
 	// +optional
 	CloudInit CloudInit `json:"cloudInit,omitempty"`
 
+	// IPConfig
+	// to do : should accept multiple IPConfig
+	IPConfig IPConfig `json:"ipConfig,omitempty"`
+
 	// FailureDomain is the failure domain unique identifier this Machine should be attached to, as defined in Cluster API.
 	// For this infrastructure provider, the ID is equivalent to an AWS Availability Zone.
 	// If multiple subnets are matched for the availability zone, the first one returned is picked.

@@ -3,9 +3,12 @@ package v1beta1
 // CloudInit defines options related to the bootstrapping systems where
 // CloudInit is used.
 type CloudInit struct {
-	User    User    `json:"user,omitempty"`
-	Meta    Meta    `json:"meta,omitempty"`
-	Network Network `json:"network,omitempty"`
+	User *User `json:"user,omitempty"`
+
+	// Meta *Meta `json:"-"`
+
+	// DEPRECATED : use IPConfig instead
+	Network *Network `json:"-"`
 }
 
 type User struct {
@@ -23,23 +26,24 @@ type User struct {
 }
 
 type Network struct {
-	Version int             `json:"version,omitempty"`
-	Config  []NetworkConfig `json:"config,omitempty"`
+	Version int             `yaml:"version,omitempty" json:"version,omitempty"`
+	Config  []NetworkConfig `yaml:"config,omitempty" json:"config,omitempty"`
 }
 
 type NetworkConfig struct {
-	Type        string   `json:"type,omitempty"`
-	Name        string   `json:"name,omitempty"`
-	MacAddress  string   `json:"mac_address,omitempty"`
-	Subnets     []Subnet `json:"subnets,omitempty"`
-	Destination string   `json:"destination,omitempty"`
-	Gateway     string   `json:"gateway,omitempty"`
+	Type        string   `yaml:"type,omitempty" json:"type,omitempty"`
+	Name        string   `yaml:"name,omitempty" json:"name,omitempty"`
+	MacAddress  string   `yaml:"mac_address,omitempty" json:"mac_address,omitempty"`
+	Subnets     []Subnet `yaml:"subnets,omitempty" json:"subnets,omitempty"`
+	Destination string   `yaml:"destination,omitempty" json:"destination,omitempty"`
+	Gateway     string   `yaml:"gateway,omitempty" json:"gateway,omitempty"`
 }
 
 type Subnet struct {
-	Type    string `json:"type,omitempty"`
-	Address string `json:"address,omitempty"`
-	Gateway string `json:"gateway,omitempty"`
+	Type    string `yaml:"type,omitempty" json:"type,omitempty"`
+	Address string `yaml:"address,omitempty" json:"address,omitempty"`
+	NetMask string `yaml:"netmask,omitempty" json:"netmask,omitempty"`
+	Gateway string `yaml:"gateway,omitempty" json:"gateway,omitempty"`
 }
 
 type Meta struct {

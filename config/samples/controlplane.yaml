@@ -20,28 +20,7 @@ spec:
       kind: ProxmoxMachineTemplate
       name: proxmoxcluster-controlplane
   replicas: 1
-  version: v1.21.2
-
----
-
-# apiVersion: cluster.x-k8s.io/v1beta1
-# kind: Machine
-# metadata:
-#   name: proxmoxcluster-controlplane
-#   labels:
-#     cluster.x-k8s.io/cluster-name: proxmoxcluster-sample
-#     cluster.x-k8s.io/control-plane: "true"
-# spec:
-#   clusterName: proxmoxcluster-sample
-#   infrastructureRef:
-#     apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-#     kind: ProxmoxMachineTemplate
-#     name: proxmoxcluster-controlplane
-#   bootstrap:
-#     configRef:
-#       apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
-#       kind: KubeadmConfig
-#       name: proxmoxcluster-controlplane
+  version: v1.26.5
 
 ---
 
@@ -58,21 +37,12 @@ metadata:
 spec:
   template:
     spec:
-      providerID: ""
-      failureDomain: ""
-
----
-
-# apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
-# kind: KubeadmConfig
-# metadata:
-#   name: proxmoxcluster-controlplane
-# spec:
-#   initConfiguration:
-#     nodeRegistration:
-#       kubeletExtraArgs:
-#         eviction-hard: nodefs.available<0%,nodefs.inodesFree<0%,imagefs.available<0%
-#   clusterConfiguration:
-#     controllerManager:
-#       extraArgs:
-#         enable-hostpath-provisioner: "true"
+      # image:
+      #   url: "dummy"
+      cloudInit:
+        user:
+          user: ubnt
+          password: ubnt
+      ipConfig:
+        gateway: 192.168.1.1
+        ip: 192.168.1.222/32

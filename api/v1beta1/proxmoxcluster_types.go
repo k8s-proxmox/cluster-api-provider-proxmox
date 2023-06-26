@@ -55,7 +55,7 @@ type ProxmoxClusterStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="ControlPlaneEndpoint",type=string,JSONPath=`.spec.controlPlaneEndpoint`
+// +kubebuilder:printcolumn:name="ControlPlaneEndpoint",type=string,JSONPath=`.spec.controlPlaneEndpoint.host`
 // +kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.ready`
 
 // ProxmoxCluster is the Schema for the proxmoxclusters API

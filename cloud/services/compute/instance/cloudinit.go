@@ -4,12 +4,10 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"k8s.io/klog/v2"
-
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/cloudinit"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/cloudinit"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
 // reconcileCloudInit
@@ -18,18 +16,10 @@ func reconcileCloudInit(s *Service, vmid int, bootstrap string) error {
 	storageName := s.scope.GetStorage().Name
 	cloudInit := s.scope.GetCloudInit()
 
-	klog.Info(cloudInit)
-
 	// user
-	if err := reconcileCloudInitUser(vmid, vmName, storageName, bootstrap, cloudInit.User, s.remote); err != nil {
+	if err := reconcileCloudInitUser(vmid, vmName, storageName, bootstrap, *cloudInit.User, s.remote); err != nil {
 		return err
 	}
-
-	// meta & network
-	if err := reconcileCloudInitConfig(vmid, vmName, storageName, cloudInit, s.remote); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -59,25 +49,21 @@ func reconcileCloudInitUser(vmid int, vmName, storageName, bootstrap string, con
 		return errors.Errorf("ssh command error : %s : %v", out, err)
 	}
 
-	if err := ApplyCICustom(vmid, vmName, storageName, "user", ssh); err != nil {
-		return err
-	}
 	return nil
 }
 
+// DEPRECATED : network can be configured via API with ipconfig params
 func reconcileCloudInitConfig(vmid int, vmName, storageName string, cloudInit infrav1.CloudInit, ssh scope.SSHClient) error {
-	klog.Info(cloudInit.Network)
 
-	networkYaml, err := cloudinit.GenerateNetworkYaml(cloudInit.Network)
-	if err != nil {
-		return err
-	}
-	out, err := ssh.RunWithStdin(fmt.Sprintf("tee /var/lib/vz/%s/snippets/%s-network.yml", storageName, vmName), networkYaml)
-	if err != nil {
-		return errors.Errorf("ssh command error : %s : %v", out, err)
-	}
-	if err := ApplyCICustom(vmid, vmName, storageName, "network", ssh); err != nil {
-		return err
+	if cloudInit.Network != nil {
+		networkYaml, err := cloudinit.GenerateNetworkYaml(*cloudInit.Network)
+		if err != nil {
+			return err
+		}
+		out, err := ssh.RunWithStdin(fmt.Sprintf("tee /var/lib/vz/%s/snippets/%s-network.yml", storageName, vmName), networkYaml)
+		if err != nil {
+			return errors.Errorf("ssh command error : %s : %v", out, err)
+		}
 	}
 
 	// if meta != nil {
@@ -89,14 +75,12 @@ func reconcileCloudInitConfig(vmid int, vmName, storageName string, cloudInit in
 	// 	if err != nil {
 	// 		return errors.Errorf("ssh command error : %s : %v", out, err)
 	// 	}
-	// 	if err := ApplyCICustom(vmid, vmName, storageName, "meta", ssh); err != nil {
-	// 		return err
-	// 	}
 	// }
 
 	return nil
 }
 
+// DEPRECATED : cicustom should be set via API
 func ApplyCICustom(vmid int, vmName, storageName, ciType string, ssh scope.SSHClient) error {
 	if !cloudinit.IsValidType(ciType) {
 		return errors.Errorf("invalid cloud init type: %s", ciType)

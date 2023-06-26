@@ -49,39 +49,6 @@ spec:
                 description: CloudInit defines options related to the bootstrapping
                   systems where CloudInit is used.
                 properties:
-                  meta:
-                    type: object
-                  network:
-                    properties:
-                      config:
-                        items:
-                          properties:
-                            destination:
-                              type: string
-                            gateway:
-                              type: string
-                            mac_address:
-                              type: string
-                            name:
-                              type: string
-                            subnets:
-                              items:
-                                properties:
-                                  address:
-                                    type: string
-                                  gateway:
-                                    type: string
-                                  type:
-                                    type: string
-                                type: object
-                              type: array
-                            type:
-                              type: string
-                          type: object
-                        type: array
-                      version:
-                        type: integer
-                    type: object
                   user:
                     properties:
                       password:
@@ -97,6 +64,14 @@ spec:
                   Zone. If multiple subnets are matched for the availability zone,
                   the first one returned is picked.
                 type: string
+              ipConfig:
+                description: 'IPConfig to do : should accept multiple IPConfig'
+                properties:
+                  gateway:
+                    type: string
+                  ip:
+                    type: string
+                type: object
               providerID:
                 description: ProviderID
                 type: string
