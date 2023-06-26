@@ -38,6 +38,9 @@ type ProxmoxMachineSpec struct {
 	// ProviderID
 	ProviderID *string `json:"providerID,omitempty"`
 
+	// Image is the image to be provisioned
+	// Image Image `json:"image"`
+
 	// CloudInit defines options related to the bootstrapping systems where
 	// CloudInit is used.
 	// +optional
@@ -47,9 +50,6 @@ type ProxmoxMachineSpec struct {
 	// For this infrastructure provider, the ID is equivalent to an AWS Availability Zone.
 	// If multiple subnets are matched for the availability zone, the first one returned is picked.
 	FailureDomain *string `json:"failureDomain,omitempty"`
-
-	// Foo is an example field of ProxmoxMachine. Edit proxmoxmachine_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
 }
 
 // ProxmoxMachineStatus defines the observed state of ProxmoxMachine
@@ -72,11 +72,14 @@ type ProxmoxMachineStatus struct {
 
 	// InstanceStatus is the status of the GCP instance for this machine.
 	// +optional
-	InstanceStatus *InstanceStatus `json:"instanceState,omitempty"` // InstanceStatus
+	InstanceStatus *InstanceStatus `json:"instanceStatus,omitempty"` // InstanceStatus
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Addresses",type=string,JSONPath=`.status.addresses`
+// +kubebuilder:printcolumn:name="ProviderID",type=string,JSONPath=`.spec.providerID`
+// +kubebuilder:printcolumn:name="InstanceStatus",type=string,JSONPath=`.status.instanceStatus`
 
 // ProxmoxMachine is the Schema for the proxmoxmachines API
 type ProxmoxMachine struct {

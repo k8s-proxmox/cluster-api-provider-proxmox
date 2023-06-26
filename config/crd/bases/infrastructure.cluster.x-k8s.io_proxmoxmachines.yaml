@@ -15,7 +15,17 @@ spec:
     singular: proxmoxmachine
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .status.addresses
+      name: Addresses
+      type: string
+    - jsonPath: .spec.providerID
+      name: ProviderID
+      type: string
+    - jsonPath: .status.instanceStatus
+      name: InstanceStatus
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: ProxmoxMachine is the Schema for the proxmoxmachines API
@@ -38,6 +48,47 @@ spec:
               cloudInit:
                 description: CloudInit defines options related to the bootstrapping
                   systems where CloudInit is used.
+                properties:
+                  meta:
+                    type: object
+                  network:
+                    properties:
+                      config:
+                        items:
+                          properties:
+                            destination:
+                              type: string
+                            gateway:
+                              type: string
+                            mac_address:
+                              type: string
+                            name:
+                              type: string
+                            subnets:
+                              items:
+                                properties:
+                                  address:
+                                    type: string
+                                  gateway:
+                                    type: string
+                                  type:
+                                    type: string
+                                type: object
+                              type: array
+                            type:
+                              type: string
+                          type: object
+                        type: array
+                      version:
+                        type: integer
+                    type: object
+                  user:
+                    properties:
+                      password:
+                        type: string
+                      user:
+                        type: string
+                    type: object
                 type: object
               failureDomain:
                 description: FailureDomain is the failure domain unique identifier
@@ -45,10 +96,6 @@ spec:
                   this infrastructure provider, the ID is equivalent to an AWS Availability
                   Zone. If multiple subnets are matched for the availability zone,
                   the first one returned is picked.
-                type: string
-              foo:
-                description: Foo is an example field of ProxmoxMachine. Edit proxmoxmachine_types.go
-                  to remove/update
                 type: string
               providerID:
                 description: ProviderID
@@ -126,7 +173,7 @@ spec:
               failureReason:
                 description: FailureReason
                 type: string
-              instanceState:
+              instanceStatus:
                 description: InstanceStatus is the status of the GCP instance for
                   this machine.
                 type: string

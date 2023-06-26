@@ -13,7 +13,6 @@ import (
 	"github.com/sp-yduck/proxmox/pkg/api"
 	"github.com/sp-yduck/proxmox/pkg/service/node"
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -114,11 +113,6 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 		return nil, err
 	}
 
-	// cloud init snippet // to do ssh key
-	if err := setCloudConfig(ctx, s.scope.Name(), s.scope.GetStorage().Name, bootstrap, s.remote); err != nil {
-		return nil, err
-	}
-
 	// create vm
 	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name)
 	vm, err := node.CreateVirtualMachine(vmid, vmoption)
@@ -127,18 +121,22 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 		return nil, err
 	}
 
-	if err := ApplyCICustom(vmid, s.scope.Name(), s.scope.GetStorage().Name, s.remote); err != nil {
+	// cloud init
+	if err := reconcileCloudInit(s, vmid, bootstrap); err != nil {
 		return nil, err
 	}
 
+	// os image
 	if err := SetCloudImage(ctx, vmid, s.scope.GetStorage().Name, s.remote); err != nil {
 		return nil, err
 	}
 
+	// volume
 	if err := vm.ResizeVolume("scsi0", "+30G"); err != nil {
 		return nil, err
 	}
 
+	// vm status
 	if err := EnsureRunning(*vm); err != nil {
 		return nil, err
 	}
@@ -205,40 +203,6 @@ func SetCloudImage(ctx context.Context, vmid int, storageName string, ssh scope.
 	return nil
 }
 
-func setCloudConfig(ctx context.Context, vmName, storageName, bootstrap string, ssh scope.SSHClient) error {
-	log := log.FromContext(ctx)
-	log.Info("setting cloud config")
-
-	base := baseUserConfig(vmName)
-	bootstrapConfig := ParseUserConfig(bootstrap)
-	cloudConfig, err := MergeUserConfigs(base, bootstrapConfig)
-	if err != nil {
-		return err
-	}
-	configYaml, err := GenerateUserConfigYaml(*cloudConfig)
-	if err != nil {
-		return err
-	}
-	log.Info(configYaml)
-
-	// to do: should be set via API
-	out, err := ssh.RunWithStdin(fmt.Sprintf("tee /var/lib/vz/%s/snippets/%s.yml", storageName, vmName), configYaml)
-	if err != nil {
-		return errors.Errorf("ssh command error : %s : %v", out, err)
-	}
-	return nil
-}
-
-func ApplyCICustom(vmid int, vmName, storageName string, ssh scope.SSHClient) error {
-	cicustom := fmt.Sprintf("user=%s:snippets/%s.yml", storageName, vmName)
-	out, err := ssh.RunCommand(fmt.Sprintf("qm set %d --cicustom '%s'", vmid, cicustom))
-	if err != nil {
-		return errors.Errorf("ssh command error : %s : %v", out, err)
-	}
-	klog.Info(out)
-	return nil
-}
-
 func generateVMOptions(vmName, storageName string) vm.VirtualMachineCreateOptions {
 	vmoptions := vm.VirtualMachineCreateOptions{
 		Agent:  "enabled=1",
@@ -247,7 +211,7 @@ func generateVMOptions(vmName, storageName string) vm.VirtualMachineCreateOption
 		Name:   vmName,
 		Boot:   "order=scsi0",
 		Ide:    vm.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
-		// IPConfig: vm.IPConfig{IPConfig0: "ip=dhcp"},
+		// IPConfig: vm.IPConfig{IPConfig0: "ip=192.168.1.222/32,gw=192.168.1.1"},
 		OSType: vm.L26,
 		Net:    vm.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
 		Scsi:   vm.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},

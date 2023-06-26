@@ -15,7 +15,14 @@ spec:
     singular: proxmoxcluster
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.controlPlaneEndpoint
+      name: ControlPlaneEndpoint
+      type: string
+    - jsonPath: .status.ready
+      name: Ready
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: ProxmoxCluster is the Schema for the proxmoxclusters API

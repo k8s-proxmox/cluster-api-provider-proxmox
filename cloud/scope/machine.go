@@ -23,6 +23,7 @@ import (
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
@@ -149,6 +150,11 @@ func (m *MachineScope) GetProviderID() string {
 		return *m.ProxmoxMachine.Spec.ProviderID
 	}
 	return ""
+}
+
+func (m *MachineScope) GetCloudInit() infrav1.CloudInit {
+	klog.Info(m.ProxmoxMachine.Spec.CloudInit)
+	return m.ProxmoxMachine.Spec.CloudInit
 }
 
 // SetProviderID sets the ProxmoxMachine providerID in spec.

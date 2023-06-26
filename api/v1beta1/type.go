@@ -16,11 +16,19 @@ type ObjectReference struct {
 	Name string `json:"name"`
 }
 
-// CloudInit defines options related to the bootstrapping systems where
-// CloudInit is used.
-type CloudInit struct {
-}
+// Image is the image to be provisioned
+// type Image struct {
+// 	// URL is a location of an image to deploy.
+// 	URL string `json:"url"`
 
+// 	// Checksum
+// 	Checksum string `json:"checksum,omitempty"`
+
+// 	// ChecksumType
+// 	ChecksumType *string `json:"checksumType,omitempty"`
+// }
+
+// Storage for image and snippets
 type Storage struct {
 	Name string `json:"name"`
 	Path string `json:"path,omitempty"`
