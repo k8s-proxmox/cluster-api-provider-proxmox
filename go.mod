@@ -7,7 +7,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.5
 	github.com/pkg/errors v0.9.1
-	github.com/sp-yduck/proxmox v0.0.0-20230611030631-783fc8d00395
+	github.com/sp-yduck/proxmox v0.0.0-20230627144956-64b565d07db7
 	golang.org/x/crypto v0.9.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.26.1

@@ -206,20 +206,22 @@ func SetCloudImage(ctx context.Context, vmid int, storageName string, ssh scope.
 func generateVMOptions(vmName, storageName string, network infrav1.Network) vm.VirtualMachineCreateOptions {
 
 	vmoptions := vm.VirtualMachineCreateOptions{
-		Agent:    "enabled=1",
-		Cores:    2,
-		Memory:   1024 * 4,
-		Name:     vmName,
-		Boot:     "order=scsi0",
-		Ide:      vm.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
-		CiCustom: fmt.Sprintf("user=%s:snippets/%s-user.yml", storageName, vmName),
-		IPConfig: vm.IPConfig{IPConfig0: network.IPConfig.String()},
-		OSType:   vm.L26,
-		Net:      vm.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
-		Scsi:     vm.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},
-		ScsiHw:   vm.VirtioScsiPci,
-		Serial:   vm.Serial{Serial0: "socket"},
-		VGA:      "serial0",
+		Agent:        "enabled=1",
+		Cores:        2,
+		Memory:       1024 * 4,
+		Name:         vmName,
+		NameServer:   network.NameServer,
+		Boot:         "order=scsi0",
+		Ide:          vm.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
+		CiCustom:     fmt.Sprintf("user=%s:snippets/%s-user.yml", storageName, vmName),
+		IPConfig:     vm.IPConfig{IPConfig0: network.IPConfig.String()},
+		OSType:       vm.L26,
+		Net:          vm.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
+		Scsi:         vm.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},
+		ScsiHw:       vm.VirtioScsiPci,
+		SearchDomain: network.SearchDomain,
+		Serial:       vm.Serial{Serial0: "socket"},
+		VGA:          "serial0",
 	}
 	return vmoptions
 }
