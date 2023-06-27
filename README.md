@@ -75,7 +75,7 @@ This project aims to follow the Cluster API [Provider contract](https://cluster-
 
 - [x] Create virtual machine instance
 
-- [x] Boot virtual machine instance with provided bootstrap secret (see: [bootstrap provider specificatio](https://cluster-api.sigs.k8s.io/developer/providers/bootstrap.html#bootstrap-provider-specification) for how bootstrap works)
+- [x] Boot virtual machine instance with provided bootstrap secret (see: [bootstrap provider specification](https://cluster-api.sigs.k8s.io/developer/providers/bootstrap.html#bootstrap-provider-specification) for how bootstrap works)
 
 - [ ] Register virtual machine instance with Controlplane load balancer
 

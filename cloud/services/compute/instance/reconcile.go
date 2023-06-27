@@ -109,7 +109,7 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 
 	vmid, err := s.GetNextID()
 	if err != nil {
-		log.Error(err, "failed to get availabel vmid")
+		log.Error(err, "failed to get available vmid")
 		return nil, err
 	}
 
