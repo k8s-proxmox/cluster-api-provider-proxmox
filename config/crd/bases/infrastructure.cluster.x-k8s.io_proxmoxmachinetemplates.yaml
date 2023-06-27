@@ -102,12 +102,24 @@ spec:
                           to an AWS Availability Zone. If multiple subnets are matched
                           for the availability zone, the first one returned is picked.
                         type: string
-                      ipConfig:
-                        description: 'IPConfig to do : should accept multiple IPConfig'
+                      network:
+                        description: Network
                         properties:
-                          gateway:
+                          ipConfig:
+                            description: 'to do : should accept multiple IPConfig'
+                            properties:
+                              dhcp:
+                                type: boolean
+                              gateway:
+                                type: string
+                              ip:
+                                type: string
+                            type: object
+                          nameServer:
+                            description: DNS server
                             type: string
-                          ip:
+                          searchDomain:
+                            description: search domain
                             type: string
                         type: object
                       providerID:

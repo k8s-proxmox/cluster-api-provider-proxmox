@@ -155,8 +155,8 @@ func (m *MachineScope) GetCloudInit() infrav1.CloudInit {
 	return m.ProxmoxMachine.Spec.CloudInit
 }
 
-func (m *MachineScope) GetIPConfig() infrav1.IPConfig {
-	return m.ProxmoxMachine.Spec.IPConfig
+func (m *MachineScope) GetNetwork() infrav1.Network {
+	return m.ProxmoxMachine.Spec.Network
 }
 
 // SetProviderID sets the ProxmoxMachine providerID in spec.

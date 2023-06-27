@@ -43,6 +43,9 @@ spec:
         user:
           user: ubnt
           password: ubnt
-      ipConfig:
-        gateway: 192.168.1.1
-        ip: 192.168.1.222/32
+      network:
+        ipConfig:
+          gateway: 192.168.1.1
+          ip: 192.168.1.222/32
+        nameServer: "192.168.1.1"
+      

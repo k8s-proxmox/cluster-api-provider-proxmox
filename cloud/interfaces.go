@@ -60,7 +60,7 @@ type MachineGetter interface {
 	GetInstanceStatus() *infrav1.InstanceStatus
 	GetStorage() infrav1.Storage
 	GetCloudInit() infrav1.CloudInit
-	GetIPConfig() infrav1.IPConfig
+	GetNetwork() infrav1.Network
 }
 
 // MachineSetter is an interface which can set machine information.

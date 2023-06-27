@@ -52,34 +52,6 @@ func reconcileCloudInitUser(vmid int, vmName, storageName, bootstrap string, con
 	return nil
 }
 
-// DEPRECATED : network can be configured via API with ipconfig params
-func reconcileCloudInitConfig(vmid int, vmName, storageName string, cloudInit infrav1.CloudInit, ssh scope.SSHClient) error {
-
-	if cloudInit.Network != nil {
-		networkYaml, err := cloudinit.GenerateNetworkYaml(*cloudInit.Network)
-		if err != nil {
-			return err
-		}
-		out, err := ssh.RunWithStdin(fmt.Sprintf("tee /var/lib/vz/%s/snippets/%s-network.yml", storageName, vmName), networkYaml)
-		if err != nil {
-			return errors.Errorf("ssh command error : %s : %v", out, err)
-		}
-	}
-
-	// if meta != nil {
-	// 	metaYaml, err := cloudinit.GenerateMetaYaml(*meta)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	out, err := ssh.RunWithStdin(fmt.Sprintf("tee /var/lib/vz/%s/snippets/%s-meta.yml", storageName, vmName), metaYaml)
-	// 	if err != nil {
-	// 		return errors.Errorf("ssh command error : %s : %v", out, err)
-	// 	}
-	// }
-
-	return nil
-}
-
 // DEPRECATED : cicustom should be set via API
 func ApplyCICustom(vmid int, vmName, storageName, ciType string, ssh scope.SSHClient) error {
 	if !cloudinit.IsValidType(ciType) {

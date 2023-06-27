@@ -114,7 +114,7 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 	}
 
 	// create vm
-	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetIPConfig())
+	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetNetwork())
 	vm, err := node.CreateVirtualMachine(vmid, vmoption)
 	if err != nil {
 		log.Error(err, "failed to create virtual machine")
@@ -203,7 +203,7 @@ func SetCloudImage(ctx context.Context, vmid int, storageName string, ssh scope.
 	return nil
 }
 
-func generateVMOptions(vmName, storageName string, ipconfig infrav1.IPConfig) vm.VirtualMachineCreateOptions {
+func generateVMOptions(vmName, storageName string, network infrav1.Network) vm.VirtualMachineCreateOptions {
 
 	vmoptions := vm.VirtualMachineCreateOptions{
 		Agent:    "enabled=1",
@@ -213,7 +213,7 @@ func generateVMOptions(vmName, storageName string, ipconfig infrav1.IPConfig) vm
 		Boot:     "order=scsi0",
 		Ide:      vm.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
 		CiCustom: fmt.Sprintf("user=%s:snippets/%s-user.yml", storageName, vmName),
-		IPConfig: vm.IPConfig{IPConfig0: ipconfig.String()},
+		IPConfig: vm.IPConfig{IPConfig0: network.IPConfig.String()},
 		OSType:   vm.L26,
 		Net:      vm.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
 		Scsi:     vm.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},

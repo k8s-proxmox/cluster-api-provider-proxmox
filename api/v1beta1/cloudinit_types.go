@@ -1,14 +1,9 @@
 package v1beta1
 
-// CloudInit defines options related to the bootstrapping systems where
-// CloudInit is used.
+// CloudInit is passed through raw yaml file not Proxmox API
+// so you can configure more detailed configs
 type CloudInit struct {
 	User *User `json:"user,omitempty"`
-
-	// Meta *Meta `json:"-"`
-
-	// DEPRECATED : use IPConfig instead
-	Network *Network `json:"-"`
 }
 
 type User struct {
@@ -23,30 +18,6 @@ type User struct {
 	PackageUpgrade bool         `yaml:"package_upgrade,omitempty" json:"-"`
 	WriteFiles     []WriteFiles `yaml:"write_files,omitempty" json:"-"`
 	RunCmd         []string     `yaml:"runcmd,omitempty" json:"-"`
-}
-
-type Network struct {
-	Version int             `yaml:"version,omitempty" json:"version,omitempty"`
-	Config  []NetworkConfig `yaml:"config,omitempty" json:"config,omitempty"`
-}
-
-type NetworkConfig struct {
-	Type        string   `yaml:"type,omitempty" json:"type,omitempty"`
-	Name        string   `yaml:"name,omitempty" json:"name,omitempty"`
-	MacAddress  string   `yaml:"mac_address,omitempty" json:"mac_address,omitempty"`
-	Subnets     []Subnet `yaml:"subnets,omitempty" json:"subnets,omitempty"`
-	Destination string   `yaml:"destination,omitempty" json:"destination,omitempty"`
-	Gateway     string   `yaml:"gateway,omitempty" json:"gateway,omitempty"`
-}
-
-type Subnet struct {
-	Type    string `yaml:"type,omitempty" json:"type,omitempty"`
-	Address string `yaml:"address,omitempty" json:"address,omitempty"`
-	NetMask string `yaml:"netmask,omitempty" json:"netmask,omitempty"`
-	Gateway string `yaml:"gateway,omitempty" json:"gateway,omitempty"`
-}
-
-type Meta struct {
 }
 
 type GrowPart struct {

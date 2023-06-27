@@ -30,12 +30,28 @@ type ObjectReference struct {
 // 	ChecksumType *string `json:"checksumType,omitempty"`
 // }
 
+// Network
+// cloud-init network configuration is configured through Proxmox API
+// it may be migrated to raw yaml way from Proxmox API way in the future
+type Network struct {
+	// to do : should accept multiple IPConfig
+	IPConfig IPConfig `json:"ipConfig,omitempty"`
+
+	// DNS server
+	NameServer string `json:"nameServer,omitempty"`
+
+	// search domain
+	SearchDomain string `json:"searchDomain,omitempty"`
+}
+
 // IPConfig
 type IPConfig struct {
 	IP       string `json:"ip,omitempty"`
 	Gateway4 string `json:"gateway,omitempty"`
+	DHCP     bool   `json:"dhcp,omitempty"`
 }
 
+// to do : user better logic
 func (i *IPConfig) String() string {
 	config := ""
 	if i.IP != "" {
@@ -46,6 +62,9 @@ func (i *IPConfig) String() string {
 	}
 	if i.Gateway4 != "" {
 		config += fmt.Sprintf("gw=%s", i.Gateway4)
+	}
+	if config == "" {
+		config = "ip=dhcp"
 	}
 	return config
 }
