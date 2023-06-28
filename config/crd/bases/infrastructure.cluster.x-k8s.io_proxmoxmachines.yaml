@@ -64,6 +64,19 @@ spec:
                   Zone. If multiple subnets are matched for the availability zone,
                   the first one returned is picked.
                 type: string
+              hardware:
+                description: Hardware
+                properties:
+                  cpu:
+                    default: 2
+                    description: 'number of CPU cores : 1 ~'
+                    type: integer
+                  memoty:
+                    default: 4096
+                    description: 'amount of RAM for the VM in MiB : 16 ~'
+                    minimum: 16
+                    type: integer
+                type: object
               network:
                 description: Network
                 properties:

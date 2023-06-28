@@ -46,6 +46,9 @@ type ProxmoxMachineSpec struct {
 	// +optional
 	CloudInit CloudInit `json:"cloudInit,omitempty"`
 
+	// Hardware
+	Hardware Hardware `json:"hardware,omitempty"`
+
 	// Network
 	Network Network `json:"network,omitempty"`
 

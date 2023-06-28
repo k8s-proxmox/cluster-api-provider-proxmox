@@ -159,6 +159,17 @@ func (m *MachineScope) GetNetwork() infrav1.Network {
 	return m.ProxmoxMachine.Spec.Network
 }
 
+func (m *MachineScope) GetHardware() infrav1.Hardware {
+	// set default value if empty
+	if m.ProxmoxMachine.Spec.Hardware.CPU == 0 {
+		m.ProxmoxMachine.Spec.Hardware.CPU = 2
+	}
+	if m.ProxmoxMachine.Spec.Hardware.Memory == 0 {
+		m.ProxmoxMachine.Spec.Hardware.Memory = 4096
+	}
+	return m.ProxmoxMachine.Spec.Hardware
+}
+
 // SetProviderID sets the ProxmoxMachine providerID in spec.
 func (m *MachineScope) SetProviderID(instance *vm.VirtualMachine) error {
 	providerid, err := providerid.New(instance.Node.Name(), instance.VMID)

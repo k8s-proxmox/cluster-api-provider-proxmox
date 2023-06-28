@@ -30,6 +30,19 @@ type ObjectReference struct {
 // 	ChecksumType *string `json:"checksumType,omitempty"`
 // }
 
+// Hardware
+type Hardware struct {
+	// number of CPU cores : 1 ~
+	// +kubebuilder:validation:Mimimum:=1
+	// +kubebuilder:default:=2
+	CPU int `json:"cpu,omitempty"`
+
+	// amount of RAM for the VM in MiB : 16 ~
+	// +kubebuilder:validation:Minimum:=16
+	// +kubebuilder:default:=4096
+	Memory int `json:"memoty,omitempty"`
+}
+
 // Network
 // cloud-init network configuration is configured through Proxmox API
 // it may be migrated to raw yaml way from Proxmox API way in the future
@@ -71,7 +84,7 @@ func (i *IPConfig) String() string {
 
 // Storage for image and snippets
 type Storage struct {
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 	Path string `json:"path,omitempty"`
 }
 

@@ -114,7 +114,7 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 	}
 
 	// create vm
-	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetNetwork())
+	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetNetwork(), s.scope.GetHardware())
 	vm, err := node.CreateVirtualMachine(vmid, vmoption)
 	if err != nil {
 		log.Error(err, "failed to create virtual machine")
@@ -210,12 +210,11 @@ func SetCloudImage(ctx context.Context, vmid int, storageName string, ssh scope.
 	return nil
 }
 
-func generateVMOptions(vmName, storageName string, network infrav1.Network) vm.VirtualMachineCreateOptions {
-
+func generateVMOptions(vmName, storageName string, network infrav1.Network, hardware infrav1.Hardware) vm.VirtualMachineCreateOptions {
 	vmoptions := vm.VirtualMachineCreateOptions{
 		Agent:        "enabled=1",
-		Cores:        2,
-		Memory:       1024 * 4,
+		Cores:        hardware.CPU,
+		Memory:       hardware.Memory,
 		Name:         vmName,
 		NameServer:   network.NameServer,
 		Boot:         "order=scsi0",
