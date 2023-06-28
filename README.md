@@ -79,7 +79,7 @@ This project aims to follow the Cluster API [Provider contract](https://cluster-
 
 - [ ] Register virtual machine instance with Controlplane load balancer
 
-- [ ] Delete virtual machine instance
+- [x] Delete virtual machine instance
 
 - [ ] Un-register virtual machine instance with Controlplane load balancer
 

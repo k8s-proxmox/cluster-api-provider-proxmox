@@ -169,8 +169,10 @@ func (s *Service) GetRandomNode() (*node.Node, error) {
 	return nodes[r.Intn(len(nodes))], nil
 }
 
-// wip
 func (s *Service) Delete(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	log.Info("Deleting instance resources")
+
 	instance, err := s.GetInstance(ctx)
 	if err != nil {
 		if !IsNotFound(err) {
@@ -178,7 +180,12 @@ func (s *Service) Delete(ctx context.Context) error {
 		}
 		return nil
 	}
-	// to do : stop instance before deletion
+
+	// must stop or pause instance before deletion
+	// otherwise deletion will be fail
+	if err := EnsureStoppedOrPaused(*instance); err != nil {
+		return err
+	}
 	return instance.Delete()
 }
 
@@ -249,11 +256,23 @@ func EnsureRunning(instance vm.VirtualMachine) error {
 			return err
 		}
 	default:
-		errors.Errorf("unexpected status : %s", instance.Status)
+		return errors.Errorf("unexpected status : %s", instance.Status)
 	}
 	return nil
 }
 
-// func EnsureStopped(instance vm.VirtualMachine) error {
-// 	return nil
-// }
+func EnsureStoppedOrPaused(instance vm.VirtualMachine) error {
+	switch instance.Status {
+	case vm.ProcessStatusRunning:
+		if err := instance.Stop(); err != nil {
+			return err
+		}
+	case vm.ProcessStatusPaused:
+		return nil
+	case vm.ProcessStatusStopped:
+		return nil
+	default:
+		return errors.Errorf("unexpected status : %s", instance.Status)
+	}
+	return nil
+}

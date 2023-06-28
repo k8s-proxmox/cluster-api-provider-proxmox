@@ -183,7 +183,6 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 	}
 }
 
-// wip
 func (r *ProxmoxMachineReconciler) reconcileDelete(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling Delete ProxmoxMachine")
