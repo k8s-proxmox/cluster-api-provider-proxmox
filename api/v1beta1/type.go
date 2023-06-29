@@ -19,16 +19,16 @@ type ObjectReference struct {
 }
 
 // Image is the image to be provisioned
-// type Image struct {
-// 	// URL is a location of an image to deploy.
-// 	URL string `json:"url"`
+type Image struct {
+	// URL is a location of an image to deploy.
+	URL string `json:"url"`
 
-// 	// Checksum
-// 	Checksum string `json:"checksum,omitempty"`
+	// Checksum
+	Checksum string `json:"checksum,omitempty"`
 
-// 	// ChecksumType
-// 	ChecksumType *string `json:"checksumType,omitempty"`
-// }
+	// ChecksumType
+	ChecksumType *string `json:"checksumType,omitempty"`
+}
 
 // Hardware
 type Hardware struct {

@@ -37,8 +37,8 @@ metadata:
 spec:
   template:
     spec:
-      # image:
-      #   url: "dummy"
+      image:
+        url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
       cloudInit:
         user:
           user: ubnt
@@ -47,5 +47,5 @@ spec:
         ipConfig:
           gateway: 192.168.1.1
           ip: 192.168.1.222/32
-        nameServer: "192.168.1.1"
+        nameServer: 192.168.1.1
       

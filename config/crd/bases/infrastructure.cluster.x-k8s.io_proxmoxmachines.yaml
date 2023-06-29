@@ -77,6 +77,21 @@ spec:
                     minimum: 16
                     type: integer
                 type: object
+              image:
+                description: Image is the image to be provisioned
+                properties:
+                  checksum:
+                    description: Checksum
+                    type: string
+                  checksumType:
+                    description: ChecksumType
+                    type: string
+                  url:
+                    description: URL is a location of an image to deploy.
+                    type: string
+                required:
+                - url
+                type: object
               network:
                 description: Network
                 properties:
@@ -100,6 +115,8 @@ spec:
               providerID:
                 description: ProviderID
                 type: string
+            required:
+            - image
             type: object
           status:
             description: ProxmoxMachineStatus defines the observed state of ProxmoxMachine

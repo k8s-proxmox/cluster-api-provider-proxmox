@@ -39,7 +39,7 @@ type ProxmoxMachineSpec struct {
 	ProviderID *string `json:"providerID,omitempty"`
 
 	// Image is the image to be provisioned
-	// Image Image `json:"image"`
+	Image Image `json:"image"`
 
 	// CloudInit defines options related to the bootstrapping systems where
 	// CloudInit is used.
