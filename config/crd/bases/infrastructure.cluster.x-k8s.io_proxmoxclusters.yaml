@@ -57,9 +57,34 @@ spec:
                 - host
                 - port
                 type: object
+              nodeRefs:
+                description: NodesRef contains reference of nodes used for ProxmoxCluster
+                items:
+                  description: NodeRef
+                  properties:
+                    credentialsRef:
+                      description: ObjectReference is a reference to another Kubernetes
+                        object instance.
+                      properties:
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        namespace:
+                          description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                          type: string
+                      required:
+                      - name
+                      - namespace
+                      type: object
+                    name:
+                      type: string
+                  required:
+                  - credentialsRef
+                  - name
+                  type: object
+                type: array
               serverRef:
-                description: 'ServerRef is used for configuring Proxmox client to
-                  do : client options like insecure tls verify, token login, etc.'
+                description: ServerRef is used for configuring Proxmox client
                 properties:
                   credentialsRef:
                     description: CredentialsRef is a reference for secret which contains

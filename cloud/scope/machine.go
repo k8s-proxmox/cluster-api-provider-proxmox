@@ -99,6 +99,10 @@ func (m *MachineScope) Namespace() string {
 	return m.ProxmoxMachine.Namespace
 }
 
+func (m *MachineScope) NodeName() string {
+	return m.ProxmoxMachine.Spec.Node
+}
+
 // func (m *MachineScope) Client() Compute {
 // 	return m.ClusterGetter.Client()
 // }

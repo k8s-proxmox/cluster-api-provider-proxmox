@@ -156,6 +156,10 @@ spec:
                             description: search domain
                             type: string
                         type: object
+                      node:
+                        description: Node is proxmox node hosting vm instance which
+                          used for ProxmoxMachine
+                        type: string
                       providerID:
                         description: ProviderID
                         type: string

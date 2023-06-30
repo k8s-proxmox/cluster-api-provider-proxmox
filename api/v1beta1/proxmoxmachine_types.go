@@ -38,6 +38,10 @@ type ProxmoxMachineSpec struct {
 	// ProviderID
 	ProviderID *string `json:"providerID,omitempty"`
 
+	// Node is proxmox node hosting vm instance which used for ProxmoxMachine
+	// +optional
+	Node string `json:"node,omitempty"`
+
 	// Image is the image to be provisioned
 	Image Image `json:"image"`
 

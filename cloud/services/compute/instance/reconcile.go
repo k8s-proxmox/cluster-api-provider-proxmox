@@ -100,12 +100,26 @@ func (s *Service) getInstanceFromInstanceID(instanceID string) (*vm.VirtualMachi
 func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
-	// temp solution
-	node, err := s.GetRandomNode()
-	if err != nil {
-		log.Error(err, "failed to get random node")
-		return nil, err
+	var node *node.Node
+	var err error
+	nodeName := s.scope.NodeName()
+	if nodeName != "" {
+		node, err = s.GetNode(nodeName)
+		if err != nil {
+			log.Error(err, fmt.Sprintf("failed to get node %s", nodeName))
+			return nil, err
+		}
+	} else {
+		// temp solution
+		node, err = s.GetRandomNode()
+		if err != nil {
+			log.Error(err, "failed to get random node")
+			return nil, err
+		}
 	}
+
+	// (for multiple node proxmox cluster support)
+	// to do : set ssh client for specific node
 
 	vmid, err := s.GetNextID()
 	if err != nil {
@@ -153,6 +167,10 @@ func (s *Service) GetNextID() (int, error) {
 
 func (s *Service) GetNodes() ([]*node.Node, error) {
 	return s.client.Nodes()
+}
+
+func (s *Service) GetNode(name string) (*node.Node, error) {
+	return s.client.Node(name)
 }
 
 // GetRandomNode returns a node chosen randomly

@@ -15,10 +15,16 @@ type ServerRef struct {
 	// to do : login type should be an option
 	// user&pass or token
 
-	// to do : insecure tls verify
+	// to do : client options like insecure tls verify
 
 	// CredentialsRef is a reference for secret which contains proxmox login secrets
 	// and ssh configs for proxmox nodes
+	CredentialsRef *ObjectReference `json:"credentialsRef"`
+}
+
+// NodeRef
+type NodeRef struct {
+	Name           string           `json:"name"`
 	CredentialsRef *ObjectReference `json:"credentialsRef"`
 }
 

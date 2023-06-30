@@ -53,6 +53,7 @@ type MachineGetter interface {
 	// Role() string
 	// IsControlPlane() bool
 	// ControlPlaneGroupName() string
+	NodeName() string
 	GetInstanceID() *string
 	GetProviderID() string
 	GetBootstrapData() (string, error)
