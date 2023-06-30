@@ -5,14 +5,22 @@ metadata:
 spec:
   kubeadmConfigSpec:
     clusterConfiguration:
-      controllerManager:
-        extraArgs:
-          enable-hostpath-provisioner: "true"
+      etcd:
+        local:
+          dataDir: /var/lib/etcd
+      networking:
+        dnsDomain: cluster.local
+        serviceSubnet: 10.96.0.0/12
+        podSubnet: 10.98.0.0/16
     initConfiguration:
+      localAPIEndpoints:
+        advertiseAddress: 192.168.1.222  # your controlplane endpoint
+        bindPort: 6443
       nodeRegistration:
-        kubeletExtraArgs:
-          eviction-hard: nodefs.available<0%,nodefs.inodesFree<0%,imagefs.available<0%
-    postKubeadmCommands: []
+        criSocket: unix:///var/run/containerd/containerd.sock
+    postKubeadmCommands:
+    - "curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
+    - "chmod +x /usr/lcoal/bin/kubectl"
     preKubeadmCommands: []
   machineTemplate:
     infrastructureRef:
@@ -43,9 +51,12 @@ spec:
         user:
           user: ubnt
           password: ubnt
+      hardware:
+        cpu: 4
+        memory: 8192
       network:
         ipConfig:
-          gateway: 192.168.1.1
-          ip: 192.168.1.222/32
-        nameServer: 192.168.1.1
+          gateway: 192.168.1.1  # your gateway address
+          ip: 192.168.1.222/32  # your controplane endpoint
+        nameServer: 192.168.1.1  # your dns server address
       

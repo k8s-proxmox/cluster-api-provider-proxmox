@@ -10,9 +10,18 @@ metadata:
   name: proxmoxcluster-sample
 spec:
   controlPlaneEndpoint:
-    host: ""
-    port: 0
-  credentialsRef:
-    name: proxmoxcluster-sample
+    host: 192.168.1.222  # your controlplane endpoint
+    port: 6443
+  serverRef: 
+    endpoint: 192.168.1.157:8006  # your proxmox api endpoint
+    credentialsRef:
+      name: proxmoxcluster-sample
+      namespace: default
+  nodeRefs:
+    - name: mynode
+      credentialsRef:
+        name: proxmoxcluster-sample
+        namespace: default
   storage:
     name: proxmoxcluster-sample
+    path: ""

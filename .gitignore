@@ -27,3 +27,6 @@ Dockerfile.cross
 
 
 *_test.go
+
+# 
+config/samples/secret.yaml
