@@ -31,7 +31,6 @@ type ClusterGetter interface {
 	Client
 	Name() string
 	Namespace() string
-	Server() string
 	// NetworkName() string
 	// Network() *infrav1.Network
 	// AdditionalLabels() infrav1.Labels

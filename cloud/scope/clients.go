@@ -32,8 +32,8 @@ type ProxmoxServices struct {
 	Remote  *SSHClient
 }
 
-func newComputeService(ctx context.Context, pCluster *infrav1.ProxmoxCluster, crClient client.Client) (*service.Service, error) {
-	credentialsRef := pCluster.Spec.CredentialsRef
+func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClient client.Client) (*service.Service, error) {
+	credentialsRef := serverRef.CredentialsRef
 	if credentialsRef == nil {
 		return nil, errors.New("failed to get proxmox client form nil credentialsRef")
 	}
@@ -53,7 +53,7 @@ func newComputeService(ctx context.Context, pCluster *infrav1.ProxmoxCluster, cr
 		return nil, errors.Errorf("failed to fetch PROXMOX_PASSWORD from Secret : %v", key)
 	}
 
-	return service.NewServiceWithLogin(pCluster.Spec.Server, string(proxmoxUser), string(proxmoxPassword))
+	return service.NewServiceWithLogin(serverRef.Endpoint, string(proxmoxUser), string(proxmoxPassword))
 }
 
 func newRemoteClient(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*SSHClient, error) {

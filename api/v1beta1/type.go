@@ -7,6 +7,21 @@ import (
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
 )
 
+// ServerRef is used for configuring Proxmox client
+type ServerRef struct {
+	// endpoint is the address of the Proxmox-VE REST API endpoint.
+	Endpoint string `json:"endpoint"`
+
+	// to do : login type should be an option
+	// user&pass or token
+
+	// to do : insecure tls verify
+
+	// CredentialsRef is a reference for secret which contains proxmox login secrets
+	// and ssh configs for proxmox nodes
+	CredentialsRef *ObjectReference `json:"credentialsRef"`
+}
+
 // ObjectReference is a reference to another Kubernetes object instance.
 type ObjectReference struct {
 	// Namespace of the referent.

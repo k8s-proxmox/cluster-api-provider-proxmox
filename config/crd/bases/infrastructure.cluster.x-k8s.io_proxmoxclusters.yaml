@@ -57,24 +57,32 @@ spec:
                 - host
                 - port
                 type: object
-              credentialsRef:
-                description: CredentialsRef is a reference for secret which contains
-                  proxmox login secrets and ssh configs for proxmox nodes
+              serverRef:
+                description: 'ServerRef is used for configuring Proxmox client to
+                  do : client options like insecure tls verify, token login, etc.'
                 properties:
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                    type: string
-                  namespace:
-                    description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                  credentialsRef:
+                    description: CredentialsRef is a reference for secret which contains
+                      proxmox login secrets and ssh configs for proxmox nodes
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                        type: string
+                      namespace:
+                        description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                        type: string
+                    required:
+                    - name
+                    - namespace
+                    type: object
+                  endpoint:
+                    description: endpoint is the address of the Proxmox-VE REST API
+                      endpoint.
                     type: string
                 required:
-                - name
-                - namespace
+                - credentialsRef
+                - endpoint
                 type: object
-              server:
-                description: 'Server is the address of the Proxmox-VE REST API endpoint.
-                  to do : client options like insecure tls verify, token login, etc.'
-                type: string
               storage:
                 description: storage is for proxmox storage used by vm instances
                 properties:
@@ -84,8 +92,7 @@ spec:
                     type: string
                 type: object
             required:
-            - credentialsRef
-            - server
+            - serverRef
             - storage
             type: object
           status:

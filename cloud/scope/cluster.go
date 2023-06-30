@@ -44,7 +44,7 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 	}
 
 	if params.ProxmoxServices.Compute == nil {
-		computeSvc, err := newComputeService(ctx, params.ProxmoxCluster, params.Client)
+		computeSvc, err := newComputeService(ctx, params.ProxmoxCluster.Spec.ServerRef, params.Client)
 		if err != nil {
 			return nil, errors.Errorf("failed to create proxmox compute client: %v", err)
 		}
@@ -52,7 +52,7 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 	}
 
 	if params.ProxmoxServices.Remote == nil {
-		remote, err := newRemoteClient(ctx, params.ProxmoxCluster.Spec.CredentialsRef, params.Client)
+		remote, err := newRemoteClient(ctx, params.ProxmoxCluster.Spec.ServerRef.CredentialsRef, params.Client)
 		if err != nil {
 			return nil, errors.Errorf("failed to create remote client: %v", err)
 		}
@@ -87,10 +87,6 @@ func (s *ClusterScope) Name() string {
 
 func (s *ClusterScope) Namespace() string {
 	return s.Cluster.Namespace
-}
-
-func (s *ClusterScope) Server() string {
-	return s.ProxmoxCluster.Spec.Server
 }
 
 func (s *ClusterScope) ControlPlaneEndpoint() clusterv1.APIEndpoint {
