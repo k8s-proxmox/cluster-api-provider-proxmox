@@ -66,7 +66,19 @@ type: Opaque
 
 ## Compatibility
 
-CAPP is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve)`
+### Proxmox-VE REST API
+
+CAPP is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve)`.
+
+### Cluster API
+
+|                       | Cluster API v1alpha4 | Cluster API v1beta1 |
+| --------------------- | :------------------: | :-----------------: |
+| CAPP v1beta1 `(v0.x)` |          ?           |          ✓          |
+
+### ControlPlane & Bootstrap provider 
+
+CAPP is tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
 
 ## How it works
 This project aims to follow the Cluster API [Provider contract](https://cluster-api.sigs.k8s.io/developer/providers/contracts.html).
