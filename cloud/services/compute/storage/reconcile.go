@@ -16,9 +16,14 @@ const (
 )
 
 func (s *Service) Reconcile(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	log.Info("Reconciling storage")
+
 	if err := s.createOrGetStorage(ctx); err != nil {
 		return err
 	}
+
+	log.Info("Reconciled storage")
 	return nil
 }
 
@@ -29,9 +34,6 @@ func (s *Service) Delete(ctx context.Context) error {
 
 // createOrGetStorage gets Proxmox Storage for VMs
 func (s *Service) createOrGetStorage(ctx context.Context) error {
-	log := log.FromContext(ctx)
-	log.Info("Reconciling vm storage")
-
 	opts := generateVMStorageOptions(s.scope)
 	if err := s.getStorage(opts.Storage); err != nil {
 		if api.IsNotFound(err) {

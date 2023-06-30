@@ -109,7 +109,7 @@ spec:
                             default: 2
                             description: 'number of CPU cores : 1 ~'
                             type: integer
-                          memoty:
+                          memory:
                             default: 4096
                             description: 'amount of RAM for the VM in MiB : 16 ~'
                             minimum: 16

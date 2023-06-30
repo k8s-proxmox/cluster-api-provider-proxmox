@@ -62,7 +62,7 @@ type Hardware struct {
 	// amount of RAM for the VM in MiB : 16 ~
 	// +kubebuilder:validation:Minimum:=16
 	// +kubebuilder:default:=4096
-	Memory int `json:"memoty,omitempty"`
+	Memory int `json:"memory,omitempty"`
 }
 
 // Network

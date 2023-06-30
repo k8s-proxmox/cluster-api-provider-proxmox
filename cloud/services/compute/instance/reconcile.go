@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +18,10 @@ import (
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
+)
+
+const (
+	etcCAPP = "/etc/capp"
 )
 
 func (s *Service) Reconcile(ctx context.Context) error {
@@ -143,7 +148,7 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 	}
 
 	// os image
-	if err := SetCloudImage(ctx, vmid, s.scope.GetStorage().Name, s.remote); err != nil {
+	if err := SetCloudImage(ctx, vmid, s.scope.GetStorage(), s.scope.GetImage(), s.remote); err != nil {
 		return nil, err
 	}
 
@@ -209,24 +214,28 @@ func (s *Service) Delete(ctx context.Context) error {
 	return instance.Delete()
 }
 
-func SetCloudImage(ctx context.Context, vmid int, storageName string, ssh scope.SSHClient) error {
+// setCloudImage set OS image to specified storage
+func SetCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image infrav1.Image, ssh scope.SSHClient) error {
 	log := log.FromContext(ctx)
 	log.Info("setting cloud image")
 
+	url := image.URL
+	fileName := path.Base(url)
+	rawImageDirPath := fmt.Sprintf("%s/images", etcCAPP)
+	rawImageFilePath := fmt.Sprintf("%s/%s", rawImageDirPath, fileName)
+
 	// workaround
 	// API does not support something equivalent of "qm importdisk"
-	out, err := ssh.RunCommand(fmt.Sprintf("wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img -O /etc/capi-proxmox/jammy-server-cloudimg-amd64-disk-kvm.img -nc"))
-	// if err != nil {
-	// 	return nil, errors.Errorf("failed to download image")
-	// }
-
-	destPath := fmt.Sprintf("/var/lib/vz/%s/images/%d/vm-%d-disk-0.raw", storageName, vmid, vmid)
-	out, err = ssh.RunCommand(fmt.Sprintf("/usr/bin/qemu-img convert -O raw /root/jammy-server-cloudimg-amd64-disk-kvm.img %s", destPath))
+	out, err := ssh.RunCommand(fmt.Sprintf("wget %s --directory-prefix %s -nc", url, rawImageDirPath))
 	if err != nil {
-		return err
+		return errors.Errorf("failed to download image: %s : %v", out, err)
 	}
-	log.Info("imported cloud image")
-	log.Info(out)
+
+	destPath := fmt.Sprintf("%s/images/%d/vm-%d-disk-0.raw", storage.Path, vmid, vmid)
+	out, err = ssh.RunCommand(fmt.Sprintf("/usr/bin/qemu-img convert -O raw %s %s", rawImageFilePath, destPath))
+	if err != nil {
+		return errors.Errorf("failed to convert iamge : %s : %v", out, err)
+	}
 	return nil
 }
 
