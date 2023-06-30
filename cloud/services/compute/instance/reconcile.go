@@ -116,6 +116,7 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 			log.Error(err, "failed to get random node")
 			return nil, err
 		}
+		s.scope.SetNodeName(node.Node)
 	}
 
 	// (for multiple node proxmox cluster support)

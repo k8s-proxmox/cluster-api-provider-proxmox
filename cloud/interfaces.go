@@ -68,6 +68,7 @@ type MachineGetter interface {
 type MachineSetter interface {
 	SetProviderID(instance *vm.VirtualMachine) error
 	SetInstanceStatus(v infrav1.InstanceStatus)
+	SetNodeName(name string)
 	// SetFailureMessage(v error)
 	// SetFailureReason(v capierrors.MachineStatusError)
 	// SetAnnotation(key, value string)

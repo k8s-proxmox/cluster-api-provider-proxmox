@@ -103,6 +103,10 @@ func (m *MachineScope) NodeName() string {
 	return m.ProxmoxMachine.Spec.Node
 }
 
+func (m *MachineScope) SetNodeName(name string) {
+	m.ProxmoxMachine.Spec.Node = name
+}
+
 // func (m *MachineScope) Client() Compute {
 // 	return m.ClusterGetter.Client()
 // }
