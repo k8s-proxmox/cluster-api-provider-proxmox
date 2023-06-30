@@ -1,4 +1,4 @@
-# cluster-api-provider-proxmox
+# cluster-api-provider-proxmox (CAPP)
 
 cluster-api-provider-proxmox is a Cluster API [infrastructure provider](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html) implementation for [Proxmox VE](https://pve.proxmox.com/wiki/Main_Page).
 
@@ -47,8 +47,8 @@ data:
   # for proxmox API
   PROXMOX_PASSWORD: "<base 64>"
   PROXMOX_USER: "<base 64>"
-  PROXMOX_URL: "<base 64>"
   # for ssh into the node to bootstrapping VMs
+  ## * current CAPP is compatible with only single node proxmox cluster
   NODE_URL: "<base 64>"
   NODE_USER: "<base 64>"
   NODE_PASSWORD: "<base 64>"
