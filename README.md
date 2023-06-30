@@ -9,7 +9,7 @@ cluster-api-provider-proxmox provides only infrastructure controller (`ProxmoxCl
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
-### Running on the cluster
+### with KubeadmControlplane/Bootstrap
 1. Initialize Management cluster
 
 for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#initialize-the-management-cluster
@@ -71,9 +71,17 @@ CAPP is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve)
 ## How it works
 This project aims to follow the Cluster API [Provider contract](https://cluster-api.sigs.k8s.io/developer/providers/contracts.html).
 
+### ProxmoxCluster
+
+Because Proxmox-VE does not provide LBaaS solution, CAPP does not follow the [typical infra-cluster logic](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html#behavior). ProxmoxCluster controller reconciles only Proxmox storages used for instances. You need to prepare control plane load balancer by yourself if you creates HA control plane workload cluster.
+
+### ProxmoxMachine
+
+ProxmoxMachine controller follows the [typical infra-machine logic](https://cluster-api.sigs.k8s.io/developer/providers/machine-infrastructure.html#behavior). To bootstrap your machine, CAPP supports only `cloud-config` type bootstrap data secret. CAPP is mainly tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
+
 ## Contributing
 
-Are you interested in contributing to cluster-api-provider-proxmox? Do not hesitate to open Github issues. 
+Are you interested in contributing to cluster-api-provider-proxmox? Do not hesitate to open GitHub issues.
 
 ## License
 
