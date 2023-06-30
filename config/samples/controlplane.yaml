@@ -13,7 +13,7 @@ spec:
         serviceSubnet: 10.96.0.0/12
         podSubnet: 10.98.0.0/16
     initConfiguration:
-      localAPIEndpoints:
+      localAPIEndpoint:
         advertiseAddress: 192.168.1.222  # your controlplane endpoint
         bindPort: 6443
       nodeRegistration:
