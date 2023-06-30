@@ -14,7 +14,6 @@ type SSHClient struct {
 }
 
 func NewSSHClient(addr, user, password string) (*SSHClient, error) {
-
 	sshConfig := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{

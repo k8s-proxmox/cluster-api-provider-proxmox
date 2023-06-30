@@ -35,7 +35,7 @@ type ProxmoxClusterSpec struct {
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 
-	// ServerRef is used for configuring Proxmox client
+	// ServerRef is used for configuring Proxmox client (and node ssh client)
 	// to do : client options like insecure tls verify, token login, etc.
 	ServerRef ServerRef `json:"serverRef"`
 
