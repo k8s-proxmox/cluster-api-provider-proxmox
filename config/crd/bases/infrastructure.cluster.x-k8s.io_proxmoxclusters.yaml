@@ -58,8 +58,8 @@ spec:
                 - port
                 type: object
               credentialsRef:
-                description: ObjectReference is a reference to another Kubernetes
-                  object instance.
+                description: CredentialsRef is a reference for secret which contains
+                  proxmox login secrets and ssh configs for proxmox nodes
                 properties:
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -71,6 +71,10 @@ spec:
                 - name
                 - namespace
                 type: object
+              server:
+                description: 'Server is the address of the Proxmox-VE REST API endpoint.
+                  to do : client options like insecure tls verify, token login, etc.'
+                type: string
               storage:
                 description: storage is for proxmox storage used by vm instances
                 properties:
@@ -81,6 +85,7 @@ spec:
                 type: object
             required:
             - credentialsRef
+            - server
             - storage
             type: object
           status:

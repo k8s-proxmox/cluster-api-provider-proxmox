@@ -29,9 +29,9 @@ type Cluster interface {
 // ClusterGetter is an interface which can get cluster information.
 type ClusterGetter interface {
 	Client
-	// Region() string
 	Name() string
 	Namespace() string
+	Server() string
 	// NetworkName() string
 	// Network() *infrav1.Network
 	// AdditionalLabels() infrav1.Labels

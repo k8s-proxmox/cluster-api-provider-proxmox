@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	// "github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/vm"
 )
 
 type ProxmoxServices struct {
@@ -33,7 +32,8 @@ type ProxmoxServices struct {
 	Remote  *SSHClient
 }
 
-func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*service.Service, error) {
+func newComputeService(ctx context.Context, pCluster *infrav1.ProxmoxCluster, crClient client.Client) (*service.Service, error) {
+	credentialsRef := pCluster.Spec.CredentialsRef
 	if credentialsRef == nil {
 		return nil, errors.New("failed to get proxmox client form nil credentialsRef")
 	}
@@ -44,10 +44,6 @@ func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectRefere
 		return nil, err
 	}
 
-	proxmoxUrl, ok := secret.Data["PROXMOX_URL"]
-	if !ok {
-		return nil, errors.Errorf("failed to fetch PROXMOX_URL from Secret : %v", key)
-	}
 	proxmoxUser, ok := secret.Data["PROXMOX_USER"]
 	if !ok {
 		return nil, errors.Errorf("failed to fetch PROXMOX_USER from Secret : %v", key)
@@ -57,7 +53,7 @@ func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectRefere
 		return nil, errors.Errorf("failed to fetch PROXMOX_PASSWORD from Secret : %v", key)
 	}
 
-	return service.NewServiceWithLogin(string(proxmoxUrl), string(proxmoxUser), string(proxmoxPassword))
+	return service.NewServiceWithLogin(pCluster.Spec.Server, string(proxmoxUser), string(proxmoxPassword))
 }
 
 func newRemoteClient(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*SSHClient, error) {
