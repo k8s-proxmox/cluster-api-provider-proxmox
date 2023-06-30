@@ -21,6 +21,8 @@ clusterctl init
 # install cluster-api-provider-proxmox crd & controller
 make deploy
 ```
+**Note:** container images are available at [here](https://hub.docker.com/r/spyduck/cluster-api-provider-proxmox/tags)
+
 2. Create your first workload cluster
 ```sh
 # cluster & infra cluster
