@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
@@ -159,6 +158,10 @@ func (m *MachineScope) GetProviderID() string {
 	return ""
 }
 
+func (m *MachineScope) GetImage() infrav1.Image {
+	return m.ProxmoxMachine.Spec.Image
+}
+
 func (m *MachineScope) GetCloudInit() infrav1.CloudInit {
 	return m.ProxmoxMachine.Spec.CloudInit
 }
@@ -179,8 +182,8 @@ func (m *MachineScope) GetHardware() infrav1.Hardware {
 }
 
 // SetProviderID sets the ProxmoxMachine providerID in spec.
-func (m *MachineScope) SetProviderID(instance *vm.VirtualMachine) error {
-	providerid, err := providerid.New(instance.Node.Name(), instance.VMID)
+func (m *MachineScope) SetProviderID(node string, vmid int) error {
+	providerid, err := providerid.New(node, vmid)
 	if err != nil {
 		return err
 	}

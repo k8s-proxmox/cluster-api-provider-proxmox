@@ -29,8 +29,9 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	}
 	log.Info(fmt.Sprintf("instance : %v", instance))
 
-	s.scope.SetProviderID(instance)
+	s.scope.SetProviderID(instance.Node.Name(), instance.VMID)
 	s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.Status))
+	// s.scope.SetAddresses()
 	return nil
 }
 
