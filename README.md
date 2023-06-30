@@ -58,44 +58,22 @@ metadata:
 type: Opaque
 ```
 
+## Fetures
+
+- No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`.
+
+- Supports custom cloud-config (user data). CAPP uses ssh for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
+
+## Compatibility
+
+CAPP is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve)`
+
 ## How it works
 This project aims to follow the Cluster API [Provider contract](https://cluster-api.sigs.k8s.io/developer/providers/contracts.html).
 
-### Proxmox Cluster Controller
-
-- [ ] Create controlplane load balancer
-
-- [x] Create proxmox storage
-
-- [ ] Delete controlplane load balancer
-
-- [ ] Delete proxmox storage
-
-### Proxmox Machine Controller
-
-- [x] Create virtual machine instance
-
-- [x] Boot virtual machine instance with provided bootstrap secret (see: [bootstrap provider specification](https://cluster-api.sigs.k8s.io/developer/providers/bootstrap.html#bootstrap-provider-specification) for how bootstrap works)
-
-- [ ] Register virtual machine instance with Controlplane load balancer
-
-- [x] Delete virtual machine instance
-
-- [ ] Un-register virtual machine instance with Controlplane load balancer
-
 ## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
 
-### Modifying the API definitions
-If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
-
-```sh
-make manifests
-```
-
-**NOTE:** Run `make --help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+Are you interested in contributing to cluster-api-provider-proxmox? Do not hesitate to open Github issues. 
 
 ## License
 
