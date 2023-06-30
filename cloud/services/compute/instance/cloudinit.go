@@ -44,6 +44,7 @@ func reconcileCloudInitUser(vmid int, vmName, storageName, bootstrap string, con
 	}
 
 	// to do: should be set via API
+	// to do: storage path
 	out, err := ssh.RunWithStdin(fmt.Sprintf("tee /var/lib/vz/%s/snippets/%s-user.yml", storageName, vmName), configYaml)
 	if err != nil {
 		return errors.Errorf("ssh command error : %s : %v", out, err)
@@ -65,6 +66,7 @@ func ApplyCICustom(vmid int, vmName, storageName, ciType string, ssh scope.SSHCl
 	return nil
 }
 
+// to do : remove these cloud-config
 func baseUserData(vmName string) infrav1.User {
 	return infrav1.User{
 		GrowPart:       infrav1.GrowPart{Mode: "auto", Devices: []string{"/"}, IgnoreGrowrootDisabled: false},
@@ -89,16 +91,6 @@ func baseUserData(vmName string) infrav1.User {
 net.bridge.bridge-nf-call-ip6tables = 1
 net.ipv4.ip_forward                 = 1`,
 			},
-			{
-				Path:        "/etc/containerd/config.toml",
-				Owner:       "root:root",
-				Permissions: "0640",
-				Content: `[plugins."io.containerd.grpc.v1.cri"]
-  sandbox_image = "registry.k8s.io/pause:3.2"
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-    SystemdCgroup = true`,
-			},
 		},
 		RunCmd: []string{
 			"modprobe overlay",
@@ -107,6 +99,9 @@ net.ipv4.ip_forward                 = 1`,
 			`mkdir -p /usr/local/bin`,
 			`curl -L "https://github.com/containerd/containerd/releases/download/v1.7.2/containerd-1.7.2-linux-amd64.tar.gz" | tar Cxvz "/usr/local"`,
 			`curl -L "https://raw.githubusercontent.com/containerd/containerd/main/containerd.service" -o /etc/systemd/system/containerd.service`,
+			"mkdir -p /etc/containerd",
+			"containerd config default > /etc/containerd/config.toml",
+			"sed 's/SystemdCgroup = false/SystemdCgroup = true/g /etc/containerd/config.toml",
 			"systemctl daemon-reload",
 			"systemctl enable --now containerd",
 			"mkdir -p /usr/local/sbin",
