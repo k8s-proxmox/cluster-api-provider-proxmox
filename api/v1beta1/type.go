@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
 )
@@ -57,29 +58,40 @@ type Network struct {
 	SearchDomain string `json:"searchDomain,omitempty"`
 }
 
-// IPConfig
+// IPConfig defines IP addresses and gateways for corresponding interface
 type IPConfig struct {
-	IP       string `json:"ip,omitempty"`
-	Gateway4 string `json:"gateway,omitempty"`
-	DHCP     bool   `json:"dhcp,omitempty"`
+	// IPv4 with CIDR
+	IP string `json:"ip,omitempty"`
+	// gateway IPv4
+	Gateway string `json:"gateway,omitempty"`
+	// IPv6 with CIDR
+	IP6 string `json:"ip6,omitempty"`
+	// gateway IPv6
+	Gateway6 string `json:"gateway6,omitempty"`
 }
 
-// to do : user better logic
-func (i *IPConfig) String() string {
-	config := ""
-	if i.IP != "" {
-		config += fmt.Sprintf("ip=%s", i.IP)
+func (c *IPConfig) String() string {
+	configs := []string{}
+	if c.IP != "" {
+		configs = append(configs, fmt.Sprintf("ip=%s", c.IP))
 	}
-	if i.IP != "" && i.Gateway4 != "" {
-		config += ","
+	if c.Gateway != "" {
+		configs = append(configs, fmt.Sprintf("gw=%s", c.Gateway))
 	}
-	if i.Gateway4 != "" {
-		config += fmt.Sprintf("gw=%s", i.Gateway4)
+	if c.IP6 != "" {
+		configs = append(configs, fmt.Sprintf("ip6=%s", c.IP6))
 	}
-	if config == "" {
-		config = "ip=dhcp"
+	if c.Gateway6 != "" {
+		configs = append(configs, fmt.Sprintf("gw6=%s", c.Gateway6))
 	}
-	return config
+	ipconfig := strings.Join(configs, ",")
+
+	// it defaults to using dhcp on IPv4 if neither IP nor IP6 is specified
+	if !strings.Contains(ipconfig, "ip") {
+		ipconfig = "ip=dhcp"
+	}
+
+	return ipconfig
 }
 
 // Storage for image and snippets

@@ -136,11 +136,17 @@ spec:
                           ipConfig:
                             description: 'to do : should accept multiple IPConfig'
                             properties:
-                              dhcp:
-                                type: boolean
                               gateway:
+                                description: gateway IPv4
+                                type: string
+                              gateway6:
+                                description: gateway IPv6
                                 type: string
                               ip:
+                                description: IPv4 with CIDR
+                                type: string
+                              ip6:
+                                description: IPv6 with CIDR
                                 type: string
                             type: object
                           nameServer:
