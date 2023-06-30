@@ -19,8 +19,9 @@ spec:
       nodeRegistration:
         criSocket: unix:///var/run/containerd/containerd.sock
     postKubeadmCommands:
-    - "curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
-    - "chmod +x /usr/lcoal/bin/kubectl"
+    - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
+    - "chmod +x /usr/local/bin/kubectl"
+    - "reboot now"
     preKubeadmCommands: []
   machineTemplate:
     infrastructureRef:
