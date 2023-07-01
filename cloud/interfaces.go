@@ -53,7 +53,7 @@ type MachineGetter interface {
 	// IsControlPlane() bool
 	// ControlPlaneGroupName() string
 	NodeName() string
-	GetInstanceID() *string
+	GetBiosUUID() *string
 	GetImage() infrav1.Image
 	GetProviderID() string
 	GetBootstrapData() (string, error)
@@ -62,13 +62,15 @@ type MachineGetter interface {
 	GetCloudInit() infrav1.CloudInit
 	GetNetwork() infrav1.Network
 	GetHardware() infrav1.Hardware
+	GetVMID() *int
 }
 
 // MachineSetter is an interface which can set machine information.
 type MachineSetter interface {
-	SetProviderID(node string, vmid int) error
+	SetProviderID(uuid string) error
 	SetInstanceStatus(v infrav1.InstanceStatus)
 	SetNodeName(name string)
+	SetVMID(vmid int)
 	// SetFailureMessage(v error)
 	// SetFailureReason(v capierrors.MachineStatusError)
 	// SetAnnotation(key, value string)

@@ -42,6 +42,10 @@ type ProxmoxMachineSpec struct {
 	// +optional
 	Node string `json:"node,omitempty"`
 
+	// VMID is proxmox qemu's id
+	// +optional
+	VMID *int `json:"vmID,omitempty"`
+
 	// Image is the image to be provisioned
 	Image Image `json:"image"`
 
@@ -74,7 +78,7 @@ type ProxmoxMachineStatus struct {
 	// FailureMessage
 	FailureMessage *string `json:"failureMessage,omitempty"`
 
-	// Addresses contains the AWS instance associated addresses.
+	// Addresses
 	Addresses []clusterv1.MachineAddress `json:"addresses,omitempty"`
 
 	// Conditions
@@ -87,9 +91,12 @@ type ProxmoxMachineStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Addresses",type=string,JSONPath=`.status.addresses`
+// +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this VSphereMachine belongs"
+// +kubebuilder:printcolumn:name="Machine",type="string",JSONPath=".metadata.ownerReferences[?(@.kind==\"Machine\")].name",description="Machine object which owns with this ProxmoxMachine",priority=1
+// +kubebuilder:printcolumn:name="vmid",type=string,JSONPath=`.spec.vmID`,priority=1
 // +kubebuilder:printcolumn:name="ProviderID",type=string,JSONPath=`.spec.providerID`
-// +kubebuilder:printcolumn:name="InstanceStatus",type=string,JSONPath=`.status.instanceStatus`
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.instanceStatus`
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="Time duration since creation of Machine"
 
 // ProxmoxMachine is the Schema for the proxmoxmachines API
 type ProxmoxMachine struct {

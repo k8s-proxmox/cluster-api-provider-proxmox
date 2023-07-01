@@ -363,6 +363,11 @@ func (in *ProxmoxMachineSpec) DeepCopyInto(out *ProxmoxMachineSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.VMID != nil {
+		in, out := &in.VMID, &out.VMID
+		*out = new(int)
+		**out = **in
+	}
 	in.Image.DeepCopyInto(&out.Image)
 	in.CloudInit.DeepCopyInto(&out.CloudInit)
 	out.Hardware = in.Hardware

@@ -16,15 +16,29 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.addresses
-      name: Addresses
+    - description: Cluster to which this VSphereMachine belongs
+      jsonPath: .metadata.labels.cluster\.x-k8s\.io/cluster-name
+      name: Cluster
+      type: string
+    - description: Machine object which owns with this ProxmoxMachine
+      jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
+      name: Machine
+      priority: 1
+      type: string
+    - jsonPath: .spec.vmID
+      name: vmid
+      priority: 1
       type: string
     - jsonPath: .spec.providerID
       name: ProviderID
       type: string
     - jsonPath: .status.instanceStatus
-      name: InstanceStatus
+      name: Status
       type: string
+    - description: Time duration since creation of Machine
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1beta1
     schema:
       openAPIV3Schema:
@@ -125,6 +139,9 @@ spec:
               providerID:
                 description: ProviderID
                 type: string
+              vmID:
+                description: VMID is proxmox qemu's id
+                type: integer
             required:
             - image
             type: object
@@ -132,7 +149,7 @@ spec:
             description: ProxmoxMachineStatus defines the observed state of ProxmoxMachine
             properties:
               addresses:
-                description: Addresses contains the AWS instance associated addresses.
+                description: Addresses
                 items:
                   description: MachineAddress contains information for the node's
                     address.

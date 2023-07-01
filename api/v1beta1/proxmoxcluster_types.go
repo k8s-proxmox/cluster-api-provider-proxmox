@@ -59,8 +59,10 @@ type ProxmoxClusterStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="ControlPlaneEndpoint",type=string,JSONPath=`.spec.controlPlaneEndpoint.host`
-// +kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.ready`
+// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready",description="Cluster infrastructure is ready for ProxmoxMachine"
+// +kubebuilder:printcolumn:name="Proxmox-Server",type="string",JSONPath=".spec.serverRef.endpoint",description="Server is the address of the Proxmox API endpoint."
+// +kubebuilder:printcolumn:name="ControlPlane",type="string",JSONPath=".spec.controlPlaneEndpoint.host",description="kube-apiserver Endpoint"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="Time duration since creation of Machine"
 
 // ProxmoxCluster is the Schema for the proxmoxclusters API
 type ProxmoxCluster struct {

@@ -13,14 +13,15 @@ spec:
         serviceSubnet: 10.96.0.0/12
         podSubnet: 10.98.0.0/16
     initConfiguration:
-      localAPIEndpoints:
+      localAPIEndpoint:
         advertiseAddress: 192.168.1.222  # your controlplane endpoint
         bindPort: 6443
       nodeRegistration:
         criSocket: unix:///var/run/containerd/containerd.sock
     postKubeadmCommands:
-    - "curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
-    - "chmod +x /usr/lcoal/bin/kubectl"
+    - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
+    - "chmod +x /usr/local/bin/kubectl"
+    - "reboot now"
     preKubeadmCommands: []
   machineTemplate:
     infrastructureRef:

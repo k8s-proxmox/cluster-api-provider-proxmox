@@ -3,20 +3,19 @@ package instance
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"net/url"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox/pkg/api"
-	"github.com/sp-yduck/proxmox/pkg/service/node"
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/providerid"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
@@ -24,20 +23,47 @@ const (
 	etcCAPP = "/etc/capp"
 )
 
+// reconcile normal
 func (s *Service) Reconcile(ctx context.Context) error {
 	log := log.FromContext(ctx)
-	log.Info("Reconciling instance resources")
+	log.Info("Reconciling instance")
 	instance, err := s.createOrGetInstance(ctx)
 	if err != nil {
 		log.Error(err, "failed to create/get instance")
 		return err
 	}
-	log.Info(fmt.Sprintf("instance : %v", instance))
 
-	s.scope.SetProviderID(instance.Node.Name(), instance.VMID)
+	uuid, err := getBiosUUID(instance)
+	if err != nil {
+		return err
+	}
+
+	log.Info(fmt.Sprintf("Reconciled instance: bios-uuid=%s", *uuid))
+	s.scope.SetProviderID(*uuid)
 	s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.Status))
 	// s.scope.SetAddresses()
 	return nil
+}
+
+// reconcile delete
+func (s *Service) Delete(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	log.Info("Deleting instance resources")
+
+	instance, err := s.GetInstance(ctx)
+	if err != nil {
+		if !IsNotFound(err) {
+			return err
+		}
+		return nil
+	}
+
+	// must stop or pause instance before deletion
+	// otherwise deletion will be fail
+	if err := EnsureStoppedOrPaused(*instance); err != nil {
+		return err
+	}
+	return instance.Delete()
 }
 
 func (s *Service) createOrGetInstance(ctx context.Context) (*vm.VirtualMachine, error) {
@@ -50,10 +76,11 @@ func (s *Service) createOrGetInstance(ctx context.Context) (*vm.VirtualMachine, 
 		return nil, errors.Wrap(err, "failed to retrieve bootstrap data")
 	}
 
-	if s.scope.GetInstanceID() == nil {
-		log.Info("ProxmoxMachine doesn't have instanceID. instance will be created")
+	if s.scope.GetBiosUUID() == nil {
+		log.Info("ProxmoxMachine doesn't have bios UUID. instance will be created")
 		return s.CreateInstance(ctx, bootstrapData)
 	}
+
 	instance, err := s.GetInstance(ctx)
 	if err != nil {
 		if IsNotFound(err) {
@@ -63,24 +90,52 @@ func (s *Service) createOrGetInstance(ctx context.Context) (*vm.VirtualMachine, 
 		log.Error(err, "failed to get instance")
 		return nil, err
 	}
+
 	return instance, nil
 }
 
 func (s *Service) GetInstance(ctx context.Context) (*vm.VirtualMachine, error) {
 	log := log.FromContext(ctx)
-	instanceID := s.scope.GetInstanceID()
-	vm, err := s.getInstanceFromInstanceID(*instanceID)
+	biosUUID := s.scope.GetBiosUUID()
+	if biosUUID == nil {
+		return nil, api.ErrNotFound
+	}
+	vm, err := s.getInstanceFromBiosUUID(*biosUUID)
 	if err != nil {
 		if api.IsNotFound(err) {
 			log.Info("instance wasn't found")
 			return nil, api.ErrNotFound
 		}
-		log.Error(err, "failed to get instance from instance ID")
+		log.Error(err, "failed to get instance from bios UUID")
 		return nil, err
 	}
 	return vm, nil
 }
 
+func getBiosUUID(vm *vm.VirtualMachine) (*string, error) {
+	config, err := vm.Config()
+	if err != nil {
+		return nil, err
+	}
+	smbios := config.SMBios1
+	uuid, err := convertSMBiosToUUID(smbios)
+	if err != nil {
+		return nil, err
+	}
+	return pointer.StringPtr(uuid), nil
+}
+
+func convertSMBiosToUUID(smbios string) (string, error) {
+	re := regexp.MustCompile(fmt.Sprintf("uuid=%s", providerid.UUIDFormat))
+	match := re.FindString(smbios)
+	if match == "" {
+		return "", errors.Errorf("failed to fetch uuid form smbios")
+	}
+	// match: uuid=<uuid>
+	return strings.Split(match, "=")[1], nil
+}
+
+// will be abolished
 func (s *Service) getInstanceFromInstanceID(instanceID string) (*vm.VirtualMachine, error) {
 	vmid, err := strconv.Atoi(instanceID)
 	if err != nil {
@@ -103,44 +158,48 @@ func (s *Service) getInstanceFromInstanceID(instanceID string) (*vm.VirtualMachi
 	return nil, api.ErrNotFound
 }
 
+func (s *Service) getInstanceFromBiosUUID(uuid string) (*vm.VirtualMachine, error) {
+	nodes, err := s.client.Nodes()
+	if err != nil {
+		return nil, err
+	}
+	if len(nodes) == 0 {
+		return nil, errors.New("proxmox nodes not found")
+	}
+
+	// to do : check each node in parallel
+	for _, node := range nodes {
+		vms, err := node.VirtualMachines()
+		if err != nil {
+			continue
+		}
+		for _, vm := range vms {
+			config, err := vm.Config()
+			if err != nil {
+				return nil, err
+			}
+			vmuuid, err := convertSMBiosToUUID(config.SMBios1)
+			if err != nil {
+				return nil, err
+			}
+			if vmuuid == uuid {
+				return vm, nil
+			}
+		}
+	}
+	return nil, api.ErrNotFound
+}
+
 func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
-	var node *node.Node
-	var err error
-	nodeName := s.scope.NodeName()
-	if nodeName != "" {
-		node, err = s.GetNode(nodeName)
-		if err != nil {
-			log.Error(err, fmt.Sprintf("failed to get node %s", nodeName))
-			return nil, err
-		}
-	} else {
-		// temp solution
-		node, err = s.GetRandomNode()
-		if err != nil {
-			log.Error(err, "failed to get random node")
-			return nil, err
-		}
-		s.scope.SetNodeName(node.Node)
-	}
-
-	// (for multiple node proxmox cluster support)
-	// to do : set ssh client for specific node
-
-	vmid, err := s.GetNextID()
+	// qemu
+	vm, err := s.reconcileQEMU(ctx)
 	if err != nil {
-		log.Error(err, "failed to get available vmid")
 		return nil, err
 	}
-
-	// create vm
-	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetNetwork(), s.scope.GetHardware())
-	vm, err := node.CreateVirtualMachine(vmid, vmoption)
-	if err != nil {
-		log.Error(err, "failed to create virtual machine")
-		return nil, err
-	}
+	vmid := vm.VMID
+	log.Info(fmt.Sprintf("reconciled qemu: node=%s,vmid=%d", vm.Node.Name(), vmid))
 
 	// cloud init
 	if err := reconcileCloudInit(s, vmid, bootstrap); err != nil {
@@ -153,6 +212,7 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 	}
 
 	// volume
+	// to do: size option
 	if err := vm.ResizeVolume("scsi0", "+30G"); err != nil {
 		return nil, err
 	}
@@ -166,52 +226,6 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 
 func IsNotFound(err error) bool {
 	return api.IsNotFound(err)
-}
-
-func (s *Service) GetNextID() (int, error) {
-	return s.client.NextID()
-}
-
-func (s *Service) GetNodes() ([]*node.Node, error) {
-	return s.client.Nodes()
-}
-
-func (s *Service) GetNode(name string) (*node.Node, error) {
-	return s.client.Node(name)
-}
-
-// GetRandomNode returns a node chosen randomly
-func (s *Service) GetRandomNode() (*node.Node, error) {
-	nodes, err := s.GetNodes()
-	if err != nil {
-		return nil, err
-	}
-	if len(nodes) <= 0 {
-		return nil, errors.Errorf("no nodes found")
-	}
-	src := rand.NewSource(time.Now().Unix())
-	r := rand.New(src)
-	return nodes[r.Intn(len(nodes))], nil
-}
-
-func (s *Service) Delete(ctx context.Context) error {
-	log := log.FromContext(ctx)
-	log.Info("Deleting instance resources")
-
-	instance, err := s.GetInstance(ctx)
-	if err != nil {
-		if !IsNotFound(err) {
-			return err
-		}
-		return nil
-	}
-
-	// must stop or pause instance before deletion
-	// otherwise deletion will be fail
-	if err := EnsureStoppedOrPaused(*instance); err != nil {
-		return err
-	}
-	return instance.Delete()
 }
 
 // setCloudImage set OS image to specified storage
@@ -237,37 +251,6 @@ func SetCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image
 		return errors.Errorf("failed to convert iamge : %s : %v", out, err)
 	}
 	return nil
-}
-
-func generateVMOptions(vmName, storageName string, network infrav1.Network, hardware infrav1.Hardware) vm.VirtualMachineCreateOptions {
-	vmoptions := vm.VirtualMachineCreateOptions{
-		Agent:        "enabled=1",
-		Cores:        hardware.CPU,
-		Memory:       hardware.Memory,
-		Name:         vmName,
-		NameServer:   network.NameServer,
-		Boot:         "order=scsi0",
-		Ide:          vm.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
-		CiCustom:     fmt.Sprintf("user=%s:snippets/%s-user.yml", storageName, vmName),
-		IPConfig:     vm.IPConfig{IPConfig0: network.IPConfig.String()},
-		OSType:       vm.L26,
-		Net:          vm.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
-		Scsi:         vm.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},
-		ScsiHw:       vm.VirtioScsiPci,
-		SearchDomain: network.SearchDomain,
-		Serial:       vm.Serial{Serial0: "socket"},
-		VGA:          "serial0",
-	}
-	return vmoptions
-}
-
-// URL encodes the ssh keys
-func sshKeyUrlEncode(keys string) (encodedKeys string) {
-	encodedKeys = url.PathEscape(keys + "\n")
-	encodedKeys = strings.Replace(encodedKeys, "+", "%2B", -1)
-	encodedKeys = strings.Replace(encodedKeys, "@", "%40", -1)
-	encodedKeys = strings.Replace(encodedKeys, "=", "%3D", -1)
-	return
 }
 
 func EnsureRunning(instance vm.VirtualMachine) error {

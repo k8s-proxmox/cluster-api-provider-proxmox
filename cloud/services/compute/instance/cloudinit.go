@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"k8s.io/klog/v2"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/cloudinit"
@@ -42,6 +43,8 @@ func reconcileCloudInitUser(vmid int, vmName, storageName, bootstrap string, con
 	if err != nil {
 		return err
 	}
+
+	klog.Info(configYaml)
 
 	// to do: should be set via API
 	// to do: storage path
@@ -101,7 +104,7 @@ net.ipv4.ip_forward                 = 1`,
 			`curl -L "https://raw.githubusercontent.com/containerd/containerd/main/containerd.service" -o /etc/systemd/system/containerd.service`,
 			"mkdir -p /etc/containerd",
 			"containerd config default > /etc/containerd/config.toml",
-			"sed 's/SystemdCgroup = false/SystemdCgroup = true/g /etc/containerd/config.toml",
+			"sed 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml -i",
 			"systemctl daemon-reload",
 			"systemctl enable --now containerd",
 			"mkdir -p /usr/local/sbin",

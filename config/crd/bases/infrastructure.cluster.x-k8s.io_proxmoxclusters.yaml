@@ -16,12 +16,22 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.controlPlaneEndpoint.host
-      name: ControlPlaneEndpoint
-      type: string
-    - jsonPath: .status.ready
+    - description: Cluster infrastructure is ready for ProxmoxMachine
+      jsonPath: .status.ready
       name: Ready
       type: string
+    - description: Server is the address of the Proxmox API endpoint.
+      jsonPath: .spec.serverRef.endpoint
+      name: Proxmox-Server
+      type: string
+    - description: kube-apiserver Endpoint
+      jsonPath: .spec.controlPlaneEndpoint.host
+      name: ControlPlane
+      type: string
+    - description: Time duration since creation of Machine
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1beta1
     schema:
       openAPIV3Schema:
