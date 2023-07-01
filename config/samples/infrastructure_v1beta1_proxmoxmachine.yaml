@@ -9,5 +9,18 @@ metadata:
     app.kubernetes.io/created-by: cluster-api-provider-proxmox
   name: proxmoxmachine-sample
 spec:
-  providerID: ""
-  failureDomain: ""
+  image:
+    url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
+  cloudInit:
+    user:
+      user: ubnt
+      password: ubnt
+  hardware:
+    cpu: 2
+    memory: 4096
+  network:
+    ipConfig:
+      gateway: 192.168.1.1  # your gateway address
+      ip: 192.168.1.223/32  # your controplane endpoint
+    nameServer: 192.168.1.1  # your dns server address
+      
