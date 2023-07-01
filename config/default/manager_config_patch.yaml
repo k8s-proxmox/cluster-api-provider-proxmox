@@ -8,4 +8,4 @@ spec:
     spec:
       containers:
       - name: manager
-        image: spyduck/cluster-api-provider-proxmox:v0.1.0
+        image: spyduck/cluster-api-provider-proxmox:v0.2.0
