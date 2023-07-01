@@ -2,50 +2,41 @@ package providerid
 
 import (
 	"fmt"
-	"path"
-	"strconv"
 
 	"github.com/pkg/errors"
 )
 
-const Prefix = "proxmox://"
+const (
+	Prefix     = "proxmox://"
+	UUIDFormat = `[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}`
+)
 
 type ProviderID interface {
-	Node() string
-	VMID() int
+	UUID() string
 	fmt.Stringer
 }
 
 type providerID struct {
-	// proxmox node name
-	node string
-	// proxmox vmid
-	vmid int
+	uuid string
 }
 
-func New(node string, vmid int) (ProviderID, error) {
-	if node == "" {
-		return nil, errors.New("location required for provider id")
-	}
-	if vmid == 0 {
-		return nil, errors.New("vmid required for provider id")
+func New(uuid string) (ProviderID, error) {
+	if uuid == "" {
+		return nil, errors.New("uuid is required for provider id")
 	}
 
+	// to do: validate uuid
+
 	return &providerID{
-		node: node,
-		vmid: vmid,
+		uuid: uuid,
 	}, nil
 }
 
-func (p *providerID) Node() string {
-	return p.node
-}
-
-func (p *providerID) VMID() int {
-	return p.vmid
+func (p *providerID) UUID() string {
+	return p.uuid
 }
 
 func (p *providerID) String() string {
-	// provider ID : proxmox://<node name>/<vmid>
-	return Prefix + path.Join(p.node, strconv.Itoa(p.vmid))
+	// provider ID : proxmox://<bios-uuid>
+	return Prefix + p.uuid
 }

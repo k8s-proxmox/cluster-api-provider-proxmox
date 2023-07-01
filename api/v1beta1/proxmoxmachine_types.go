@@ -42,6 +42,10 @@ type ProxmoxMachineSpec struct {
 	// +optional
 	Node string `json:"node,omitempty"`
 
+	// VMID is proxmox qemu's id
+	// +optional
+	VMID *int `json:"vmID,omitempty"`
+
 	// Image is the image to be provisioned
 	Image Image `json:"image"`
 

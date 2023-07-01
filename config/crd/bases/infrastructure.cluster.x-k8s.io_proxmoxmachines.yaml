@@ -125,6 +125,9 @@ spec:
               providerID:
                 description: ProviderID
                 type: string
+              vmID:
+                description: VMID is proxmox qemu's id
+                type: integer
             required:
             - image
             type: object

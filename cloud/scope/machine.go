@@ -142,12 +142,11 @@ func (m *MachineScope) SetInstanceStatus(v infrav1.InstanceStatus) {
 	m.ProxmoxMachine.Status.InstanceStatus = &v
 }
 
-func (m *MachineScope) GetInstanceID() *string {
+func (m *MachineScope) GetBiosUUID() *string {
 	parsed, err := noderefutil.NewProviderID(m.GetProviderID())
 	if err != nil {
 		return nil
 	}
-	// instance id == vmid
 	return pointer.StringPtr(parsed.ID())
 }
 
@@ -156,6 +155,10 @@ func (m *MachineScope) GetProviderID() string {
 		return *m.ProxmoxMachine.Spec.ProviderID
 	}
 	return ""
+}
+
+func (m *MachineScope) GetVMID() *int {
+	return m.ProxmoxMachine.Spec.VMID
 }
 
 func (m *MachineScope) GetImage() infrav1.Image {
@@ -182,13 +185,17 @@ func (m *MachineScope) GetHardware() infrav1.Hardware {
 }
 
 // SetProviderID sets the ProxmoxMachine providerID in spec.
-func (m *MachineScope) SetProviderID(node string, vmid int) error {
-	providerid, err := providerid.New(node, vmid)
+func (m *MachineScope) SetProviderID(uuid string) error {
+	providerid, err := providerid.New(uuid)
 	if err != nil {
 		return err
 	}
 	m.ProxmoxMachine.Spec.ProviderID = pointer.StringPtr(providerid.String())
 	return nil
+}
+
+func (m *MachineScope) SetVMID(vmid int) {
+	m.ProxmoxMachine.Spec.VMID = &vmid
 }
 
 func (m *MachineScope) SetReady() {

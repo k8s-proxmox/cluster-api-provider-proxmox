@@ -163,18 +163,18 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 	instanceState := *machineScope.GetInstanceStatus()
 	switch instanceState {
 	case infrav1.InstanceStatusRunning:
-		log.Info("ProxmoxMachine instance is running", "instance-id", *machineScope.GetInstanceID())
-		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is running - instance-id: %s", *machineScope.GetInstanceID())
+		log.Info("ProxmoxMachine instance is running", "bios-uuid", *machineScope.GetBiosUUID())
+		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is running - bios-uuid: %s", *machineScope.GetBiosUUID())
 		record.Event(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "Reconciled")
 		machineScope.SetReady()
 		return ctrl.Result{}, nil
 	case infrav1.InstanceStatusStopped:
-		log.Info("ProxmoxMachine instance is stopped", "instance-id", *machineScope.GetInstanceID())
-		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is stopped - instance-id: %s", *machineScope.GetInstanceID())
+		log.Info("ProxmoxMachine instance is stopped", "instance-id", *machineScope.GetBiosUUID())
+		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is stopped - bios-uuid: %s", *machineScope.GetBiosUUID())
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	case infrav1.InstanceStatusPaused:
-		log.Info("ProxmoxMachine instance is paused", "instance-id", *machineScope.GetInstanceID())
-		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is paused - instance-id: %s", *machineScope.GetInstanceID())
+		log.Info("ProxmoxMachine instance is paused", "instance-id", *machineScope.GetBiosUUID())
+		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is paused - bios-uuid: %s", *machineScope.GetBiosUUID())
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	default:
 		machineScope.SetFailureReason(capierrors.UpdateMachineError)
