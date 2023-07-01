@@ -60,6 +60,14 @@ metadata:
 type: Opaque
 ```
 
+3. Check your Cluster & Machines !!
+
+Once CAPP reconciled your `ProxmoxCluster`/`ProxmoxMachine`, you can see `READY=true` for `ProxmoxCluster` and `STATUS=running` for `ProxmoxMachine`.
+
+![kubectl-get-proxmox-cluster](./logos/k-get-proxmoxcluster.PNG)
+
+![kubectl-get-proxmox-machine](./logos/k-get-proxmoxmachine.PNG)
+
 ## Fetures
 
 - No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`.
