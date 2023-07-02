@@ -118,10 +118,6 @@ spec:
                             description: 'amount of RAM for the VM in MiB : 16 ~'
                             minimum: 16
                             type: integer
-                        required:
-                        - cpu
-                        - disk
-                        - memory
                         type: object
                       image:
                         description: Image is the image to be provisioned
