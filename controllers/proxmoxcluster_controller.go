@@ -144,7 +144,7 @@ func (r *ProxmoxClusterReconciler) reconcileDelete(ctx context.Context, clusterS
 	log.Info("Reconciling Delete ProxmoxCluster")
 
 	reconcilers := []cloud.Reconciler{
-		// to do
+		storage.NewService(clusterScope),
 	}
 
 	for _, r := range reconcilers {
