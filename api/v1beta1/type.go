@@ -63,6 +63,10 @@ type Hardware struct {
 	// +kubebuilder:validation:Minimum:=16
 	// +kubebuilder:default:=4096
 	Memory int `json:"memory,omitempty"`
+
+	// hard disk size
+	// +kubebuilder:default:="50G"
+	Disk string `json:"disk,omitempty"`
 }
 
 // Network

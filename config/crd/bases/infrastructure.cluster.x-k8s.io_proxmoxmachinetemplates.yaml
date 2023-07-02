@@ -109,11 +109,19 @@ spec:
                             default: 2
                             description: 'number of CPU cores : 1 ~'
                             type: integer
+                          disk:
+                            default: 50G
+                            description: hard disk size
+                            type: string
                           memory:
                             default: 4096
                             description: 'amount of RAM for the VM in MiB : 16 ~'
                             minimum: 16
                             type: integer
+                        required:
+                        - cpu
+                        - disk
+                        - memory
                         type: object
                       image:
                         description: Image is the image to be provisioned
