@@ -24,6 +24,30 @@ func reconcileCloudInit(s *Service, vmid int, bootstrap string) error {
 	return nil
 }
 
+// delete CloudConfig
+func (s *Service) deleteCloudConfig() error {
+	storageName := s.scope.GetStorage().Name
+	volumeID := fmt.Sprintf("%s:snippets/%s-user.yml", storageName, s.scope.Name())
+
+	node, err := s.client.Node(s.scope.NodeName())
+	if err != nil {
+		return err
+	}
+	storage, err := node.Storage(storageName)
+	if err != nil {
+		return err
+	}
+	content, err := storage.GetContent(volumeID)
+	if IsNotFound(err) { // return nil if it's already deleted
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	return content.DeleteVolume()
+}
+
 func reconcileCloudInitUser(vmid int, vmName, storageName, bootstrap string, config infrav1.User, ssh scope.SSHClient) error {
 	base := baseUserData(vmName)
 

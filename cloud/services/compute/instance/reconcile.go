@@ -61,6 +61,13 @@ func (s *Service) Delete(ctx context.Context) error {
 	if err := EnsureStoppedOrPaused(*instance); err != nil {
 		return err
 	}
+
+	// delete cloud-config file
+	if err := s.deleteCloudConfig(); err != nil {
+		return err
+	}
+
+	// delete qemu
 	return instance.Delete()
 }
 
