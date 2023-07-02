@@ -129,7 +129,7 @@ func generateVMOptions(vmName, storageName string, network infrav1.Network, hard
 		NameServer:   network.NameServer,
 		Boot:         "order=scsi0",
 		Ide:          vm.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
-		CiCustom:     fmt.Sprintf("user=%s:snippets/%s-user.yml", storageName, vmName),
+		CiCustom:     fmt.Sprintf("user=%s:%s", storageName, userSnippetPath(vmName)),
 		IPConfig:     vm.IPConfig{IPConfig0: network.IPConfig.String()},
 		OSType:       vm.L26,
 		Net:          vm.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},

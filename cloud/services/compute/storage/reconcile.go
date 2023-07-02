@@ -28,7 +28,10 @@ func (s *Service) Reconcile(ctx context.Context) error {
 }
 
 func (s *Service) Delete(ctx context.Context) error {
-	// to do
+	// return s.deleteStorage(ctx)
+	// not worthy to delete Storage
+	// since deleting Storage will block vm deletion
+	// and does not delete actual content in the node
 	return nil
 }
 
@@ -58,6 +61,26 @@ func (s *Service) getStorage(name string) error {
 func (s *Service) createStorage(options storage.StorageCreateOptions) error {
 	if _, err := s.client.CreateStorage(options.Storage, options.StorageType, options); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (s *Service) deleteStorage(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	nodes, err := s.client.Nodes()
+	if err != nil {
+		return err
+	}
+	for _, node := range nodes {
+		storage, err := node.Storage(s.scope.Storage().Name)
+		if err != nil {
+			log.Info(err.Error())
+			continue
+		}
+		if _, err := storage.Delete(); err != nil {
+			log.Info(err.Error())
+			return err
+		}
 	}
 	return nil
 }
