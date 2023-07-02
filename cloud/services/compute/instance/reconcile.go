@@ -3,7 +3,6 @@ package instance
 import (
 	"context"
 	"fmt"
-	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,7 +15,6 @@ import (
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/providerid"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
 const (
@@ -206,14 +204,8 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 		return nil, err
 	}
 
-	// os image
-	if err := SetCloudImage(ctx, vmid, s.scope.GetStorage(), s.scope.GetImage(), s.remote); err != nil {
-		return nil, err
-	}
-
-	// volume
-	// to do: size option
-	if err := vm.ResizeVolume("scsi0", "+30G"); err != nil {
+	// set cloud image to hard disk and then resize
+	if err := s.reconcileBootDevice(ctx, vm); err != nil {
 		return nil, err
 	}
 
@@ -226,31 +218,6 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 
 func IsNotFound(err error) bool {
 	return api.IsNotFound(err)
-}
-
-// setCloudImage set OS image to specified storage
-func SetCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image infrav1.Image, ssh scope.SSHClient) error {
-	log := log.FromContext(ctx)
-	log.Info("setting cloud image")
-
-	url := image.URL
-	fileName := path.Base(url)
-	rawImageDirPath := fmt.Sprintf("%s/images", etcCAPP)
-	rawImageFilePath := fmt.Sprintf("%s/%s", rawImageDirPath, fileName)
-
-	// workaround
-	// API does not support something equivalent of "qm importdisk"
-	out, err := ssh.RunCommand(fmt.Sprintf("wget %s --directory-prefix %s -nc", url, rawImageDirPath))
-	if err != nil {
-		return errors.Errorf("failed to download image: %s : %v", out, err)
-	}
-
-	destPath := fmt.Sprintf("%s/images/%d/vm-%d-disk-0.raw", storage.Path, vmid, vmid)
-	out, err = ssh.RunCommand(fmt.Sprintf("/usr/bin/qemu-img convert -O raw %s %s", rawImageFilePath, destPath))
-	if err != nil {
-		return errors.Errorf("failed to convert iamge : %s : %v", out, err)
-	}
-	return nil
 }
 
 func EnsureRunning(instance vm.VirtualMachine) error {
