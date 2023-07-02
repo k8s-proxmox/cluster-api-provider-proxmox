@@ -288,8 +288,8 @@ github.com/shopspring/decimal v1.3.1 h1:2Usl1nmF/WZucqkFZhnfFYxxxu8LG21F6nPQBE5g
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
-github.com/sp-yduck/proxmox v0.0.0-20230627144956-64b565d07db7 h1:y2VI0xIOh35Dl3vKdbns6TVwe6ReSw4Akyr5qUVyUWU=
-github.com/sp-yduck/proxmox v0.0.0-20230627144956-64b565d07db7/go.mod h1:VIKtGZXlx0nO9Y+K2vJ4z3rJLkZ3v0OvTnKbO22EnL4=
+github.com/sp-yduck/proxmox v0.0.0-20230702124708-d086ca37fd8f h1:n32eSWqWLtjk+jb4B1Ok+W5KoAxuYuouEkXjumqySXI=
+github.com/sp-yduck/proxmox v0.0.0-20230702124708-d086ca37fd8f/go.mod h1:VIKtGZXlx0nO9Y+K2vJ4z3rJLkZ3v0OvTnKbO22EnL4=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/spf13/cast v1.5.0 h1:rj3WzYc11XZaIZMPKmwP96zkFEnnAmV8s6XbB2aY32w=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
