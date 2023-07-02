@@ -207,7 +207,7 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 	log.Info(fmt.Sprintf("reconciled qemu: node=%s,vmid=%d", vm.Node.Name(), vmid))
 
 	// cloud init
-	if err := reconcileCloudInit(s, vmid, bootstrap); err != nil {
+	if err := s.reconcileCloudInit(bootstrap); err != nil {
 		return nil, err
 	}
 

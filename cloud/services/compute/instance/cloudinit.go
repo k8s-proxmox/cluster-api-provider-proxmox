@@ -11,14 +11,14 @@ import (
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
-// reconcileCloudInit
-func reconcileCloudInit(s *Service, vmid int, bootstrap string) error {
-	vmName := s.scope.Name()
-	storageName := s.scope.GetStorage().Name
-	cloudInit := s.scope.GetCloudInit()
+const (
+	userSnippetPathFormat = "snippets/%s-user.yml"
+)
 
+// reconcileCloudInit
+func (s *Service) reconcileCloudInit(bootstrap string) error {
 	// user
-	if err := reconcileCloudInitUser(vmid, vmName, storageName, bootstrap, *cloudInit.User, s.remote); err != nil {
+	if err := s.reconcileCloudInitUser(bootstrap); err != nil {
 		return err
 	}
 	return nil
@@ -27,7 +27,8 @@ func reconcileCloudInit(s *Service, vmid int, bootstrap string) error {
 // delete CloudConfig
 func (s *Service) deleteCloudConfig() error {
 	storageName := s.scope.GetStorage().Name
-	volumeID := fmt.Sprintf("%s:snippets/%s-user.yml", storageName, s.scope.Name())
+	path := userSnippetPath(s.scope.Name())
+	volumeID := fmt.Sprintf("%s:%s", storageName, path)
 
 	node, err := s.client.Node(s.scope.NodeName())
 	if err != nil {
@@ -48,14 +49,17 @@ func (s *Service) deleteCloudConfig() error {
 	return content.DeleteVolume()
 }
 
-func reconcileCloudInitUser(vmid int, vmName, storageName, bootstrap string, config infrav1.User, ssh scope.SSHClient) error {
-	base := baseUserData(vmName)
+func (s *Service) reconcileCloudInitUser(bootstrap string) error {
+	vmName := s.scope.Name()
+	storagePath := s.scope.GetStorage().Path
+	config := s.scope.GetCloudInit().User
 
 	bootstrapConfig, err := cloudinit.ParseUser(bootstrap)
 	if err != nil {
 		return err
 	}
-	additional, err := cloudinit.MergeUsers(config, base)
+	base := baseUserData(vmName)
+	additional, err := cloudinit.MergeUsers(*config, base)
 	if err != nil {
 		return err
 	}
@@ -71,13 +75,16 @@ func reconcileCloudInitUser(vmid int, vmName, storageName, bootstrap string, con
 	klog.Info(configYaml)
 
 	// to do: should be set via API
-	// to do: storage path
-	out, err := ssh.RunWithStdin(fmt.Sprintf("tee /var/lib/vz/%s/snippets/%s-user.yml", storageName, vmName), configYaml)
+	out, err := s.remote.RunWithStdin(fmt.Sprintf("tee %s/%s", storagePath, userSnippetPath(vmName)), configYaml)
 	if err != nil {
 		return errors.Errorf("ssh command error : %s : %v", out, err)
 	}
 
 	return nil
+}
+
+func userSnippetPath(vmName string) string {
+	return fmt.Sprintf(userSnippetPathFormat, vmName)
 }
 
 // DEPRECATED : cicustom should be set via API
