@@ -72,7 +72,9 @@ spec:
                 items:
                   description: NodeRef
                   properties:
-                    credentialsRef:
+                    name:
+                      type: string
+                    secretRef:
                       description: ObjectReference is a reference to another Kubernetes
                         object instance.
                       properties:
@@ -84,20 +86,21 @@ spec:
                           type: string
                       required:
                       - name
-                      - namespace
                       type: object
-                    name:
-                      type: string
                   required:
-                  - credentialsRef
                   - name
+                  - secretRef
                   type: object
                 type: array
               serverRef:
                 description: ServerRef is used for configuring Proxmox client
                 properties:
-                  credentialsRef:
-                    description: CredentialsRef is a reference for secret which contains
+                  endpoint:
+                    description: endpoint is the address of the Proxmox-VE REST API
+                      endpoint.
+                    type: string
+                  secretRef:
+                    description: SecretRef is a reference for secret which contains
                       proxmox login secrets and ssh configs for proxmox nodes
                     properties:
                       name:
@@ -108,15 +111,10 @@ spec:
                         type: string
                     required:
                     - name
-                    - namespace
                     type: object
-                  endpoint:
-                    description: endpoint is the address of the Proxmox-VE REST API
-                      endpoint.
-                    type: string
                 required:
-                - credentialsRef
                 - endpoint
+                - secretRef
                 type: object
               storage:
                 description: storage is for proxmox storage used by vm instances

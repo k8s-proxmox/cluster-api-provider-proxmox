@@ -25,48 +25,35 @@ make deploy
 
 2. Create your first workload cluster
 ```sh
-# cluster & infra cluster
-kubectl apply -f config/samples/cluster.yaml
-kubectl apply -f config/samples/infrastructure_v1beta1_proxmoxcluster.yaml
+# export env variables
+export CONTROLPLANE_HOST=X.X.X.X
+export PROXMOX_URL=X.X.X.X:8006
+export GATEWAY_ADDRESS=X.X.X.X
+export NAMESERVER_ADDRESS=X.X.X.X
+export PROXMOX_PASSWORD_BASE64=$(echo -n <password> | base64)
+export PROXMOX_USER_BASE64=$(echo -n <user@pam> | base64)
+export NODE_URL_BASE64=$(echo -n <node.ssh.url:22> | base64)
+export NODE_USER_BASE64=$(echo -n <node-ssh-user> | base64)
+export NODE_PASSWORD_BASE64=$(echo -n <node-ssh-password> | base64)
 
-# controlplane
-kubectl apply -f config/samples/controlplane.yaml
-
-# machine & bootstrap & infra machine
-kubectl apply -f config/samples/machine.yaml
-kubectl apply -f config/samples/bootstrap.yaml
-kubectl apply -f config/samples/infrastructure_v1beta1_proxmoxcluster.yaml
-
-# proxmox configs
-kubetl apply -f <your-proxmox-config-secret>.yaml
+make create-workload-cluster
 ```
 
-You need to provide your proxmox information through secret. 
-```yaml
-# <your-proxmox-config-secret>.yaml
-apiVersion: v1
-data:
-  # for proxmox API
-  PROXMOX_PASSWORD: "<base 64>"
-  PROXMOX_USER: "<base 64>"
-  # for ssh into the node to bootstrapping VMs
-  ## * current CAPP is compatible with only single node proxmox cluster
-  NODE_URL: "<base 64>"
-  NODE_USER: "<base 64>"
-  NODE_PASSWORD: "<base 64>"
-kind: Secret
-metadata:
-  name: proxmoxcluster-sample
-type: Opaque
+3. Access your first workload cluster !!
+
+Usually it takes 2~5 mins to complete bootstrap the nodes.
+```sh
+# get workload cluster's kubeconfig
+clusterctl get kubeconfig cappx-test > kubeconfig.yaml
+
+# get node command for workload cluster
+kubectl --kubeconfig=kubeconfig.yaml get node
 ```
 
-3. Check your Cluster & Machines !!
-
-Once CAPP reconciled your `ProxmoxCluster`/`ProxmoxMachine`, you can see `READY=true` for `ProxmoxCluster` and `STATUS=running` for `ProxmoxMachine`.
-
-![kubectl-get-proxmox-cluster](./logos/k-get-proxmoxcluster.PNG)
-
-![kubectl-get-proxmox-machine](./logos/k-get-proxmoxmachine.PNG)
+4. Tear down your workload cluster
+```sh
+make delete-workload-cluster
+```
 
 ## Fetures
 

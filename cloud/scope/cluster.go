@@ -42,6 +42,7 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 	if params.ProxmoxCluster == nil {
 		return nil, errors.New("failed to generate new scope from nil ProxmoxCluster")
 	}
+	populateNamespace(params.ProxmoxCluster)
 
 	if params.ProxmoxServices.Compute == nil {
 		computeSvc, err := newComputeService(ctx, params.ProxmoxCluster.Spec.ServerRef, params.Client)
@@ -53,7 +54,7 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 
 	if params.ProxmoxServices.Remote == nil {
 		// current CAPP is compatible with only single node proxmox cluster
-		remote, err := newRemoteClient(ctx, params.ProxmoxCluster.Spec.NodeRefs[0].CredentialsRef, params.Client)
+		remote, err := newRemoteClient(ctx, params.ProxmoxCluster.Spec.NodeRefs[0].SecretRef, params.Client)
 		if err != nil {
 			return nil, errors.Errorf("failed to create remote client: %v", err)
 		}
@@ -72,6 +73,17 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 		ProxmoxServices: params.ProxmoxServices,
 		patchHelper:     helper,
 	}, err
+}
+
+func populateNamespace(proxmoxCluster *infrav1.ProxmoxCluster) {
+	if proxmoxCluster.Spec.ServerRef.SecretRef.Namespace == "" {
+		proxmoxCluster.Spec.ServerRef.SecretRef.Namespace = proxmoxCluster.Namespace
+	}
+	for i, nodeRef := range proxmoxCluster.Spec.NodeRefs {
+		if nodeRef.SecretRef.Namespace == "" {
+			proxmoxCluster.Spec.NodeRefs[i].SecretRef.Namespace = proxmoxCluster.Namespace
+		}
+	}
 }
 
 type ClusterScope struct {

@@ -11,6 +11,9 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+GOARCH  := $(shell go env GOARCH)
+GOOS    := $(shell go env GOOS)
+
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
 SHELL = /usr/bin/env bash -o pipefail
@@ -58,6 +61,16 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 
+CLUSTER_NAME := cappx-test
+
+.PHONY: create-workload-cluster
+create-workload-cluster: $(KUSTOMIZE) $(ENVSUBST) $(KUBECTL)
+	export CLUSTER_NAME=$(CLUSTER_NAME) && $(KUSTOMIZE) build templates | $(ENVSUBST) | $(KUBECTL) apply -f -
+
+.PHONY: delete-workload-cluster
+delete-workload-cluster: $(KUBECTL)
+	$(KUBECTL) delete cluster $(CLUSTER_NAME)
+
 ##@ Build
 
 .PHONY: build
@@ -72,7 +85,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
+docker-build: # test ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
 .PHONY: docker-push
@@ -119,6 +132,30 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
+##@ Release
+
+## Location to output for release
+RELEASE_DIR := out
+$(RELEASE_DIR):
+	mkdir -p $(RELEASE_DIR)
+
+# RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
+
+# .PHONY: release
+
+.PHONY: release-manifests
+release-manifests: $(KUSTOMIZE) $(RELEASE_DIR) ## Builds the manifests to publish with a release
+	$(KUSTOMIZE) build config/default > $(RELEASE_DIR)/infrastructure-components.yaml
+
+.PHONY: release-metadata
+release-metadata: $(RELEASE_DIR)
+	cp metadata.yaml $(RELEASE_DIR)/metadata.yaml
+
+.PHONY: release-templates
+release-templates: $(RELEASE_DIR)
+	cp templates/cluster-template* $(RELEASE_DIR)/
+
+
 ##@ Build Dependencies
 
 ## Location to install dependencies to
@@ -130,10 +167,14 @@ $(LOCALBIN):
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
+ENVSUBST ?= $(LOCALBIN)/envsubst
+KUBECTL ?= $(LOCALBIN)/kubectl
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.0.0
 CONTROLLER_TOOLS_VERSION ?= v0.11.3
+ENVSUBST_VER ?= v1.4.2
+KUBECTL_VER := v1.25.10
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -155,3 +196,14 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+.PHONY: envsubst
+envsubst: $(ENVSUBST)
+$(ENVSUBST): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install github.com/a8m/envsubst/cmd/envsubst@$(ENVSUBST_VER)
+
+.PHONY: kubectl
+kubectl: $(KUBECTL)
+$(KUBECTL): $(LOCALBIN)
+	curl --retry 3 -fsL https://dl.k8s.io/release/$(KUBECTL_VER)/bin/$(GOOS)/$(GOARCH)/kubectl -o $(LOCALBIN)/kubectl
+	chmod +x $(KUBECTL)

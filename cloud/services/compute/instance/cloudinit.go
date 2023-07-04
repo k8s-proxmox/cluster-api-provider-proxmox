@@ -59,11 +59,13 @@ func (s *Service) reconcileCloudInitUser(bootstrap string) error {
 		return err
 	}
 	base := baseUserData(vmName)
-	additional, err := cloudinit.MergeUsers(*config, base)
-	if err != nil {
-		return err
+	if config != nil {
+		base, err = cloudinit.MergeUsers(*config, *base)
+		if err != nil {
+			return err
+		}
 	}
-	cloudConfig, err := cloudinit.MergeUsers(*additional, *bootstrapConfig)
+	cloudConfig, err := cloudinit.MergeUsers(*base, *bootstrapConfig)
 	if err != nil {
 		return err
 	}
@@ -101,8 +103,8 @@ func ApplyCICustom(vmid int, vmName, storageName, ciType string, ssh scope.SSHCl
 }
 
 // to do : remove these cloud-config
-func baseUserData(vmName string) infrav1.User {
-	return infrav1.User{
+func baseUserData(vmName string) *infrav1.User {
+	return &infrav1.User{
 		GrowPart:       infrav1.GrowPart{Mode: "auto", Devices: []string{"/"}, IgnoreGrowrootDisabled: false},
 		HostName:       vmName,
 		ManageEtcHosts: true,
