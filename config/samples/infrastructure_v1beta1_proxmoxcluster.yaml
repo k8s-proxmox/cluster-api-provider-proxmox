@@ -14,14 +14,12 @@ spec:
     port: 6443
   serverRef: 
     endpoint: 192.168.1.157:8006  # your proxmox api endpoint
-    credentialsRef:
+    secretRef:
       name: proxmoxcluster-sample
-      namespace: default
   nodeRefs:
     - name: mynode
-      credentialsRef:
+      secretRef:
         name: proxmoxcluster-sample
-        namespace: default
   storage:
     name: proxmoxcluster-sample
     path: ""

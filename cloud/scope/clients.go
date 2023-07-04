@@ -33,13 +33,13 @@ type ProxmoxServices struct {
 }
 
 func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClient client.Client) (*service.Service, error) {
-	credentialsRef := serverRef.CredentialsRef
-	if credentialsRef == nil {
-		return nil, errors.New("failed to get proxmox client form nil credentialsRef")
+	secretRef := serverRef.SecretRef
+	if secretRef == nil {
+		return nil, errors.New("failed to get proxmox client form nil secretRef")
 	}
 
 	var secret corev1.Secret
-	key := client.ObjectKey{Namespace: credentialsRef.Namespace, Name: credentialsRef.Name}
+	key := client.ObjectKey{Namespace: secretRef.Namespace, Name: secretRef.Name}
 	if err := crClient.Get(ctx, key, &secret); err != nil {
 		return nil, err
 	}
@@ -56,13 +56,13 @@ func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClien
 	return service.NewServiceWithLogin(serverRef.Endpoint, string(proxmoxUser), string(proxmoxPassword))
 }
 
-func newRemoteClient(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*SSHClient, error) {
-	if credentialsRef == nil {
-		return nil, errors.New("failed to get proxmox client form nil credentialsRef")
+func newRemoteClient(ctx context.Context, secretRef *infrav1.ObjectReference, crClient client.Client) (*SSHClient, error) {
+	if secretRef == nil {
+		return nil, errors.New("failed to get proxmox client form nil secretRef")
 	}
 
 	var secret corev1.Secret
-	key := client.ObjectKey{Namespace: credentialsRef.Namespace, Name: credentialsRef.Name}
+	key := client.ObjectKey{Namespace: secretRef.Namespace, Name: secretRef.Name}
 	if err := crClient.Get(ctx, key, &secret); err != nil {
 		return nil, err
 	}

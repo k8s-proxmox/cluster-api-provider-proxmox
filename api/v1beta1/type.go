@@ -17,23 +17,22 @@ type ServerRef struct {
 
 	// to do : client options like insecure tls verify
 
-	// CredentialsRef is a reference for secret which contains proxmox login secrets
+	// SecretRef is a reference for secret which contains proxmox login secrets
 	// and ssh configs for proxmox nodes
-	CredentialsRef *ObjectReference `json:"credentialsRef"`
+	SecretRef *ObjectReference `json:"secretRef"`
 }
 
 // NodeRef
 type NodeRef struct {
-	Name           string           `json:"name"`
-	CredentialsRef *ObjectReference `json:"credentialsRef"`
+	Name      string           `json:"name"`
+	SecretRef *ObjectReference `json:"secretRef"`
 }
 
 // ObjectReference is a reference to another Kubernetes object instance.
 type ObjectReference struct {
 	// Namespace of the referent.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-	// +kubebuilder:validation:Required
-	Namespace string `json:"namespace"`
+	Namespace string `json:"namespace,omitempty"`
 	// Name of the referent.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	// +kubebuilder:validation:Required
