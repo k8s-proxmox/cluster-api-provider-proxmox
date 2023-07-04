@@ -41,7 +41,7 @@ make create-workload-cluster
 
 3. Access your first workload cluster !!
 
-Usually it takes 2~5 mins to complete bootstrap the nodes.
+Usually it takes 2~10 mins to complete bootstrap the nodes.
 ```sh
 # get workload cluster's kubeconfig
 clusterctl get kubeconfig cappx-test > kubeconfig.yaml
