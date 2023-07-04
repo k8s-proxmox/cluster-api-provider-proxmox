@@ -53,7 +53,7 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 	}
 
 	if params.ProxmoxServices.Remote == nil {
-		// current CAPP is compatible with only single node proxmox cluster
+		// current CAPPX is compatible with only single node proxmox cluster
 		remote, err := newRemoteClient(ctx, params.ProxmoxCluster.Spec.NodeRefs[0].SecretRef, params.Client)
 		if err != nil {
 			return nil, errors.Errorf("failed to create remote client: %v", err)
