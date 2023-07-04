@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	etcCAPP = "/etc/capp"
+	etcCAPPX = "/etc/cappx"
 )
 
 // reconcile normal

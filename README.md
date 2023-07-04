@@ -1,4 +1,4 @@
-# cluster-api-provider-proxmox (CAPP)
+# cluster-api-provider-proxmox (CAPPX)
 
 cluster-api-provider-proxmox is a Cluster API [infrastructure provider](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html) implementation for [Proxmox VE](https://pve.proxmox.com/wiki/Main_Page).
 
@@ -41,7 +41,7 @@ make create-workload-cluster
 
 3. Access your first workload cluster !!
 
-Usually it takes 2~5 mins to complete bootstrap the nodes.
+Usually it takes 2~10 mins to complete bootstrapping the nodes.
 ```sh
 # get workload cluster's kubeconfig
 clusterctl get kubeconfig cappx-test > kubeconfig.yaml
@@ -59,34 +59,34 @@ make delete-workload-cluster
 
 - No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`.
 
-- Supports custom cloud-config (user data). CAPP uses ssh for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
+- Supports custom cloud-config (user data). CAPPX uses ssh for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
 
 ## Compatibility
 
 ### Proxmox-VE REST API
 
-CAPP is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve)`.
+CAPPX is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve)`.
 
 ### Cluster API
 
 |                       | Cluster API v1alpha4 | Cluster API v1beta1 |
 | --------------------- | :------------------: | :-----------------: |
-| CAPP v1beta1 `(v0.x)` |          ?           |          ✓          |
+| CAPPX v1beta1 `(v0.x)` |          ?           |          ✓          |
 
 ### ControlPlane & Bootstrap provider 
 
-CAPP is tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
+CAPPX is tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
 
 ## How it works
 This project aims to follow the Cluster API [Provider contract](https://cluster-api.sigs.k8s.io/developer/providers/contracts.html).
 
 ### ProxmoxCluster
 
-Because Proxmox-VE does not provide LBaaS solution, CAPP does not follow the [typical infra-cluster logic](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html#behavior). ProxmoxCluster controller reconciles only Proxmox storages used for instances. You need to prepare control plane load balancer by yourself if you creates HA control plane workload cluster.
+Because Proxmox-VE does not provide LBaaS solution, CAPPX does not follow the [typical infra-cluster logic](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html#behavior). ProxmoxCluster controller reconciles only Proxmox storages used for instances. You need to prepare control plane load balancer by yourself if you creates HA control plane workload cluster.
 
 ### ProxmoxMachine
 
-ProxmoxMachine controller follows the [typical infra-machine logic](https://cluster-api.sigs.k8s.io/developer/providers/machine-infrastructure.html#behavior). To bootstrap your machine, CAPP supports only `cloud-config` type bootstrap data secret. CAPP is mainly tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
+ProxmoxMachine controller follows the [typical infra-machine logic](https://cluster-api.sigs.k8s.io/developer/providers/machine-infrastructure.html#behavior). To bootstrap your machine, CAPPX supports only `cloud-config` type bootstrap data secret. CAPPX is mainly tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
 
 ## Contributing
 
