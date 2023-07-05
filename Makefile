@@ -57,10 +57,6 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
-.PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
-
 CLUSTER_NAME := cappx-test
 
 .PHONY: create-workload-cluster
@@ -70,6 +66,21 @@ create-workload-cluster: $(KUSTOMIZE) $(ENVSUBST) $(KUBECTL)
 .PHONY: delete-workload-cluster
 delete-workload-cluster: $(KUBECTL)
 	$(KUBECTL) delete cluster $(CLUSTER_NAME)
+
+##@ Testing
+
+SETUP_ENVTEST_VER := v0.0.0-20211110210527-619e6b92dab9
+SETUP_ENVTEST := $(LOCALBIN)/setup-envtest
+
+.PHONY: test
+test: manifests generate fmt $(SETUP_ENVTEST)
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./controllers $(TEST_ARGS)
+
+.PHONY: test-cover
+test-cover: ## Run unit and integration tests and generate coverage report
+	$(MAKE) test TEST_ARGS="$(TEST_ARGS) -coverprofile=coverage.out"
+	go tool cover -func=coverage.out -o coverate.txt
+	go tool cover -html=coverage.out -o coverage.html
 
 ##@ Build
 
@@ -207,3 +218,8 @@ kubectl: $(KUBECTL)
 $(KUBECTL): $(LOCALBIN)
 	curl --retry 3 -fsL https://dl.k8s.io/release/$(KUBECTL_VER)/bin/$(GOOS)/$(GOARCH)/kubectl -o $(LOCALBIN)/kubectl
 	chmod +x $(KUBECTL)
+
+.PHONY: setup-envtest
+setup-envtest: $(SETUP_ENVTEST)
+$(SETUP_ENVTEST): go.mod # Build setup-envtest from tools folder.
+	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(SETUP_ENVTEST_VER)
