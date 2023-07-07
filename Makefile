@@ -74,12 +74,12 @@ SETUP_ENVTEST := $(LOCALBIN)/setup-envtest
 
 .PHONY: test
 test: manifests generate fmt $(SETUP_ENVTEST)
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./controllers $(TEST_ARGS)
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... $(TEST_ARGS)
 
 .PHONY: test-cover
 test-cover: ## Run unit and integration tests and generate coverage report
 	$(MAKE) test TEST_ARGS="$(TEST_ARGS) -coverprofile=coverage.out"
-	go tool cover -func=coverage.out -o coverate.txt
+	go tool cover -func=coverage.out -o coverage.txt
 	go tool cover -html=coverage.out -o coverage.html
 
 ##@ Build
