@@ -1,8 +1,10 @@
 package cloudinit_test
 
 import (
+	"reflect"
 	"testing"
 
+	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/cloudinit"
 )
 
@@ -49,5 +51,27 @@ runcmd:
 	_, err = cloudinit.GenerateUserYaml(*uc)
 	if err != nil {
 		t.Fatalf("generate : %v", err)
+	}
+}
+
+func TestMergeUsers(t *testing.T) {
+	a := infrav1.User{
+		User:   "override-user",
+		RunCmd: []string{"command A", "command B"},
+	}
+	b := infrav1.User{
+		User:   "test-user",
+		RunCmd: []string{"command C"},
+	}
+	expected := infrav1.User{
+		User:   "override-user",
+		RunCmd: []string{"command A", "command B", "command C"},
+	}
+	c, err := cloudinit.MergeUsers(a, b)
+	if err != nil {
+		t.Errorf("failed to merge cloud init user data: %v", err)
+	}
+	if !reflect.DeepEqual(*c, expected) {
+		t.Errorf("%v is expected to same as %v", *c, expected)
 	}
 }
