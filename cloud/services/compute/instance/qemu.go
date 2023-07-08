@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -140,13 +138,4 @@ func generateVMOptions(vmName, storageName string, network infrav1.Network, hard
 		VGA:          "serial0",
 	}
 	return vmoptions
-}
-
-// URL encodes the ssh keys
-func sshKeyUrlEncode(keys string) (encodedKeys string) {
-	encodedKeys = url.PathEscape(keys + "\n")
-	encodedKeys = strings.Replace(encodedKeys, "+", "%2B", -1)
-	encodedKeys = strings.Replace(encodedKeys, "@", "%40", -1)
-	encodedKeys = strings.Replace(encodedKeys, "=", "%3D", -1)
-	return
 }
