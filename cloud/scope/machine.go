@@ -147,7 +147,7 @@ func (m *MachineScope) GetBiosUUID() *string {
 	if err != nil {
 		return nil
 	}
-	return pointer.StringPtr(parsed.ID())
+	return pointer.String(parsed.ID())
 }
 
 func (m *MachineScope) GetProviderID() string {
@@ -194,7 +194,7 @@ func (m *MachineScope) SetProviderID(uuid string) error {
 	if err != nil {
 		return err
 	}
-	m.ProxmoxMachine.Spec.ProviderID = pointer.StringPtr(providerid.String())
+	m.ProxmoxMachine.Spec.ProviderID = pointer.String(providerid.String())
 	return nil
 }
 
@@ -207,7 +207,7 @@ func (m *MachineScope) SetReady() {
 }
 
 func (m *MachineScope) SetFailureMessage(v error) {
-	m.ProxmoxMachine.Status.FailureMessage = pointer.StringPtr(v.Error())
+	m.ProxmoxMachine.Status.FailureMessage = pointer.String(v.Error())
 }
 
 func (m *MachineScope) SetFailureReason(v capierrors.MachineStatusError) {
