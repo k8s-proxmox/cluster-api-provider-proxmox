@@ -42,6 +42,7 @@ type ProxmoxClusterSpec struct {
 	NodeRefs []NodeRef `json:"nodeRefs,omitempty"`
 
 	// storage is for proxmox storage used by vm instances
+	// +optional
 	Storage Storage `json:"storage"`
 }
 

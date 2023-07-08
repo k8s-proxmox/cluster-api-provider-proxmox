@@ -1,4 +1,4 @@
-# cluster-api-provider-proxmox (CAPP)
+# cluster-api-provider-proxmox (CAPPX)
 
 cluster-api-provider-proxmox is a Cluster API [infrastructure provider](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html) implementation for [Proxmox VE](https://pve.proxmox.com/wiki/Main_Page).
 
@@ -25,81 +25,68 @@ make deploy
 
 2. Create your first workload cluster
 ```sh
-# cluster & infra cluster
-kubectl apply -f config/samples/cluster.yaml
-kubectl apply -f config/samples/infrastructure_v1beta1_proxmoxcluster.yaml
+# export env variables
+export CONTROLPLANE_HOST=X.X.X.X
+export PROXMOX_URL=X.X.X.X:8006
+export GATEWAY_ADDRESS=X.X.X.X
+export NAMESERVER_ADDRESS=X.X.X.X
+export PROXMOX_PASSWORD_BASE64=$(echo -n <password> | base64)
+export PROXMOX_USER_BASE64=$(echo -n <user@pam> | base64)
+export NODE_URL_BASE64=$(echo -n <node.ssh.url:22> | base64)
+export NODE_USER_BASE64=$(echo -n <node-ssh-user> | base64)
+export NODE_PASSWORD_BASE64=$(echo -n <node-ssh-password> | base64)
 
-# controlplane
-kubectl apply -f config/samples/controlplane.yaml
-
-# machine & bootstrap & infra machine
-kubectl apply -f config/samples/machine.yaml
-kubectl apply -f config/samples/bootstrap.yaml
-kubectl apply -f config/samples/infrastructure_v1beta1_proxmoxcluster.yaml
-
-# proxmox configs
-kubetl apply -f <your-proxmox-config-secret>.yaml
+make create-workload-cluster
 ```
 
-You need to provide your proxmox information through secret. 
-```yaml
-# <your-proxmox-config-secret>.yaml
-apiVersion: v1
-data:
-  # for proxmox API
-  PROXMOX_PASSWORD: "<base 64>"
-  PROXMOX_USER: "<base 64>"
-  # for ssh into the node to bootstrapping VMs
-  ## * current CAPP is compatible with only single node proxmox cluster
-  NODE_URL: "<base 64>"
-  NODE_USER: "<base 64>"
-  NODE_PASSWORD: "<base 64>"
-kind: Secret
-metadata:
-  name: proxmoxcluster-sample
-type: Opaque
+3. Access your first workload cluster !!
+
+Usually it takes 2~10 mins to complete bootstrapping the nodes.
+```sh
+# get workload cluster's kubeconfig
+clusterctl get kubeconfig cappx-test > kubeconfig.yaml
+
+# get node command for workload cluster
+kubectl --kubeconfig=kubeconfig.yaml get node
 ```
 
-3. Check your Cluster & Machines !!
-
-Once CAPP reconciled your `ProxmoxCluster`/`ProxmoxMachine`, you can see `READY=true` for `ProxmoxCluster` and `STATUS=running` for `ProxmoxMachine`.
-
-![kubectl-get-proxmox-cluster](./logos/k-get-proxmoxcluster.PNG)
-
-![kubectl-get-proxmox-machine](./logos/k-get-proxmoxmachine.PNG)
+4. Tear down your workload cluster
+```sh
+make delete-workload-cluster
+```
 
 ## Fetures
 
 - No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`.
 
-- Supports custom cloud-config (user data). CAPP uses ssh for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
+- Supports custom cloud-config (user data). CAPPX uses ssh for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
 
 ## Compatibility
 
 ### Proxmox-VE REST API
 
-CAPP is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve)`.
+CAPPX is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve)`.
 
 ### Cluster API
 
 |                       | Cluster API v1alpha4 | Cluster API v1beta1 |
 | --------------------- | :------------------: | :-----------------: |
-| CAPP v1beta1 `(v0.x)` |          ?           |          ✓          |
+| CAPPX v1beta1 `(v0.x)` |          ?           |          ✓          |
 
 ### ControlPlane & Bootstrap provider 
 
-CAPP is tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
+CAPPX is tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
 
 ## How it works
 This project aims to follow the Cluster API [Provider contract](https://cluster-api.sigs.k8s.io/developer/providers/contracts.html).
 
 ### ProxmoxCluster
 
-Because Proxmox-VE does not provide LBaaS solution, CAPP does not follow the [typical infra-cluster logic](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html#behavior). ProxmoxCluster controller reconciles only Proxmox storages used for instances. You need to prepare control plane load balancer by yourself if you creates HA control plane workload cluster.
+Because Proxmox-VE does not provide LBaaS solution, CAPPX does not follow the [typical infra-cluster logic](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html#behavior). ProxmoxCluster controller reconciles only Proxmox storages used for instances. You need to prepare control plane load balancer by yourself if you creates HA control plane workload cluster.
 
 ### ProxmoxMachine
 
-ProxmoxMachine controller follows the [typical infra-machine logic](https://cluster-api.sigs.k8s.io/developer/providers/machine-infrastructure.html#behavior). To bootstrap your machine, CAPP supports only `cloud-config` type bootstrap data secret. CAPP is mainly tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
+ProxmoxMachine controller follows the [typical infra-machine logic](https://cluster-api.sigs.k8s.io/developer/providers/machine-infrastructure.html#behavior). To bootstrap your machine, CAPPX supports only `cloud-config` type bootstrap data secret. CAPPX is mainly tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
 
 ## Contributing
 

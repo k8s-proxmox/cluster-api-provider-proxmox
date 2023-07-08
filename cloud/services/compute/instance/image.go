@@ -43,7 +43,7 @@ func SetCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image
 
 	url := image.URL
 	fileName := path.Base(url)
-	rawImageDirPath := fmt.Sprintf("%s/images", etcCAPP)
+	rawImageDirPath := fmt.Sprintf("%s/images", etcCAPPX)
 	rawImageFilePath := fmt.Sprintf("%s/%s", rawImageDirPath, fileName)
 
 	// workaround

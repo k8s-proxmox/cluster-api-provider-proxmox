@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -18,7 +17,7 @@ import (
 )
 
 const (
-	etcCAPP = "/etc/capp"
+	etcCAPPX = "/etc/cappx"
 )
 
 // reconcile normal
@@ -37,7 +36,9 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	}
 
 	log.Info(fmt.Sprintf("Reconciled instance: bios-uuid=%s", *uuid))
-	s.scope.SetProviderID(*uuid)
+	if err := s.scope.SetProviderID(*uuid); err != nil {
+		return err
+	}
 	s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.Status))
 	// s.scope.SetAddresses()
 	return nil
@@ -127,7 +128,7 @@ func getBiosUUID(vm *vm.VirtualMachine) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pointer.StringPtr(uuid), nil
+	return pointer.String(uuid), nil
 }
 
 func convertSMBiosToUUID(smbios string) (string, error) {
@@ -138,29 +139,6 @@ func convertSMBiosToUUID(smbios string) (string, error) {
 	}
 	// match: uuid=<uuid>
 	return strings.Split(match, "=")[1], nil
-}
-
-// will be abolished
-func (s *Service) getInstanceFromInstanceID(instanceID string) (*vm.VirtualMachine, error) {
-	vmid, err := strconv.Atoi(instanceID)
-	if err != nil {
-		return nil, err
-	}
-	nodes, err := s.client.Nodes()
-	if err != nil {
-		return nil, err
-	}
-	if len(nodes) == 0 {
-		return nil, errors.New("proxmox nodes not found")
-	}
-	for _, node := range nodes {
-		vm, err := node.VirtualMachine(vmid)
-		if err != nil {
-			continue
-		}
-		return vm, nil
-	}
-	return nil, api.ErrNotFound
 }
 
 func (s *Service) getInstanceFromBiosUUID(uuid string) (*vm.VirtualMachine, error) {
