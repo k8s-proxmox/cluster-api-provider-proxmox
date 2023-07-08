@@ -10,6 +10,3 @@ jobs:
     - uses: actions/checkout@master
     - run: "make test-cover"
     - uses: codecov/codecov-action@v2
-    with:
-      file: ./coverage.out
-      fail_ci_if_error: true
