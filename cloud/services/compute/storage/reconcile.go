@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/sp-yduck/proxmox/pkg/api"
@@ -28,11 +29,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 }
 
 func (s *Service) Delete(ctx context.Context) error {
-	// return s.deleteStorage(ctx)
-	// not worthy to delete Storage
-	// since deleting Storage will block vm deletion
-	// and does not delete actual content in the node
-	return nil
+	return s.deleteStorage(ctx)
 }
 
 // createOrGetStorage gets Proxmox Storage for VMs
@@ -77,6 +74,17 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 			log.Info(err.Error())
 			continue
 		}
+
+		// check if storage is empty
+		contents, err := storage.Contents()
+		if err != nil {
+			return err
+		}
+		if len(contents) > 0 {
+			return errors.New("Storage must be empty to be deleted")
+		}
+
+		// delete
 		if _, err := storage.Delete(); err != nil {
 			log.Info(err.Error())
 			return err
