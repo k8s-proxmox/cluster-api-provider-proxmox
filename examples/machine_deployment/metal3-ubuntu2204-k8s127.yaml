@@ -1,0 +1,44 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: ${CLUSTER_NAME}-md-2
+spec:
+  clusterName: ${CLUSTER_NAME}
+  replicas: 1
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: ${CLUSTER_NAME}-md-2
+      clusterName: ${CLUSTER_NAME}
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: ProxmoxMachineTemplate
+        name: ${CLUSTER_NAME}-md-2
+      version: v1.27.1
+
+---
+
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-2
+spec:
+  template:
+    spec: {}
+
+---
+
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: ProxmoxMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-2
+spec:
+  template:
+    spec:
+      image:
+        url: https://artifactory.nordix.org/artifactory/metal3/images/k8s_v1.27.1/UBUNTU_22.04_NODE_IMAGE_K8S_v1.27.1.qcow2
