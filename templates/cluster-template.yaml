@@ -83,6 +83,8 @@ spec:
     spec:
       image:
         url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
+        checksum: 86e996f35732d26cd8b0888c46c4309d4d3b04eb6980378cf82b4d3eb2796549
+        checksumType: sha256
       hardware:
         cpu: 4
         memory: 8192

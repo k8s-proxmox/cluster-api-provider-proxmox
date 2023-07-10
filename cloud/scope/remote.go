@@ -28,7 +28,7 @@ func NewSSHClient(addr, user, password string) (*SSHClient, error) {
 	return &SSHClient{conn, password}, nil
 }
 
-func (conn *SSHClient) RunCommand(cmd string, stdin ...string) (string, error) {
+func (conn *SSHClient) RunCommand(cmd string) (string, error) {
 	session, err := conn.NewSession()
 	if err != nil {
 		return "", err
