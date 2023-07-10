@@ -1,83 +1,42 @@
 apiVersion: cluster.x-k8s.io/v1beta1
-kind: Cluster
+kind: MachineDeployment
 metadata:
-  name: "${CLUSTER_NAME}"
+  name: ${CLUSTER_NAME}-md-1
 spec:
-  infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-    kind: ProxmoxCluster
-    name: "${CLUSTER_NAME}"
-  controlPlaneRef:
-    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
-    kind: KubeadmControlPlane
-    name: "${CLUSTER_NAME}"
-  controlPlaneEndpoint:
-    host: "${CONTROLPLANE_HOST}"
-    port: 6443
-
----
-
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-kind: ProxmoxCluster
-metadata:
-  name: "${CLUSTER_NAME}"
-spec:
-  controlPlaneEndpoint:
-    host: "${CONTROLPLANE_HOST}"
-    port: 6443
-  serverRef: 
-    endpoint: "${PROXMOX_URL}"
-    secretRef:
-      name: "${CLUSTER_NAME}"
-  nodeRefs:
-    - name: mynode
-      secretRef:
-        name: "${CLUSTER_NAME}"
-  storage:
-    name: "${CLUSTER_NAME}"
-    path: ""
-
----
-
-apiVersion: controlplane.cluster.x-k8s.io/v1beta1
-kind: KubeadmControlPlane
-metadata:
-  name: "${CLUSTER_NAME}"
-spec:
-  kubeadmConfigSpec:
-    clusterConfiguration:
-      etcd:
-        local:
-          dataDir: /var/lib/etcd
-      networking:
-        dnsDomain: cluster.local
-        serviceSubnet: 10.96.0.0/12
-        podSubnet: 10.98.0.0/16
-    initConfiguration:
-      localAPIEndpoint:
-        advertiseAddress: "${CONTROLPLANE_HOST}"
-        bindPort: 6443
-      nodeRegistration:
-        criSocket: unix:///var/run/containerd/containerd.sock
-    postKubeadmCommands:
-    - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
-    - "chmod +x /usr/local/bin/kubectl"
-    - "reboot now"
-    preKubeadmCommands: []
-  machineTemplate:
-    infrastructureRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-      kind: ProxmoxMachineTemplate
-      name: ${CLUSTER_NAME}-controlplane
+  clusterName: ${CLUSTER_NAME}
   replicas: 1
-  version: v1.26.5
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: ${CLUSTER_NAME}-md-1
+      clusterName: ${CLUSTER_NAME}
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: ProxmoxMachineTemplate
+        name: ${CLUSTER_NAME}-md-1
+      version: v1.26.5
+
+---
+
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: ${CLUSTER_NAME}-md-1
+spec:
+  template:
+    spec: {}
 
 ---
 
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: ProxmoxMachineTemplate
 metadata:
-  name: ${CLUSTER_NAME}-controlplane
+  name: ${CLUSTER_NAME}-md-1
 spec:
   template:
     spec:
@@ -85,14 +44,6 @@ spec:
         url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
         checksum: 86e996f35732d26cd8b0888c46c4309d4d3b04eb6980378cf82b4d3eb2796549
         checksumType: sha256
-      hardware:
-        cpu: 4
-        memory: 8192
-      network:
-        ipConfig:
-          gateway: ${GATEWAY_ADDRESS}
-          ip: "${CONTROLPLANE_HOST}/32"
-        nameServer: ${NAMESERVER_ADDRESS}
       cloudInit:
         user:
           packages:
@@ -136,17 +87,3 @@ spec:
           - mkdir -p /etc/systemd/system/kubelet.service.d
           - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
           - "systemctl enable kubelet.service"
-
----
-
-apiVersion: v1
-data:
-  PROXMOX_PASSWORD: ${PROXMOX_PASSWORD_BASE64}
-  PROXMOX_USER: ${PROXMOX_USER_BASE64}
-  NODE_URL: ${NODE_URL_BASE64}
-  NODE_USER: ${NODE_USER_BASE64}
-  NODE_PASSWORD: ${NODE_PASSWORD_BASE64}
-kind: Secret
-metadata:
-  name: "${CLUSTER_NAME}"
-type: Opaque

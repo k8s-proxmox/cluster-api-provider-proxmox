@@ -89,10 +89,31 @@ spec:
                         properties:
                           user:
                             properties:
+                              packages:
+                                items:
+                                  type: string
+                                type: array
                               password:
                                 type: string
+                              runCmd:
+                                items:
+                                  type: string
+                                type: array
                               user:
                                 type: string
+                              writeFiles:
+                                items:
+                                  properties:
+                                    content:
+                                      type: string
+                                    owner:
+                                      type: string
+                                    path:
+                                      type: string
+                                    permissions:
+                                      type: string
+                                  type: object
+                                type: array
                             type: object
                         type: object
                       failureDomain:

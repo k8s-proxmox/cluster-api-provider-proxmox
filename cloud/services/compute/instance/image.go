@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
@@ -53,7 +54,19 @@ func SetCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image
 		return errors.Errorf("failed to download image: %s : %v", out, err)
 	}
 
-	// to do: should confirm if the checksum matchies
+	// checksum
+	if image.Checksum != "" {
+		cscmd, err := findValidChecksumCommand(*image.ChecksumType)
+		if err != nil {
+			return err
+		}
+		cmd := fmt.Sprintf("%s --check -", cscmd)
+		stdin := fmt.Sprintf("%s %s", image.Checksum, rawImageFilePath)
+		out, err = ssh.RunWithStdin(cmd, stdin)
+		if err != nil {
+			return errors.Errorf("failed to confirm checksum: %s : %v", out, err)
+		}
+	}
 
 	destPath := fmt.Sprintf("%s/images/%d/vm-%d-disk-0.raw", storage.Path, vmid, vmid)
 	out, err = ssh.RunCommand(fmt.Sprintf("/usr/bin/qemu-img convert -O raw %s %s", rawImageFilePath, destPath))
@@ -61,4 +74,16 @@ func SetCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image
 		return errors.Errorf("failed to convert iamge : %s : %v", out, err)
 	}
 	return nil
+}
+
+func findValidChecksumCommand(csType string) (string, error) {
+	csType = strings.ToLower(csType)
+	switch csType {
+	case "sha256", "sha256sum":
+		return "sha256sum", nil
+	case "md5", "md5sum":
+		return "md5sum", nil
+	default:
+		return "", errors.Errorf("checksum type %s is not supported", csType)
+	}
 }

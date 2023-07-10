@@ -14,10 +14,10 @@ type User struct {
 	ChPasswd       ChPasswd     `yaml:"chpasswd,omitempty" json:"-"`
 	Users          []string     `yaml:"users,omitempty" json:"-"`
 	Password       string       `yaml:"password,omitempty" json:"password,omitempty"`
-	Packages       []string     `yaml:"packages,omitempty" json:"-"`
+	Packages       []string     `yaml:"packages,omitempty" json:"packages,omitempty"`
 	PackageUpgrade bool         `yaml:"package_upgrade,omitempty" json:"-"`
-	WriteFiles     []WriteFiles `yaml:"write_files,omitempty" json:"-"`
-	RunCmd         []string     `yaml:"runcmd,omitempty" json:"-"`
+	WriteFiles     []WriteFiles `yaml:"write_files,omitempty" json:"writeFiles,omitempty"`
+	RunCmd         []string     `yaml:"runcmd,omitempty" json:"runCmd,omitempty"`
 }
 
 type GrowPart struct {
@@ -31,8 +31,8 @@ type ChPasswd struct {
 }
 
 type WriteFiles struct {
-	Path        string `yaml:"path,omitempty" json:"-"`
-	Owner       string `yaml:"owner,omitempty" json:"-"`
-	Permissions string `yaml:"permissions,omitempty" json:"-"`
-	Content     string `yaml:"content,omitempty" json:"-"`
+	Path        string `yaml:"path,omitempty" json:"path,omitempty"`
+	Owner       string `yaml:"owner,omitempty" json:"owner,omitempty"`
+	Permissions string `yaml:"permissions,omitempty" json:"permissions,omitempty"`
+	Content     string `yaml:"content,omitempty" json:"content,omitempty"`
 }
