@@ -139,6 +139,60 @@ spec:
 
 ---
 
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: "${CLUSTER_NAME}"
+spec:
+  clusterName: "${CLUSTER_NAME}"
+  replicas: 1
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: worker
+      clusterName: "${CLUSTER_NAME}"
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: ProxmoxMachineTemplate
+        name: ${CLUSTER_NAME}-worker
+      version: v1.26.5
+
+---
+
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: worker
+spec:
+  template:
+    spec:
+      postKubeadmCommands:
+        - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
+        - "chmod +x /usr/local/bin/kubectl"
+        - "reboot now"
+
+---
+
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: ProxmoxMachineTemplate
+metadata:
+  name: ${CLUSTER_NAME}-worker
+spec:
+  template:
+    spec:
+      image:
+        url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
+      hardware:
+        cpu: 4
+        memory: 4096
+
+---
+
 apiVersion: v1
 data:
   PROXMOX_PASSWORD: ${PROXMOX_PASSWORD_BASE64}
