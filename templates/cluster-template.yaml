@@ -2,6 +2,7 @@ apiVersion: cluster.x-k8s.io/v1beta1
 kind: Cluster
 metadata:
   name: "${CLUSTER_NAME}"
+  namespace: "${NAMESPACE}"
 spec:
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -21,6 +22,7 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: ProxmoxCluster
 metadata:
   name: "${CLUSTER_NAME}"
+  namespace: "${NAMESPACE}"
 spec:
   controlPlaneEndpoint:
     host: "${CONTROLPLANE_HOST}"
@@ -43,9 +45,16 @@ apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 kind: KubeadmControlPlane
 metadata:
   name: "${CLUSTER_NAME}"
+  namespace: "${NAMESPACE}"
 spec:
   kubeadmConfigSpec:
     clusterConfiguration:
+      apiServer:
+        extraArgs:
+          cloud-provider: external
+      controllerManager:
+        extraArgs:
+          cloud-provider: external
       etcd:
         local:
           dataDir: /var/lib/etcd
@@ -59,6 +68,8 @@ spec:
         bindPort: 6443
       nodeRegistration:
         criSocket: unix:///var/run/containerd/containerd.sock
+        kubeletExtraArgs:
+          cloud-provider: external
     postKubeadmCommands:
     - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
     - "chmod +x /usr/local/bin/kubectl"
@@ -78,6 +89,7 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: ProxmoxMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-controlplane
+  namespace: "${NAMESPACE}"
 spec:
   template:
     spec:
@@ -140,13 +152,127 @@ spec:
 ---
 
 apiVersion: v1
-data:
-  PROXMOX_PASSWORD: ${PROXMOX_PASSWORD_BASE64}
-  PROXMOX_USER: ${PROXMOX_USER_BASE64}
-  NODE_URL: ${NODE_URL_BASE64}
-  NODE_USER: ${NODE_USER_BASE64}
-  NODE_PASSWORD: ${NODE_PASSWORD_BASE64}
+stringData:
+  PROXMOX_PASSWORD: ${PROXMOX_PASSWORD}
+  PROXMOX_USER: ${PROXMOX_USER}
+  NODE_URL: ${NODE_URL}
+  NODE_USER: ${NODE_USER}
+  NODE_PASSWORD: ${NODE_PASSWORD}
 kind: Secret
 metadata:
   name: "${CLUSTER_NAME}"
+  namespace: "${NAMESPACE}"
 type: Opaque
+
+---
+
+apiVersion: addons.cluster.x-k8s.io/v1beta1
+kind: ClusterResourceSet
+metadata:
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+  name: ${CLUSTER_NAME}-crs-1
+  namespace: "${NAMESPACE}"
+spec:
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+  resources:
+  - kind: ConfigMap
+    name: cloud-controller-manager
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-controller-manager
+  namespace: "${NAMESPACE}"
+data:
+  cloud-controller-manager.yaml: |
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: proxmox-cloud-controller-manager
+      namespace: kube-system
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: system:proxmox-cloud-controller-manager
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: cluster-admin
+    subjects:
+    - kind: ServiceAccount
+      name: proxmox-cloud-controller-manager
+      namespace: kube-system
+    ---
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        k8s-app: cloud-controller-manager
+      name: cloud-controller-manager
+      namespace: kube-system
+    spec:
+      selector:
+        matchLabels:
+          k8s-app: cloud-controller-manager
+      template:
+        metadata:
+          labels:
+            k8s-app: cloud-controller-manager
+        spec:
+          serviceAccountName: proxmox-cloud-controller-manager
+          containers:
+          - name: cloud-controller-manager
+            image: spyduck/cloud-provider-proxmox:latest
+            command:
+            - /usr/local/bin/cloud-controller-manager
+            - --cloud-provider=proxmox
+            - --cloud-config=/etc/proxmox/config.yaml
+            - --leader-elect=true
+            - --use-service-account-credentials
+            - --controllers=cloud-node,cloud-node-lifecycle
+            volumeMounts:
+              - name: cloud-config
+                mountPath: /etc/proxmox
+                readOnly: true
+            livenessProbe:
+              httpGet:
+                path: /healthz
+                port: 10258
+                scheme: HTTPS
+              initialDelaySeconds: 20
+              periodSeconds: 30
+              timeoutSeconds: 5
+          volumes:
+            - name: cloud-config
+              secret:
+                secretName: cloud-config
+          tolerations:
+          - key: node.cloudprovider.kubernetes.io/uninitialized
+            value: "true"
+            effect: NoSchedule
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+            effect: NoSchedule
+          - key: node-role.kubernetes.io/master
+            operator: Exists
+            effect: NoSchedule
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""
+    ---
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: cloud-config
+      namespace: kube-system
+    stringData:
+      config.yaml: |
+        proxmox:
+          url: ${PROXMOX_URL}
+          user: ${PROXMOX_USER}
+          password: ${PROXMOX_PASSWORD}
