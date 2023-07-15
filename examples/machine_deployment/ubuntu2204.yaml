@@ -29,7 +29,11 @@ metadata:
   name: ${CLUSTER_NAME}-md-1
 spec:
   template:
-    spec: {}
+    spec:
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+              cloud-provider: external
 
 ---
 

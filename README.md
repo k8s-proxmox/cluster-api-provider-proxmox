@@ -15,28 +15,33 @@ You’ll need a Kubernetes cluster to run against. You can use [KIND](https://si
 for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#initialize-the-management-cluster
 
 ```sh
-# install cluster-api crd including controlplane provider & bootstrap provider
-clusterctl init
-
-# install cluster-api-provider-proxmox crd & controller
-make deploy
+# install cluster-api components
+export EXP_CLUSTER_RESOURCE_SET=true
+clusterctl init --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml
 ```
 **Note:** container images are available at [here](https://hub.docker.com/r/spyduck/cluster-api-provider-proxmox/tags)
 
 2. Create your first workload cluster
 ```sh
 # export env variables
-export CONTROLPLANE_HOST=X.X.X.X
+export CONTROLPLANE_HOST=X.X.X.X   # for control-plane node
+export GATEWAY_ADDRESS=X.X.X.X     # for control-plane node
+export NAMESERVER_ADDRESS=X.X.X.X  # for contro-lplane node
 export PROXMOX_URL=X.X.X.X:8006
-export GATEWAY_ADDRESS=X.X.X.X
-export NAMESERVER_ADDRESS=X.X.X.X
-export PROXMOX_PASSWORD_BASE64=$(echo -n <password> | base64)
-export PROXMOX_USER_BASE64=$(echo -n <user@pam> | base64)
-export NODE_URL_BASE64=$(echo -n <node.ssh.url:22> | base64)
-export NODE_USER_BASE64=$(echo -n <node-ssh-user> | base64)
-export NODE_PASSWORD_BASE64=$(echo -n <node-ssh-password> | base64)
+export PROXMOX_PASSWORD=password
+export PROXMOX_USER=user@pam
+export NODE_URL=node.ssh.url:22
+export NODE_USER=node-ssh-user
+export NODE_PASSWORD=node-ssh-password
 
-make create-workload-cluster
+# generate manifests
+clusterctl generate cluster cappx-test --infrastructure=proxmox:v0.2.3 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+
+# inspect and edit
+vi cappx-test.yaml
+
+# apply manifests
+kubectl apply -f cappx-test.yaml
 ```
 
 3. Access your first workload cluster !!
@@ -52,7 +57,7 @@ kubectl --kubeconfig=kubeconfig.yaml get node
 
 4. Tear down your workload cluster
 ```sh
-make delete-workload-cluster
+kubectl delete cluster cappx-test
 ```
 
 ## Fetures
