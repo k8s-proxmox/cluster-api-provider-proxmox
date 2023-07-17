@@ -142,7 +142,7 @@ spec:
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
 metadata:
-  name: "${CLUSTER_NAME}"
+  name: ${CLUSTER_NAME}-md-0
 spec:
   clusterName: "${CLUSTER_NAME}"
   replicas: 1
@@ -155,11 +155,11 @@ spec:
           apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
           kind: KubeadmConfigTemplate
           name: worker
-      clusterName: "${CLUSTER_NAME}"
+      clusterName: "${CLUSTER_NAME}-md-0"
       infrastructureRef:
         apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: ProxmoxMachineTemplate
-        name: ${CLUSTER_NAME}-worker
+        name: ${CLUSTER_NAME}-md-0
       version: v1.26.5
 
 ---
@@ -167,7 +167,7 @@ spec:
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
 metadata:
-  name: worker
+  name: ${CLUSTER_NAME}-md-0
 spec:
   template:
     spec:
@@ -181,7 +181,7 @@ spec:
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: ProxmoxMachineTemplate
 metadata:
-  name: ${CLUSTER_NAME}-worker
+  name: ${CLUSTER_NAME}-md-0
 spec:
   template:
     spec:
