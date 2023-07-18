@@ -228,7 +228,7 @@ data:
           serviceAccountName: proxmox-cloud-controller-manager
           containers:
           - name: cloud-controller-manager
-            image: spyduck/cloud-provider-proxmox:latest
+            image: docker.io/spyduck/cloud-provider-proxmox:latest
             command:
             - /usr/local/bin/cloud-controller-manager
             - --cloud-provider=proxmox
