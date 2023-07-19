@@ -197,7 +197,7 @@ metadata:
 spec:
   template:
     spec:
-      initConfiguration:
+      joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
             cloud-provider: external
