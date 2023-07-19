@@ -3,6 +3,8 @@ kind: Cluster
 metadata:
   name: "${CLUSTER_NAME}"
   namespace: "${NAMESPACE}"
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -23,6 +25,8 @@ kind: ProxmoxCluster
 metadata:
   name: "${CLUSTER_NAME}"
   namespace: "${NAMESPACE}"
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   controlPlaneEndpoint:
     host: "${CONTROLPLANE_HOST}"
@@ -46,6 +50,8 @@ kind: KubeadmControlPlane
 metadata:
   name: "${CLUSTER_NAME}"
   namespace: "${NAMESPACE}"
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   kubeadmConfigSpec:
     clusterConfiguration:
@@ -61,7 +67,7 @@ spec:
       networking:
         dnsDomain: cluster.local
         serviceSubnet: 10.96.0.0/12
-        podSubnet: 10.98.0.0/16
+        podSubnet: 10.244.0.0/16
     initConfiguration:
       localAPIEndpoint:
         advertiseAddress: "${CONTROLPLANE_HOST}"
@@ -90,6 +96,8 @@ kind: ProxmoxMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-controlplane
   namespace: "${NAMESPACE}"
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   template:
     spec:
@@ -156,6 +164,8 @@ kind: MachineDeployment
 metadata:
   name: ${CLUSTER_NAME}-md-0
   namespace: ${NAMESPACE}
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   clusterName: "${CLUSTER_NAME}"
   replicas: ${WORKER_MACHINE_COUNT}
@@ -182,9 +192,15 @@ kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
   namespace: ${NAMESPACE}
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   template:
     spec:
+      initConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: external
       postKubeadmCommands:
         - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
         - "chmod +x /usr/local/bin/kubectl"
@@ -197,6 +213,8 @@ kind: ProxmoxMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
   namespace: ${NAMESPACE}
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   template:
     spec:
@@ -261,6 +279,8 @@ kind: Secret
 metadata:
   name: "${CLUSTER_NAME}"
   namespace: "${NAMESPACE}"
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 type: Opaque
 
 ---
@@ -268,10 +288,10 @@ type: Opaque
 apiVersion: addons.cluster.x-k8s.io/v1beta1
 kind: ClusterResourceSet
 metadata:
+  name: ${CLUSTER_NAME}-crs-0
+  namespace: "${NAMESPACE}"
   labels:
     cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
-  name: ${CLUSTER_NAME}-crs-1
-  namespace: "${NAMESPACE}"
 spec:
   clusterSelector:
     matchLabels:
