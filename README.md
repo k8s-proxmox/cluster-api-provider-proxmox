@@ -34,8 +34,8 @@ export NODE_URL=node.ssh.url:22
 export NODE_USER=node-ssh-user
 export NODE_PASSWORD=node-ssh-password
 
-# generate manifests
-clusterctl generate cluster cappx-test --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+# generate manifests (available flags: --target-namespace, --kubernetes-version, --worker-machine-count)
+clusterctl generate cluster cappx-test --worker-machine-count=3 --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
 vi cappx-test.yaml
@@ -86,8 +86,8 @@ CAPPX is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve
 
 ### Cluster API
 
-|                       | Cluster API v1alpha4 | Cluster API v1beta1 |
-| --------------------- | :------------------: | :-----------------: |
+|                        | Cluster API v1alpha4 | Cluster API v1beta1 |
+| ---------------------- | :------------------: | :-----------------: |
 | CAPPX v1beta1 `(v0.x)` |          ?           |          ✓          |
 
 ### ControlPlane & Bootstrap provider 
