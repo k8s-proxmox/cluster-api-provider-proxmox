@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox/pkg/service"
+	"github.com/sp-yduck/proxmox-go/proxmox"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -28,11 +28,11 @@ import (
 )
 
 type ProxmoxServices struct {
-	Compute *service.Service
+	Compute *proxmox.Service
 	Remote  *SSHClient
 }
 
-func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClient client.Client) (*service.Service, error) {
+func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClient client.Client) (*proxmox.Service, error) {
 	secretRef := serverRef.SecretRef
 	if secretRef == nil {
 		return nil, errors.New("failed to get proxmox client form nil secretRef")
@@ -52,8 +52,12 @@ func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClien
 	if !ok {
 		return nil, errors.Errorf("failed to fetch PROXMOX_PASSWORD from Secret : %v", key)
 	}
+	authConfig := proxmox.AuthConfig{
+		Username: string(proxmoxUser),
+		Password: string(proxmoxPassword),
+	}
 
-	return service.NewServiceWithLogin(serverRef.Endpoint, string(proxmoxUser), string(proxmoxPassword))
+	return proxmox.NewService(serverRef.Endpoint, authConfig, true)
 }
 
 func newRemoteClient(ctx context.Context, secretRef *infrav1.ObjectReference, crClient client.Client) (*SSHClient, error) {

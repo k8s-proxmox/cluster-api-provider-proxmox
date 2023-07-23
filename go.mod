@@ -8,6 +8,7 @@ require (
 	github.com/onsi/gomega v1.27.8
 	github.com/pkg/errors v0.9.1
 	github.com/sp-yduck/proxmox v0.0.0-20230702124708-d086ca37fd8f
+	github.com/sp-yduck/proxmox-go v0.0.0-alpha4
 	golang.org/x/crypto v0.11.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.26.1
@@ -54,7 +55,6 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/testify v1.8.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect

@@ -3,7 +3,7 @@ package cloud
 import (
 	"context"
 
-	"github.com/sp-yduck/proxmox/pkg/service"
+	"github.com/sp-yduck/proxmox-go/proxmox"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -16,7 +16,7 @@ type Reconciler interface {
 }
 
 type Client interface {
-	CloudClient() *service.Service
+	CloudClient() *proxmox.Service
 	RemoteClient() *scope.SSHClient
 }
 
