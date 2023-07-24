@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
+	"github.com/sp-yduck/proxmox-go/api"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -15,7 +15,7 @@ import (
 )
 
 // reconcileBootDevice
-func (s *Service) reconcileBootDevice(ctx context.Context, vm *vm.VirtualMachine) error {
+func (s *Service) reconcileBootDevice(ctx context.Context, vm *api.VirtualMachine) error {
 	vmid := s.scope.GetVMID()
 	storage := s.scope.GetStorage()
 	image := s.scope.GetImage()

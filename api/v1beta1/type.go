@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
+	"github.com/sp-yduck/proxmox-go/api"
 )
 
 // ServerRef is used for configuring Proxmox client
@@ -127,7 +127,7 @@ type Storage struct {
 type InstanceStatus string
 
 var (
-	InstanceStatusPaused  = InstanceStatus(vm.ProcessStatusPaused)
-	InstanceStatusRunning = InstanceStatus(vm.ProcessStatusRunning)
-	InstanceStatusStopped = InstanceStatus(vm.ProcessStatusStopped)
+	InstanceStatusPaused  = InstanceStatus(api.ProcessStatusPaused)
+	InstanceStatusRunning = InstanceStatus(api.ProcessStatusRunning)
+	InstanceStatusStopped = InstanceStatus(api.ProcessStatusStopped)
 )

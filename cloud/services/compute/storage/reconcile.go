@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/sp-yduck/proxmox/pkg/api"
-	"github.com/sp-yduck/proxmox/pkg/service/node/storage"
+	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/sp-yduck/proxmox-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -36,7 +36,7 @@ func (s *Service) Delete(ctx context.Context) error {
 func (s *Service) createOrGetStorage(ctx context.Context) error {
 	opts := generateVMStorageOptions(s.scope)
 	if err := s.getStorage(opts.Storage); err != nil {
-		if api.IsNotFound(err) {
+		if rest.IsNotFound(err) {
 			if err := s.createStorage(opts); err != nil {
 				return err
 			}
@@ -55,7 +55,7 @@ func (s *Service) getStorage(name string) error {
 	return nil
 }
 
-func (s *Service) createStorage(options storage.StorageCreateOptions) error {
+func (s *Service) createStorage(options api.StorageCreateOptions) error {
 	if _, err := s.client.CreateStorage(options.Storage, options.StorageType, options); err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (s *Service) createStorage(options storage.StorageCreateOptions) error {
 
 func (s *Service) deleteStorage(ctx context.Context) error {
 	log := log.FromContext(ctx)
-	nodes, err := s.client.Nodes()
+	nodes, err := s.client.Nodes(ctx)
 	if err != nil {
 		return err
 	}
@@ -93,9 +93,9 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 	return nil
 }
 
-func generateVMStorageOptions(scope Scope) storage.StorageCreateOptions {
+func generateVMStorageOptions(scope Scope) api.StorageCreateOptions {
 	storageSpec := scope.Storage()
-	options := storage.StorageCreateOptions{
+	options := api.StorageCreateOptions{
 		Storage:     storageSpec.Name,
 		StorageType: "dir",
 		Content:     "images,snippets",
