@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox/pkg/api"
-	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
+	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/sp-yduck/proxmox-go/rest"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -72,7 +72,7 @@ func (s *Service) Delete(ctx context.Context) error {
 	return instance.Delete()
 }
 
-func (s *Service) createOrGetInstance(ctx context.Context) (*vm.VirtualMachine, error) {
+func (s *Service) createOrGetInstance(ctx context.Context) (*api.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
 	log.Info("Getting bootstrap data for machine")
@@ -100,17 +100,17 @@ func (s *Service) createOrGetInstance(ctx context.Context) (*vm.VirtualMachine, 
 	return instance, nil
 }
 
-func (s *Service) GetInstance(ctx context.Context) (*vm.VirtualMachine, error) {
+func (s *Service) GetInstance(ctx context.Context) (*api.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 	biosUUID := s.scope.GetBiosUUID()
 	if biosUUID == nil {
-		return nil, api.ErrNotFound
+		return nil, rest.ErrNotFound
 	}
 	vm, err := s.getInstanceFromBiosUUID(*biosUUID)
 	if err != nil {
-		if api.IsNotFound(err) {
+		if rest.IsNotFound(err) {
 			log.Info("instance wasn't found")
-			return nil, api.ErrNotFound
+			return nil, rest.ErrNotFound
 		}
 		log.Error(err, "failed to get instance from bios UUID")
 		return nil, err
@@ -118,7 +118,7 @@ func (s *Service) GetInstance(ctx context.Context) (*vm.VirtualMachine, error) {
 	return vm, nil
 }
 
-func getBiosUUID(vm *vm.VirtualMachine) (*string, error) {
+func getBiosUUID(vm *api.VirtualMachine) (*string, error) {
 	config, err := vm.Config()
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func convertSMBiosToUUID(smbios string) (string, error) {
 	return strings.Split(match, "=")[1], nil
 }
 
-func (s *Service) getInstanceFromBiosUUID(uuid string) (*vm.VirtualMachine, error) {
+func (s *Service) getInstanceFromBiosUUID(uuid string) (*api.VirtualMachine, error) {
 	nodes, err := s.client.Nodes()
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func (s *Service) getInstanceFromBiosUUID(uuid string) (*vm.VirtualMachine, erro
 			}
 		}
 	}
-	return nil, api.ErrNotFound
+	return nil, rest.ErrNotFound
 }
 
 func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.VirtualMachine, error) {
@@ -202,20 +202,20 @@ func (s *Service) CreateInstance(ctx context.Context, bootstrap string) (*vm.Vir
 }
 
 func IsNotFound(err error) bool {
-	return api.IsNotFound(err)
+	return rest.IsNotFound(err)
 }
 
-func EnsureRunning(instance vm.VirtualMachine) error {
+func EnsureRunning(instance api.VirtualMachine) error {
 	// ensure instance is running
 	switch instance.Status {
-	case vm.ProcessStatusRunning:
+	case api.ProcessStatusRunning:
 		return nil
-	case vm.ProcessStatusStopped:
-		if err := instance.Start(vm.StartOption{}); err != nil {
+	case api.ProcessStatusStopped:
+		if err := instance.Start(api.StartOption{}); err != nil {
 			return err
 		}
-	case vm.ProcessStatusPaused:
-		if err := instance.Resume(vm.ResumeOption{}); err != nil {
+	case api.ProcessStatusPaused:
+		if err := instance.Resume(api.ResumeOption{}); err != nil {
 			return err
 		}
 	default:
@@ -224,15 +224,15 @@ func EnsureRunning(instance vm.VirtualMachine) error {
 	return nil
 }
 
-func EnsureStoppedOrPaused(instance vm.VirtualMachine) error {
+func EnsureStoppedOrPaused(instance api.VirtualMachine) error {
 	switch instance.Status {
-	case vm.ProcessStatusRunning:
+	case api.ProcessStatusRunning:
 		if err := instance.Stop(); err != nil {
 			return err
 		}
-	case vm.ProcessStatusPaused:
+	case api.ProcessStatusPaused:
 		return nil
-	case vm.ProcessStatusStopped:
+	case api.ProcessStatusStopped:
 		return nil
 	default:
 		return errors.Errorf("unexpected status : %s", instance.Status)
