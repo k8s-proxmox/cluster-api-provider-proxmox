@@ -133,48 +133,6 @@ func getBiosUUID(ctx context.Context, vm *proxmox.VirtualMachine) (*string, erro
 	return pointer.String(uuid), nil
 }
 
-// func convertSMBiosToUUID(smbios string) (string, error) {
-// 	re := regexp.MustCompile(fmt.Sprintf("uuid=%s", providerid.UUIDFormat))
-// 	match := re.FindString(smbios)
-// 	if match == "" {
-// 		return "", errors.Errorf("failed to fetch uuid form smbios")
-// 	}
-// 	// match: uuid=<uuid>
-// 	return strings.Split(match, "=")[1], nil
-// }
-
-// func (s *Service) getInstanceFromBiosUUID(uuid string) (*api.VirtualMachine, error) {
-// 	nodes, err := s.client.Nodes()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if len(nodes) == 0 {
-// 		return nil, errors.New("proxmox nodes not found")
-// 	}
-
-// 	// to do : check each node in parallel
-// 	for _, node := range nodes {
-// 		vms, err := node.VirtualMachines()
-// 		if err != nil {
-// 			continue
-// 		}
-// 		for _, vm := range vms {
-// 			config, err := vm.Config()
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			vmuuid, err := convertSMBiosToUUID(config.SMBios1)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			if vmuuid == uuid {
-// 				return vm, nil
-// 			}
-// 		}
-// 	}
-// 	return nil, rest.NotFoundErr
-// }
-
 func (s *Service) createInstance(ctx context.Context, bootstrap string) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
