@@ -88,10 +88,6 @@ func (s *Service) getNodes() ([]*api.Node, error) {
 	return s.client.Nodes(context.TODO())
 }
 
-func (s *Service) getNode(ctx context.Context, name string) (*api.Node, error) {
-	return s.client.Node(ctx, name)
-}
-
 // GetRandomNode returns a node chosen randomly
 func (s *Service) getRandomNode() (*api.Node, error) {
 	nodes, err := s.getNodes()
