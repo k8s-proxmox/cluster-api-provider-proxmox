@@ -44,17 +44,11 @@ func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClien
 		return nil, err
 	}
 
-	proxmoxUser, ok := secret.Data["PROXMOX_USER"]
-	if !ok {
-		return nil, errors.Errorf("failed to fetch PROXMOX_USER from Secret : %v", key)
-	}
-	proxmoxPassword, ok := secret.Data["PROXMOX_PASSWORD"]
-	if !ok {
-		return nil, errors.Errorf("failed to fetch PROXMOX_PASSWORD from Secret : %v", key)
-	}
 	authConfig := proxmox.AuthConfig{
-		Username: string(proxmoxUser),
-		Password: string(proxmoxPassword),
+		Username: string(secret.Data["PROXMOX_USER"]),
+		Password: string(secret.Data["PROXMOX_PASSWORD"]),
+		TokenID:  string(secret.Data["PROXMOX_TOKENID"]),
+		Secret:   string(secret.Data["PROXMOX_SECRET"]),
 	}
 
 	return proxmox.NewService(serverRef.Endpoint, authConfig, true)

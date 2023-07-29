@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -24,28 +25,21 @@ func (s *Service) reconcileCloudInit(bootstrap string) error {
 }
 
 // delete CloudConfig
-func (s *Service) deleteCloudConfig() error {
+func (s *Service) deleteCloudConfig(ctx context.Context) error {
 	storageName := s.scope.GetStorage().Name
 	path := userSnippetPath(s.scope.Name())
 	volumeID := fmt.Sprintf("%s:%s", storageName, path)
 
-	node, err := s.client.Node(s.scope.NodeName())
+	node, err := s.client.Node(ctx, s.scope.NodeName())
 	if err != nil {
 		return err
 	}
-	storage, err := node.Storage(storageName)
+	storage, err := s.client.Storage(ctx, storageName)
 	if err != nil {
 		return err
 	}
-	content, err := storage.GetContent(volumeID)
-	if IsNotFound(err) { // return nil if it's already deleted
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	return content.DeleteVolume()
+	storage.Node = node.Node
+	return storage.DeleteVolume(ctx, volumeID)
 }
 
 func (s *Service) reconcileCloudInitUser(bootstrap string) error {

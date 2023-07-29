@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/sp-yduck/proxmox-go/proxmox"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -15,7 +15,7 @@ import (
 )
 
 // reconcileBootDevice
-func (s *Service) reconcileBootDevice(ctx context.Context, vm *api.VirtualMachine) error {
+func (s *Service) reconcileBootDevice(ctx context.Context, vm *proxmox.VirtualMachine) error {
 	vmid := s.scope.GetVMID()
 	storage := s.scope.GetStorage()
 	image := s.scope.GetImage()
@@ -24,12 +24,12 @@ func (s *Service) reconcileBootDevice(ctx context.Context, vm *api.VirtualMachin
 	log.Info(fmt.Sprintf("%v", hardware))
 
 	// os image
-	if err := SetCloudImage(ctx, *vmid, storage, image, s.remote); err != nil {
+	if err := setCloudImage(ctx, *vmid, storage, image, s.remote); err != nil {
 		return err
 	}
 
 	// volume
-	if err := vm.ResizeVolume("scsi0", hardware.Disk); err != nil {
+	if err := vm.ResizeVolume(ctx, "scsi0", hardware.Disk); err != nil {
 		return err
 	}
 
@@ -38,7 +38,7 @@ func (s *Service) reconcileBootDevice(ctx context.Context, vm *api.VirtualMachin
 
 // setCloudImage downloads OS image into Proxmox node
 // and then sets it to specified storage
-func SetCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image infrav1.Image, ssh scope.SSHClient) error {
+func setCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image infrav1.Image, ssh scope.SSHClient) error {
 	log := log.FromContext(ctx)
 	log.Info("setting cloud image")
 

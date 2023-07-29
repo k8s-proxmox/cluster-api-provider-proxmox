@@ -8,23 +8,24 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/sp-yduck/proxmox-go/proxmox"
 	"github.com/sp-yduck/proxmox-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 )
 
-func (s *Service) reconcileQEMU(ctx context.Context) (*api.VirtualMachine, error) {
+func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling QEMU")
 
 	nodeName := s.scope.NodeName()
 	vmid := s.scope.GetVMID()
-	api, err := s.getQEMU(nodeName, vmid)
+	api, err := s.getQEMU(ctx, vmid)
 	if err == nil { // if api is found, return it
 		return api, nil
 	}
-	if !IsNotFound(err) {
+	if !rest.IsNotFound(err) {
 		log.Error(err, fmt.Sprintf("failed to get api: node=%s,vmid=%d", nodeName, *vmid))
 		return nil, err
 	}
@@ -33,38 +34,26 @@ func (s *Service) reconcileQEMU(ctx context.Context) (*api.VirtualMachine, error
 	return s.createQEMU(ctx, nodeName, vmid)
 }
 
-func (s *Service) getQEMU(nodeName string, vmid *int) (*api.VirtualMachine, error) {
-	if vmid != nil && nodeName != "" {
-		node, err := s.GetNode(nodeName)
-		if err != nil {
-			return nil, err
-		}
-		return node.VirtualMachine(*vmid)
+func (s *Service) getQEMU(ctx context.Context, vmid *int) (*proxmox.VirtualMachine, error) {
+	if vmid != nil {
+		return s.client.VirtualMachine(ctx, *vmid)
 	}
-	return nil, rest.ErrNotFound
+	return nil, rest.NotFoundErr
 }
 
-func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*api.VirtualMachine, error) {
+func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
-	var node *api.Node
-	var err error
-
-	// get node
-	if nodeName != "" {
-		node, err = s.GetNode(nodeName)
-		if err != nil {
-			log.Error(err, fmt.Sprintf("failed to get node %s", nodeName))
-			return nil, err
-		}
-	} else {
+	// get nodej
+	if nodeName == "" {
 		// temp solution
-		node, err = s.GetRandomNode()
+		node, err := s.getRandomNode()
 		if err != nil {
 			log.Error(err, "failed to get random node")
 			return nil, err
 		}
-		s.scope.SetNodeName(node.Node)
+		nodeName = node.Node
+		s.scope.SetNodeName(nodeName)
 	}
 
 	// (for multiple node proxmox cluster support)
@@ -72,7 +61,7 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 
 	// if vmid is empty, generate new vmid
 	if vmid == nil {
-		nextid, err := s.GetNextID()
+		nextid, err := s.getNextID()
 		if err != nil {
 			log.Error(err, "failed to get available vmid")
 			return nil, err
@@ -80,32 +69,32 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 		vmid = &nextid
 	}
 
-	// create api
 	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetNetwork(), s.scope.GetHardware())
-	api, err := node.CreateVirtualMachine(*vmid, vmoption)
+	// to do : do not use RESTClient()
+	_, err := s.client.RESTClient().CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
 	if err != nil {
-		log.Error(err, "failed to create virtual machine")
+		log.Error(err, fmt.Sprintf("failed to get node %s", nodeName))
 		return nil, err
 	}
 	s.scope.SetVMID(*vmid)
-	return api, nil
+	return s.client.VirtualMachine(ctx, *vmid)
 }
 
-func (s *Service) GetNextID() (int, error) {
+func (s *Service) getNextID() (int, error) {
 	return s.client.RESTClient().GetNextID(context.TODO())
 }
 
-func (s *Service) GetNodes() ([]*api.Node, error) {
+func (s *Service) getNodes() ([]*api.Node, error) {
 	return s.client.Nodes(context.TODO())
 }
 
-func (s *Service) GetNode(name string) (*api.Node, error) {
-	return s.client.Node(name)
+func (s *Service) getNode(ctx context.Context, name string) (*api.Node, error) {
+	return s.client.Node(ctx, name)
 }
 
 // GetRandomNode returns a node chosen randomly
-func (s *Service) GetRandomNode() (*api.Node, error) {
-	nodes, err := s.GetNodes()
+func (s *Service) getRandomNode() (*api.Node, error) {
+	nodes, err := s.getNodes()
 	if err != nil {
 		return nil, err
 	}

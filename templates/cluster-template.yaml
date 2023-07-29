@@ -270,8 +270,10 @@ spec:
 
 apiVersion: v1
 stringData:
-  PROXMOX_PASSWORD: ${PROXMOX_PASSWORD}
-  PROXMOX_USER: ${PROXMOX_USER}
+  PROXMOX_PASSWORD: ${PROXMOX_PASSWORD:=""}
+  PROXMOX_USER: ${PROXMOX_USER:=""}
+  PROXMOX_TOKENID: ${PROXMOX_TOKENID:=""}
+  PROXMOX_SECRET: ${PROXMOX_SECRET:=""}
   NODE_URL: ${NODE_URL}
   NODE_USER: ${NODE_USER}
   NODE_PASSWORD: ${NODE_PASSWORD}
@@ -393,5 +395,7 @@ data:
       config.yaml: |
         proxmox:
           url: ${PROXMOX_URL}
-          user: ${PROXMOX_USER}
-          password: ${PROXMOX_PASSWORD}
+          user: ${PROXMOX_USER:=""}
+          password: ${PROXMOX_PASSWORD:=""}
+          tokenid: ${PROXMOX_TOKENID:=""}
+          secret: ${PROXMOX_SECRET:=""}
