@@ -19,7 +19,7 @@ for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#ini
 export EXP_CLUSTER_RESOURCE_SET=true
 clusterctl init --infrastructure=proxmox:v0.2.3 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml
 ```
-**Note:** container images are available at [here](https://hub.docker.com/r/spyduck/cluster-api-provider-proxmox/tags)
+**Note:** container images are available at [ghcr.io/sp-yduck/cluster-api-provider-proxmox:\<tag\>](https://github.com/sp-yduck/cluster-api-provider-proxmox/pkgs/container/cluster-api-provider-proxmox)
 
 2. Create your first workload cluster
 ```sh
