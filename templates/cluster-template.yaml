@@ -394,7 +394,7 @@ data:
           serviceAccountName: proxmox-cloud-controller-manager
           containers:
           - name: cloud-controller-manager
-            image: docker.io/spyduck/cloud-provider-proxmox:latest
+            image: ghcr.io/sp-yduck/cloud-provider-proxmox:latest
             command:
             - /usr/local/bin/cloud-controller-manager
             - --cloud-provider=proxmox
@@ -442,5 +442,5 @@ data:
           url: ${PROXMOX_URL}
           user: ${PROXMOX_USER:=""}
           password: ${PROXMOX_PASSWORD:=""}
-          tokenid: ${PROXMOX_TOKENID:=""}
+          tokenID: ${PROXMOX_TOKENID:=""}
           secret: ${PROXMOX_SECRET:=""}
