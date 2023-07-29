@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/imdario/mergo v0.3.13
 	github.com/onsi/ginkgo/v2 v2.11.0
-	github.com/onsi/gomega v1.27.8
+	github.com/onsi/gomega v1.27.10
 	github.com/pkg/errors v0.9.1
 	github.com/sp-yduck/proxmox-go v0.0.0-alpha9
 	golang.org/x/crypto v0.11.0
