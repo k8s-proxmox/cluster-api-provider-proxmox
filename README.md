@@ -24,19 +24,17 @@ clusterctl init --infrastructure=proxmox:v0.2.2 --config https://raw.githubuserc
 2. Create your first workload cluster
 ```sh
 # export env variables
-export CONTROLPLANE_HOST=X.X.X.X   # for control-plane node
-export GATEWAY_ADDRESS=X.X.X.X     # for control-plane node
-export NAMESERVER_ADDRESS=X.X.X.X  # for contro-lplane node
+export CONTROLPLANE_HOST=X.X.X.X                          # control-plane vip
 export PROXMOX_URL=https://X.X.X.X:8006/api2/json
-# export PROXMOX_PASSWORD=password # (optional)
-# export PROXMOX_USER=user@pam     # (optional)
-export PROXMOX_TOKENID='root@pam!api-token-id'
-export PROXMOX_SECRET=aaaaaaaa-bbbb-cccc-dddd-ee12345678
+# export PROXMOX_PASSWORD=password                        # (optional)
+# export PROXMOX_USER=user@pam                            # (optional)
+export PROXMOX_TOKENID='root@pam!api-token-id'            # (optional)
+export PROXMOX_SECRET=aaaaaaaa-bbbb-cccc-dddd-ee12345678  # (optional)
 export NODE_URL=node.ssh.url:22
 export NODE_USER=node-ssh-user
 export NODE_PASSWORD=node-ssh-password
 
-# generate manifests (available flags: --target-namespace, --kubernetes-version, --worker-machine-count)
+# generate manifests (available flags: --target-namespace, --kubernetes-version, --controlplane-machine-count, --worker-machine-count)
 clusterctl generate cluster cappx-test --worker-machine-count=3 --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
@@ -78,7 +76,7 @@ To build your custom node image, you can use [kubernetes-sigs/image-builder](htt
 
 Also there are some available out-of-box images published other communities such as [Metal3](https://github.com/metal3-io). For example https://artifactory.nordix.org/ui/native/metal3/images/. Example MD can be found [metal3-ubuntu2204-k8s127.yaml](examples/machine_deployment/metal3-ubuntu2204-k8s127.yaml).
 
-If it isn't possible to pre-install those prerequisites in the image, you can always deploy and execute some custom scripts through the `ProxmoxMachine.spec.cloudInit` or `KubeadmConfig.spec.preKubeadmCommands` etc. . Example MD can be found [ubuntu2204.yaml](examples/machine_deployment/ubuntu2204.yaml).
+If it isn't possible to pre-install those prerequisites in the image, you can always deploy and execute some custom scripts through the `ProxmoxMachine.spec.cloudInit` or `KubeadmConfig` . Example MD can be found [ubuntu2204.yaml](examples/machine_deployment/ubuntu2204.yaml).
 
 ## Compatibility
 

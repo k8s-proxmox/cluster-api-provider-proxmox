@@ -61,21 +61,74 @@ spec:
       controllerManager:
         extraArgs:
           cloud-provider: external
-      etcd:
-        local:
-          dataDir: /var/lib/etcd
       networking:
         dnsDomain: cluster.local
-        serviceSubnet: 10.96.0.0/12
+        serviceSubnet: 10.96.0.0/16
         podSubnet: 10.244.0.0/16
     initConfiguration:
-      localAPIEndpoint:
-        advertiseAddress: "${CONTROLPLANE_HOST}"
-        bindPort: 6443
       nodeRegistration:
-        criSocket: unix:///var/run/containerd/containerd.sock
         kubeletExtraArgs:
           cloud-provider: external
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+    files:
+    - content: |
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          creationTimestamp: null
+          name: kube-vip
+          namespace: kube-system
+        spec:
+          containers:
+          - args:
+            - manager
+            env:
+            - name: cp_enable
+              value: "true"
+            - name: vip_interface
+              value: ${VIP_NETWORK_INTERFACE=""}
+            - name: address
+              value: ${CONTROLPLANE_HOST}
+            - name: port
+              value: "6443"
+            - name: vip_arp
+              value: "true"
+            - name: vip_leaderelection
+              value: "true"
+            - name: vip_leaseduration
+              value: "15"
+            - name: vip_renewdeadline
+              value: "10"
+            - name: vip_retryperiod
+              value: "2"
+            image: ghcr.io/kube-vip/kube-vip:v0.5.11
+            imagePullPolicy: IfNotPresent
+            name: kube-vip
+            resources: {}
+            securityContext:
+              capabilities:
+                add:
+                - NET_ADMIN
+                - NET_RAW
+            volumeMounts:
+            - mountPath: /etc/kubernetes/admin.conf
+              name: kubeconfig
+          hostAliases:
+          - hostnames:
+            - kubernetes
+            ip: 127.0.0.1
+          hostNetwork: true
+          volumes:
+          - hostPath:
+              path: /etc/kubernetes/admin.conf
+              type: FileOrCreate
+            name: kubeconfig
+        status: {}
+      owner: root:root
+      path: /etc/kubernetes/manifests/kube-vip.yaml
     postKubeadmCommands:
     - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
     - "chmod +x /usr/local/bin/kubectl"
@@ -86,7 +139,7 @@ spec:
       apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
       kind: ProxmoxMachineTemplate
       name: ${CLUSTER_NAME}-controlplane
-  replicas: 1
+  replicas: ${CONTROL_PLANE_MACHINE_COUNT:=3}
   version: ${KUBERNETES_VERSION:=v1.27.3}
 
 ---
@@ -108,11 +161,6 @@ spec:
       hardware:
         cpu: 4
         memory: 8192
-      network:
-        ipConfig:
-          gateway: ${GATEWAY_ADDRESS}
-          ip: "${CONTROLPLANE_HOST}/32"
-        nameServer: ${NAMESERVER_ADDRESS}
       cloudInit:
         user:
           packages:
@@ -201,10 +249,6 @@ spec:
         nodeRegistration:
           kubeletExtraArgs:
             cloud-provider: external
-      postKubeadmCommands:
-        - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
-        - "chmod +x /usr/local/bin/kubectl"
-        - "reboot now"
 
 ---
 
@@ -301,6 +345,7 @@ spec:
   resources:
   - kind: ConfigMap
     name: cloud-controller-manager
+  strategy: Reconcile
 
 ---
 
