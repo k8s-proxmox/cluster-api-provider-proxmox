@@ -34,8 +34,8 @@ export NODE_URL=node.ssh.url:22
 export NODE_USER=node-ssh-user
 export NODE_PASSWORD=node-ssh-password
 
-# generate manifests (available flags: --target-namespace, --kubernetes-version, --controlplane-machine-count, --worker-machine-count)
-clusterctl generate cluster cappx-test --worker-machine-count=3 --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+# generate manifests (available flags: --target-namespace, --kubernetes-version, --control-plane-machine-count, --worker-machine-count)
+clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
 vi cappx-test.yaml
