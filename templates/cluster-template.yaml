@@ -314,8 +314,10 @@ spec:
 
 apiVersion: v1
 stringData:
-  PROXMOX_PASSWORD: ${PROXMOX_PASSWORD}
-  PROXMOX_USER: ${PROXMOX_USER}
+  PROXMOX_PASSWORD: ${PROXMOX_PASSWORD:=""}
+  PROXMOX_USER: ${PROXMOX_USER:=""}
+  PROXMOX_TOKENID: ${PROXMOX_TOKENID:=""}
+  PROXMOX_SECRET: ${PROXMOX_SECRET:=""}
   NODE_URL: ${NODE_URL}
   NODE_USER: ${NODE_USER}
   NODE_PASSWORD: ${NODE_PASSWORD}
@@ -392,7 +394,7 @@ data:
           serviceAccountName: proxmox-cloud-controller-manager
           containers:
           - name: cloud-controller-manager
-            image: docker.io/spyduck/cloud-provider-proxmox:latest
+            image: ghcr.io/sp-yduck/cloud-provider-proxmox:latest
             command:
             - /usr/local/bin/cloud-controller-manager
             - --cloud-provider=proxmox
@@ -438,5 +440,7 @@ data:
       config.yaml: |
         proxmox:
           url: ${PROXMOX_URL}
-          user: ${PROXMOX_USER}
-          password: ${PROXMOX_PASSWORD}
+          user: ${PROXMOX_USER:=""}
+          password: ${PROXMOX_PASSWORD:=""}
+          tokenID: ${PROXMOX_TOKENID:=""}
+          secret: ${PROXMOX_SECRET:=""}

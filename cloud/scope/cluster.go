@@ -20,12 +20,12 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/sp-yduck/proxmox-go/proxmox"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/proxmox/pkg/service"
 )
 
 type ClusterScopeParams struct {
@@ -110,7 +110,7 @@ func (s *ClusterScope) Storage() infrav1.Storage {
 	return s.ProxmoxCluster.Spec.Storage
 }
 
-func (s *ClusterScope) CloudClient() *service.Service {
+func (s *ClusterScope) CloudClient() *proxmox.Service {
 	return s.ProxmoxServices.Compute
 }
 

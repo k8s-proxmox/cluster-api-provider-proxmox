@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/sp-yduck/proxmox-go/proxmox"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
@@ -31,7 +32,6 @@ import (
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/providerid"
-	"github.com/sp-yduck/proxmox/pkg/service"
 )
 
 type MachineScopeParams struct {
@@ -78,7 +78,7 @@ type MachineScope struct {
 	ClusterGetter  *ClusterScope
 }
 
-func (m *MachineScope) CloudClient() *service.Service {
+func (m *MachineScope) CloudClient() *proxmox.Service {
 	return m.ClusterGetter.CloudClient()
 }
 

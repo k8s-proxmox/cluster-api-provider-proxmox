@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/sp-yduck/proxmox/pkg/api"
-	"github.com/sp-yduck/proxmox/pkg/service/node/storage"
+	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/sp-yduck/proxmox-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -35,9 +35,9 @@ func (s *Service) Delete(ctx context.Context) error {
 // createOrGetStorage gets Proxmox Storage for VMs
 func (s *Service) createOrGetStorage(ctx context.Context) error {
 	opts := generateVMStorageOptions(s.scope)
-	if err := s.getStorage(opts.Storage); err != nil {
-		if api.IsNotFound(err) {
-			if err := s.createStorage(opts); err != nil {
+	if err := s.getStorage(ctx, opts.Storage); err != nil {
+		if rest.IsNotFound(err) {
+			if err := s.createStorage(ctx, opts); err != nil {
 				return err
 			}
 		}
@@ -48,15 +48,15 @@ func (s *Service) createOrGetStorage(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) getStorage(name string) error {
-	if _, err := s.client.Storage(name); err != nil {
+func (s *Service) getStorage(ctx context.Context, name string) error {
+	if _, err := s.client.Storage(ctx, name); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Service) createStorage(options storage.StorageCreateOptions) error {
-	if _, err := s.client.CreateStorage(options.Storage, options.StorageType, options); err != nil {
+func (s *Service) createStorage(ctx context.Context, options api.StorageCreateOptions) error {
+	if _, err := s.client.CreateStorage(ctx, options.Storage, options.StorageType, options); err != nil {
 		return err
 	}
 	return nil
@@ -64,19 +64,20 @@ func (s *Service) createStorage(options storage.StorageCreateOptions) error {
 
 func (s *Service) deleteStorage(ctx context.Context) error {
 	log := log.FromContext(ctx)
-	nodes, err := s.client.Nodes()
+	nodes, err := s.client.Nodes(ctx)
 	if err != nil {
 		return err
 	}
 	for _, node := range nodes {
-		storage, err := node.Storage(s.scope.Storage().Name)
+		storage, err := s.client.Storage(ctx, s.scope.Storage().Name)
 		if err != nil {
 			log.Info(err.Error())
 			continue
 		}
+		storage.Node = node.Node
 
 		// check if storage is empty
-		contents, err := storage.Contents()
+		contents, err := storage.GetContents(ctx)
 		if err != nil {
 			return err
 		}
@@ -85,7 +86,7 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 		}
 
 		// delete
-		if _, err := storage.Delete(); err != nil {
+		if err := storage.Delete(ctx); err != nil {
 			log.Info(err.Error())
 			return err
 		}
@@ -93,9 +94,9 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 	return nil
 }
 
-func generateVMStorageOptions(scope Scope) storage.StorageCreateOptions {
+func generateVMStorageOptions(scope Scope) api.StorageCreateOptions {
 	storageSpec := scope.Storage()
-	options := storage.StorageCreateOptions{
+	options := api.StorageCreateOptions{
 		Storage:     storageSpec.Name,
 		StorageType: "dir",
 		Content:     "images,snippets",

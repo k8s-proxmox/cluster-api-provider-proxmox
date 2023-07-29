@@ -7,65 +7,53 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox/pkg/api"
-	"github.com/sp-yduck/proxmox/pkg/service/node"
-	"github.com/sp-yduck/proxmox/pkg/service/node/vm"
+	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/sp-yduck/proxmox-go/proxmox"
+	"github.com/sp-yduck/proxmox-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 )
 
-func (s *Service) reconcileQEMU(ctx context.Context) (*vm.VirtualMachine, error) {
+func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling QEMU")
 
 	nodeName := s.scope.NodeName()
 	vmid := s.scope.GetVMID()
-	vm, err := s.getQEMU(nodeName, vmid)
-	if err == nil { // if vm is found, return it
-		return vm, nil
+	api, err := s.getQEMU(ctx, vmid)
+	if err == nil { // if api is found, return it
+		return api, nil
 	}
-	if !IsNotFound(err) {
-		log.Error(err, fmt.Sprintf("failed to get vm: node=%s,vmid=%d", nodeName, *vmid))
+	if !rest.IsNotFound(err) {
+		log.Error(err, fmt.Sprintf("failed to get api: node=%s,vmid=%d", nodeName, *vmid))
 		return nil, err
 	}
 
-	// no vm found, create new one
+	// no api found, create new one
 	return s.createQEMU(ctx, nodeName, vmid)
 }
 
-func (s *Service) getQEMU(nodeName string, vmid *int) (*vm.VirtualMachine, error) {
-	if vmid != nil && nodeName != "" {
-		node, err := s.GetNode(nodeName)
-		if err != nil {
-			return nil, err
-		}
-		return node.VirtualMachine(*vmid)
+func (s *Service) getQEMU(ctx context.Context, vmid *int) (*proxmox.VirtualMachine, error) {
+	if vmid != nil {
+		return s.client.VirtualMachine(ctx, *vmid)
 	}
-	return nil, api.ErrNotFound
+	return nil, rest.NotFoundErr
 }
 
-func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*vm.VirtualMachine, error) {
+func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
-	var node *node.Node
-	var err error
-
-	// get node
-	if nodeName != "" {
-		node, err = s.GetNode(nodeName)
-		if err != nil {
-			log.Error(err, fmt.Sprintf("failed to get node %s", nodeName))
-			return nil, err
-		}
-	} else {
+	// get nodej
+	if nodeName == "" {
 		// temp solution
-		node, err = s.GetRandomNode()
+		node, err := s.getRandomNode()
 		if err != nil {
 			log.Error(err, "failed to get random node")
 			return nil, err
 		}
-		s.scope.SetNodeName(node.Node)
+		nodeName = node.Node
+		s.scope.SetNodeName(nodeName)
 	}
 
 	// (for multiple node proxmox cluster support)
@@ -73,7 +61,7 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 
 	// if vmid is empty, generate new vmid
 	if vmid == nil {
-		nextid, err := s.GetNextID()
+		nextid, err := s.getNextID()
 		if err != nil {
 			log.Error(err, "failed to get available vmid")
 			return nil, err
@@ -81,32 +69,28 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 		vmid = &nextid
 	}
 
-	// create vm
 	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetNetwork(), s.scope.GetHardware())
-	vm, err := node.CreateVirtualMachine(*vmid, vmoption)
+	// to do : do not use RESTClient()
+	_, err := s.client.RESTClient().CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
 	if err != nil {
-		log.Error(err, "failed to create virtual machine")
+		log.Error(err, fmt.Sprintf("failed to get node %s", nodeName))
 		return nil, err
 	}
 	s.scope.SetVMID(*vmid)
-	return vm, nil
+	return s.client.VirtualMachine(ctx, *vmid)
 }
 
-func (s *Service) GetNextID() (int, error) {
-	return s.client.NextID()
+func (s *Service) getNextID() (int, error) {
+	return s.client.RESTClient().GetNextID(context.TODO())
 }
 
-func (s *Service) GetNodes() ([]*node.Node, error) {
-	return s.client.Nodes()
-}
-
-func (s *Service) GetNode(name string) (*node.Node, error) {
-	return s.client.Node(name)
+func (s *Service) getNodes() ([]*api.Node, error) {
+	return s.client.Nodes(context.TODO())
 }
 
 // GetRandomNode returns a node chosen randomly
-func (s *Service) GetRandomNode() (*node.Node, error) {
-	nodes, err := s.GetNodes()
+func (s *Service) getRandomNode() (*api.Node, error) {
+	nodes, err := s.getNodes()
 	if err != nil {
 		return nil, err
 	}
@@ -118,23 +102,23 @@ func (s *Service) GetRandomNode() (*node.Node, error) {
 	return nodes[r.Intn(len(nodes))], nil
 }
 
-func generateVMOptions(vmName, storageName string, network infrav1.Network, hardware infrav1.Hardware) vm.VirtualMachineCreateOptions {
-	vmoptions := vm.VirtualMachineCreateOptions{
+func generateVMOptions(vmName, storageName string, network infrav1.Network, hardware infrav1.Hardware) api.VirtualMachineCreateOptions {
+	vmoptions := api.VirtualMachineCreateOptions{
 		Agent:        "enabled=1",
 		Cores:        hardware.CPU,
 		Memory:       hardware.Memory,
 		Name:         vmName,
 		NameServer:   network.NameServer,
 		Boot:         "order=scsi0",
-		Ide:          vm.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
+		Ide:          api.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
 		CiCustom:     fmt.Sprintf("user=%s:%s", storageName, userSnippetPath(vmName)),
-		IPConfig:     vm.IPConfig{IPConfig0: network.IPConfig.String()},
-		OSType:       vm.L26,
-		Net:          vm.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
-		Scsi:         vm.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},
-		ScsiHw:       vm.VirtioScsiPci,
+		IPConfig:     api.IPConfig{IPConfig0: network.IPConfig.String()},
+		OSType:       api.L26,
+		Net:          api.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
+		Scsi:         api.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},
+		ScsiHw:       api.VirtioScsiPci,
 		SearchDomain: network.SearchDomain,
-		Serial:       vm.Serial{Serial0: "socket"},
+		Serial:       api.Serial{Serial0: "socket"},
 		VGA:          "serial0",
 	}
 	return vmoptions

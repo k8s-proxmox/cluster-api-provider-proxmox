@@ -24,16 +24,18 @@ clusterctl init --infrastructure=proxmox:v0.2.2 --config https://raw.githubuserc
 2. Create your first workload cluster
 ```sh
 # export env variables
-export CONTROLPLANE_HOST=X.X.X.X   # control-plane vip
-export PROXMOX_URL=X.X.X.X:8006
-export PROXMOX_PASSWORD=password
-export PROXMOX_USER=user@pam
+export CONTROLPLANE_HOST=X.X.X.X                          # control-plane vip
+export PROXMOX_URL=https://X.X.X.X:8006/api2/json
+# export PROXMOX_PASSWORD=password                        # (optional)
+# export PROXMOX_USER=user@pam                            # (optional)
+export PROXMOX_TOKENID='root@pam!api-token-id'            # (optional)
+export PROXMOX_SECRET=aaaaaaaa-bbbb-cccc-dddd-ee12345678  # (optional)
 export NODE_URL=node.ssh.url:22
 export NODE_USER=node-ssh-user
 export NODE_PASSWORD=node-ssh-password
 
-# generate manifests (available flags: --target-namespace, --kubernetes-version, --controlplane-machine-count, --worker-machine-count)
-clusterctl generate cluster cappx-test --worker-machine-count=3 --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+# generate manifests (available flags: --target-namespace, --kubernetes-version, --control-plane-machine-count, --worker-machine-count)
+clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
 vi cappx-test.yaml

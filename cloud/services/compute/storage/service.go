@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/sp-yduck/proxmox/pkg/service"
+	"github.com/sp-yduck/proxmox-go/proxmox"
 
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 )
@@ -12,7 +12,7 @@ type Scope interface {
 
 type Service struct {
 	scope  Scope
-	client service.Service
+	client proxmox.Service
 }
 
 func NewService(s Scope) *Service {
