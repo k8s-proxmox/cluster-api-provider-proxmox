@@ -8,4 +8,4 @@ spec:
     spec:
       containers:
       - name: manager
-        image: docker.io/spyduck/cluster-api-provider-proxmox:v0.2.2
+        image: ghcr.io/sp-yduck/cluster-api-provider-proxmox:v0.2.3

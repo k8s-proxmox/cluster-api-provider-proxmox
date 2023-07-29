@@ -17,7 +17,7 @@ for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#ini
 ```sh
 # install cluster-api components
 export EXP_CLUSTER_RESOURCE_SET=true
-clusterctl init --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml
+clusterctl init --infrastructure=proxmox:v0.2.3 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml
 ```
 **Note:** container images are available at [here](https://hub.docker.com/r/spyduck/cluster-api-provider-proxmox/tags)
 
@@ -35,7 +35,7 @@ export NODE_USER=node-ssh-user
 export NODE_PASSWORD=node-ssh-password
 
 # generate manifests (available flags: --target-namespace, --kubernetes-version, --control-plane-machine-count, --worker-machine-count)
-clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.2.2 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.2.3 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
 vi cappx-test.yaml
