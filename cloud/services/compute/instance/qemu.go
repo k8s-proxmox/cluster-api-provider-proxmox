@@ -48,7 +48,7 @@ func (s *Service) getQEMU(ctx context.Context, vmid *int) (*proxmox.VirtualMachi
 func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
-	// get nodej
+	// get node
 	if nodeName == "" {
 		// temp solution
 		node, err := s.getRandomNode()
@@ -59,9 +59,6 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 		nodeName = node.Node
 		s.scope.SetNodeName(nodeName)
 	}
-
-	// (for multiple node proxmox cluster support)
-	// to do : set ssh client for specific node
 
 	// if vmid is empty, generate new vmid
 	if vmid == nil {
@@ -74,14 +71,13 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 	}
 
 	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetNetwork(), s.scope.GetHardware())
-	// to do : do not use RESTClient()
-	_, err := s.client.RESTClient().CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
+	vm, err := s.client.CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
 	if err != nil {
-		log.Error(err, fmt.Sprintf("failed to get node %s", nodeName))
+		log.Error(err, fmt.Sprintf("failed to create qemu instance %s", vm.VM.Name))
 		return nil, err
 	}
 	s.scope.SetVMID(*vmid)
-	return s.client.VirtualMachine(ctx, *vmid)
+	return vm, nil
 }
 
 func (s *Service) getNextID() (int, error) {
