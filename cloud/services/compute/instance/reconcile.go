@@ -145,7 +145,7 @@ func (s *Service) createInstance(ctx context.Context, bootstrap string) (*proxmo
 	log.Info(fmt.Sprintf("reconciled qemu: node=%s,vmid=%d", instance.Node, vmid))
 
 	// cloud init
-	if err := s.reconcileCloudInit(bootstrap); err != nil {
+	if err := s.reconcileCloudInit(ctx, bootstrap); err != nil {
 		return nil, err
 	}
 

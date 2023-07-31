@@ -16,9 +16,9 @@ const (
 )
 
 // reconcileCloudInit
-func (s *Service) reconcileCloudInit(bootstrap string) error {
+func (s *Service) reconcileCloudInit(ctx context.Context, bootstrap string) error {
 	// user
-	if err := s.reconcileCloudInitUser(bootstrap); err != nil {
+	if err := s.reconcileCloudInitUser(ctx, bootstrap); err != nil {
 		return err
 	}
 	return nil
@@ -42,9 +42,8 @@ func (s *Service) deleteCloudConfig(ctx context.Context) error {
 	return storage.DeleteVolume(ctx, volumeID)
 }
 
-func (s *Service) reconcileCloudInitUser(bootstrap string) error {
+func (s *Service) reconcileCloudInitUser(ctx context.Context, bootstrap string) error {
 	vmName := s.scope.Name()
-	storagePath := s.scope.GetStorage().Path
 	config := s.scope.GetCloudInit().User
 
 	bootstrapConfig, err := cloudinit.ParseUser(bootstrap)
@@ -66,13 +65,17 @@ func (s *Service) reconcileCloudInitUser(bootstrap string) error {
 	if err != nil {
 		return err
 	}
-
 	klog.Info(configYaml)
 
 	// to do: should be set via API
-	out, err := s.remote.RunWithStdin(fmt.Sprintf("tee %s/%s", storagePath, userSnippetPath(vmName)), configYaml)
+	vnc, err := s.vncClient(s.scope.NodeName())
 	if err != nil {
-		return errors.Errorf("ssh command error : %s : %v", out, err)
+		return err
+	}
+	defer vnc.Close()
+	filePath := fmt.Sprintf("%s/%s", s.scope.GetStorage().Path, userSnippetPath(vmName))
+	if err := vnc.WriteFile(context.TODO(), configYaml, filePath); err != nil {
+		return errors.Errorf("failed to write file error : %v", err)
 	}
 
 	return nil

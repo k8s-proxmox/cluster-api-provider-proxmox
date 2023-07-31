@@ -247,13 +247,6 @@ func (in *ProxmoxClusterSpec) DeepCopyInto(out *ProxmoxClusterSpec) {
 	*out = *in
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	in.ServerRef.DeepCopyInto(&out.ServerRef)
-	if in.NodeRefs != nil {
-		in, out := &in.NodeRefs, &out.NodeRefs
-		*out = make([]NodeRef, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
-	}
 	out.Storage = in.Storage
 }
 

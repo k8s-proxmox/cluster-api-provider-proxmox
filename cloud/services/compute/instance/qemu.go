@@ -15,6 +15,10 @@ import (
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 )
 
+const (
+	bootDvice = "scsi0"
+)
+
 func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling QEMU")
@@ -109,7 +113,7 @@ func generateVMOptions(vmName, storageName string, network infrav1.Network, hard
 		Memory:       hardware.Memory,
 		Name:         vmName,
 		NameServer:   network.NameServer,
-		Boot:         "order=scsi0",
+		Boot:         fmt.Sprintf("order=%s", bootDvice),
 		Ide:          api.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
 		CiCustom:     fmt.Sprintf("user=%s:%s", storageName, userSnippetPath(vmName)),
 		IPConfig:     api.IPConfig{IPConfig0: network.IPConfig.String()},
