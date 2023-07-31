@@ -11,6 +11,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+const (
+	rawImageDirPath = etcCAPPX + "/images"
+)
+
 // reconcileBootDevice
 func (s *Service) reconcileBootDevice(ctx context.Context, vm *proxmox.VirtualMachine) error {
 	log := log.FromContext(ctx)
@@ -38,7 +42,6 @@ func (s *Service) setCloudImage(ctx context.Context) error {
 	image := s.scope.GetImage()
 	url := image.URL
 	fileName := path.Base(url)
-	rawImageDirPath := fmt.Sprintf("%s/images", etcCAPPX)
 	rawImageFilePath := fmt.Sprintf("%s/%s", rawImageDirPath, fileName)
 
 	// workaround
@@ -56,7 +59,7 @@ func (s *Service) setCloudImage(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		cmd := fmt.Sprintf("echo '%s %s' | %s --check -", image.Checksum, rawImageFilePath, cscmd)
+		cmd := fmt.Sprintf("echo -n '%s %s' | %s --check -", image.Checksum, rawImageFilePath, cscmd)
 		out, _, err = vnc.Exec(context.TODO(), cmd)
 		if err != nil {
 			return errors.Errorf("failed to confirm checksum: %s : %v", out, err)
