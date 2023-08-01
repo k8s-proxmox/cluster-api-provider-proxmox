@@ -38,6 +38,7 @@ func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, e
 	return s.createQEMU(ctx, nodeName, vmid)
 }
 
+// get QEMU gets proxmox vm from vmid
 func (s *Service) getQEMU(ctx context.Context, vmid *int) (*proxmox.VirtualMachine, error) {
 	if vmid != nil {
 		return s.client.VirtualMachine(ctx, *vmid)
@@ -68,6 +69,7 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 			return nil, err
 		}
 		vmid = &nextid
+		s.scope.SetVMID(*vmid)
 	}
 
 	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetNetwork(), s.scope.GetHardware())
@@ -76,7 +78,6 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 		log.Error(err, fmt.Sprintf("failed to create qemu instance %s", vm.VM.Name))
 		return nil, err
 	}
-	s.scope.SetVMID(*vmid)
 	return vm, nil
 }
 

@@ -38,6 +38,8 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		return err
 	}
 	s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.VM.Status))
+	s.scope.SetNodeName(instance.Node)
+	s.scope.SetVMID(instance.VM.VMID)
 	// s.scope.SetAddresses()
 	return nil
 }
@@ -47,11 +49,12 @@ func (s *Service) Delete(ctx context.Context) error {
 	log := log.FromContext(ctx)
 	log.Info("Deleting instance resources")
 
-	instance, err := s.getInstance(ctx)
+	instance, err := s.getQEMU(ctx, s.scope.GetVMID())
 	if err != nil {
 		if !rest.IsNotFound(err) {
 			return err
 		}
+		log.Info("qemu is not found or already deleted")
 		return nil
 	}
 
@@ -86,7 +89,7 @@ func (s *Service) createOrGetInstance(ctx context.Context) (*proxmox.VirtualMach
 	return instance, nil
 }
 
-// getInstance get vm from providerID
+// getInstance() gets proxmoxm vm from providerID
 func (s *Service) getInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
