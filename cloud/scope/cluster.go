@@ -52,15 +52,6 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 		params.ProxmoxServices.Compute = computeSvc
 	}
 
-	if params.ProxmoxServices.Remote == nil {
-		// current CAPPX is compatible with only single node proxmox cluster
-		remote, err := newRemoteClient(ctx, params.ProxmoxCluster.Spec.NodeRefs[0].SecretRef, params.Client)
-		if err != nil {
-			return nil, errors.Errorf("failed to create remote client: %v", err)
-		}
-		params.ProxmoxServices.Remote = remote
-	}
-
 	helper, err := patch.NewHelper(params.ProxmoxCluster, params.Client)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to init patch helper")
@@ -78,11 +69,6 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 func populateNamespace(proxmoxCluster *infrav1.ProxmoxCluster) {
 	if proxmoxCluster.Spec.ServerRef.SecretRef.Namespace == "" {
 		proxmoxCluster.Spec.ServerRef.SecretRef.Namespace = proxmoxCluster.Namespace
-	}
-	for i, nodeRef := range proxmoxCluster.Spec.NodeRefs {
-		if nodeRef.SecretRef.Namespace == "" {
-			proxmoxCluster.Spec.NodeRefs[i].SecretRef.Namespace = proxmoxCluster.Namespace
-		}
 	}
 }
 
@@ -112,10 +98,6 @@ func (s *ClusterScope) Storage() infrav1.Storage {
 
 func (s *ClusterScope) CloudClient() *proxmox.Service {
 	return s.ProxmoxServices.Compute
-}
-
-func (s *ClusterScope) RemoteClient() *SSHClient {
-	return s.ProxmoxServices.Remote
 }
 
 func (s *ClusterScope) Close() error {

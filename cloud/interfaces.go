@@ -7,7 +7,6 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
 type Reconciler interface {
@@ -17,7 +16,6 @@ type Reconciler interface {
 
 type Client interface {
 	CloudClient() *proxmox.Service
-	RemoteClient() *scope.SSHClient
 }
 
 type Cluster interface {

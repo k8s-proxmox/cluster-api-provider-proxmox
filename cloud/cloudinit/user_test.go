@@ -67,7 +67,7 @@ func TestMergeUsers(t *testing.T) {
 		User:   "override-user",
 		RunCmd: []string{"command A", "command B", "command C"},
 	}
-	c, err := cloudinit.MergeUsers(a, b)
+	c, err := cloudinit.MergeUsers(&a, &b)
 	if err != nil {
 		t.Errorf("failed to merge cloud init user data: %v", err)
 	}

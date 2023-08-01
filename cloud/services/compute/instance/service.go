@@ -1,10 +1,11 @@
 package instance
 
 import (
+	"context"
+
 	"github.com/sp-yduck/proxmox-go/proxmox"
 
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
 type Scope interface {
@@ -14,13 +15,19 @@ type Scope interface {
 type Service struct {
 	scope  Scope
 	client proxmox.Service
-	remote scope.SSHClient
 }
 
 func NewService(s Scope) *Service {
 	return &Service{
 		scope:  s,
 		client: *s.CloudClient(),
-		remote: *s.RemoteClient(),
 	}
+}
+
+func (s *Service) vncClient(nodeName string) (*proxmox.VNCWebSocketClient, error) {
+	client, err := s.client.NewNodeVNCWebSocketConnection(context.TODO(), nodeName)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }

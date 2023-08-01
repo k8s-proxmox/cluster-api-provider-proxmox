@@ -35,10 +35,6 @@ spec:
     endpoint: "${PROXMOX_URL}"
     secretRef:
       name: "${CLUSTER_NAME}"
-  nodeRefs:
-    - name: mynode
-      secretRef:
-        name: "${CLUSTER_NAME}"
   storage:
     name: "${CLUSTER_NAME}"
     path: ""
@@ -318,9 +314,6 @@ stringData:
   PROXMOX_USER: ${PROXMOX_USER:=""}
   PROXMOX_TOKENID: ${PROXMOX_TOKENID:=""}
   PROXMOX_SECRET: ${PROXMOX_SECRET:=""}
-  NODE_URL: ${NODE_URL}
-  NODE_USER: ${NODE_USER}
-  NODE_PASSWORD: ${NODE_PASSWORD}
 kind: Secret
 metadata:
   name: "${CLUSTER_NAME}"

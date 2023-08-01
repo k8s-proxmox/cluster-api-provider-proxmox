@@ -9,27 +9,24 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+)
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
+const (
+	rawImageDirPath = etcCAPPX + "/images"
 )
 
 // reconcileBootDevice
 func (s *Service) reconcileBootDevice(ctx context.Context, vm *proxmox.VirtualMachine) error {
-	vmid := s.scope.GetVMID()
-	storage := s.scope.GetStorage()
-	image := s.scope.GetImage()
-	hardware := s.scope.GetHardware()
 	log := log.FromContext(ctx)
-	log.Info(fmt.Sprintf("%v", hardware))
+	log.Info("reconcile boot device")
 
 	// os image
-	if err := setCloudImage(ctx, *vmid, storage, image, s.remote); err != nil {
+	if err := s.setCloudImage(ctx); err != nil {
 		return err
 	}
 
 	// volume
-	if err := vm.ResizeVolume(ctx, "scsi0", hardware.Disk); err != nil {
+	if err := vm.ResizeVolume(ctx, bootDvice, s.scope.GetHardware().Disk); err != nil {
 		return err
 	}
 
@@ -38,18 +35,20 @@ func (s *Service) reconcileBootDevice(ctx context.Context, vm *proxmox.VirtualMa
 
 // setCloudImage downloads OS image into Proxmox node
 // and then sets it to specified storage
-func setCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image infrav1.Image, ssh scope.SSHClient) error {
+func (s *Service) setCloudImage(ctx context.Context) error {
 	log := log.FromContext(ctx)
 	log.Info("setting cloud image")
 
+	image := s.scope.GetImage()
 	url := image.URL
 	fileName := path.Base(url)
-	rawImageDirPath := fmt.Sprintf("%s/images", etcCAPPX)
 	rawImageFilePath := fmt.Sprintf("%s/%s", rawImageDirPath, fileName)
 
 	// workaround
 	// API does not support something equivalent of "qm importdisk"
-	out, err := ssh.RunCommand(fmt.Sprintf("wget %s --directory-prefix %s -nc", url, rawImageDirPath))
+	vnc, err := s.vncClient(s.scope.NodeName())
+	defer vnc.Close()
+	out, _, err := vnc.Exec(ctx, fmt.Sprintf("wget %s --directory-prefix %s -nc", url, rawImageDirPath))
 	if err != nil {
 		return errors.Errorf("failed to download image: %s : %v", out, err)
 	}
@@ -60,16 +59,16 @@ func setCloudImage(ctx context.Context, vmid int, storage infrav1.Storage, image
 		if err != nil {
 			return err
 		}
-		cmd := fmt.Sprintf("%s --check -", cscmd)
-		stdin := fmt.Sprintf("%s %s", image.Checksum, rawImageFilePath)
-		out, err = ssh.RunWithStdin(cmd, stdin)
+		cmd := fmt.Sprintf("echo -n '%s %s' | %s --check -", image.Checksum, rawImageFilePath, cscmd)
+		out, _, err = vnc.Exec(context.TODO(), cmd)
 		if err != nil {
 			return errors.Errorf("failed to confirm checksum: %s : %v", out, err)
 		}
 	}
 
-	destPath := fmt.Sprintf("%s/images/%d/vm-%d-disk-0.raw", storage.Path, vmid, vmid)
-	out, err = ssh.RunCommand(fmt.Sprintf("/usr/bin/qemu-img convert -O raw %s %s", rawImageFilePath, destPath))
+	vmid := s.scope.GetVMID()
+	destPath := fmt.Sprintf("%s/images/%d/vm-%d-disk-0.raw", s.scope.GetStorage().Path, *vmid, *vmid)
+	out, _, err = vnc.Exec(context.TODO(), fmt.Sprintf("/usr/bin/qemu-img convert -O raw %s %s", rawImageFilePath, destPath))
 	if err != nil {
 		return errors.Errorf("failed to convert iamge : %s : %v", out, err)
 	}
