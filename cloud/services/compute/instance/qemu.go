@@ -25,16 +25,16 @@ func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, e
 
 	nodeName := s.scope.NodeName()
 	vmid := s.scope.GetVMID()
-	api, err := s.getQEMU(ctx, vmid)
-	if err == nil { // if api is found, return it
-		return api, nil
+	qemu, err := s.getQEMU(ctx, vmid)
+	if err == nil { // if qemu is found, return it
+		return qemu, nil
 	}
 	if !rest.IsNotFound(err) {
-		log.Error(err, fmt.Sprintf("failed to get api: node=%s,vmid=%d", nodeName, *vmid))
+		log.Error(err, fmt.Sprintf("failed to get qemu: node=%s,vmid=%d", nodeName, *vmid))
 		return nil, err
 	}
 
-	// no api found, create new one
+	// no qemu found, create new one
 	return s.createQEMU(ctx, nodeName, vmid)
 }
 
@@ -51,7 +51,7 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 	// get node
 	if nodeName == "" {
 		// temp solution
-		node, err := s.getRandomNode()
+		node, err := s.getRandomNode(ctx)
 		if err != nil {
 			log.Error(err, "failed to get random node")
 			return nil, err
@@ -62,7 +62,7 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 
 	// if vmid is empty, generate new vmid
 	if vmid == nil {
-		nextid, err := s.getNextID()
+		nextid, err := s.getNextID(ctx)
 		if err != nil {
 			log.Error(err, "failed to get available vmid")
 			return nil, err
@@ -80,17 +80,17 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 	return vm, nil
 }
 
-func (s *Service) getNextID() (int, error) {
-	return s.client.RESTClient().GetNextID(context.TODO())
+func (s *Service) getNextID(ctx context.Context) (int, error) {
+	return s.client.RESTClient().GetNextID(ctx)
 }
 
-func (s *Service) getNodes() ([]*api.Node, error) {
-	return s.client.Nodes(context.TODO())
+func (s *Service) getNodes(ctx context.Context) ([]*api.Node, error) {
+	return s.client.Nodes(ctx)
 }
 
 // GetRandomNode returns a node chosen randomly
-func (s *Service) getRandomNode() (*api.Node, error) {
-	nodes, err := s.getNodes()
+func (s *Service) getRandomNode(ctx context.Context) (*api.Node, error) {
+	nodes, err := s.getNodes(ctx)
 	if err != nil {
 		return nil, err
 	}

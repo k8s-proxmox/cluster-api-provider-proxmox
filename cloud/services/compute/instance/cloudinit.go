@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/cloudinit"
@@ -16,11 +16,15 @@ const (
 )
 
 // reconcileCloudInit
-func (s *Service) reconcileCloudInit(ctx context.Context, bootstrap string) error {
+func (s *Service) reconcileCloudInit(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	log.Info("Reconciling cloud init")
+
 	// user
-	if err := s.reconcileCloudInitUser(ctx, bootstrap); err != nil {
+	if err := s.reconcileCloudInitUser(ctx); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -42,30 +46,30 @@ func (s *Service) deleteCloudConfig(ctx context.Context) error {
 	return storage.DeleteVolume(ctx, volumeID)
 }
 
-func (s *Service) reconcileCloudInitUser(ctx context.Context, bootstrap string) error {
-	vmName := s.scope.Name()
-	config := s.scope.GetCloudInit().User
+func (s *Service) reconcileCloudInitUser(ctx context.Context) error {
+	log := log.FromContext(ctx)
 
+	// cloud init from bootstrap provider
+	bootstrap, err := s.scope.GetBootstrapData()
+	if err != nil {
+		log.Error(err, "Error getting bootstrap data for machine")
+		return errors.Wrap(err, "failed to retrieve bootstrap data")
+	}
 	bootstrapConfig, err := cloudinit.ParseUser(bootstrap)
 	if err != nil {
 		return err
 	}
-	base := baseUserData(vmName)
-	if config != nil {
-		base, err = cloudinit.MergeUsers(*config, *base)
-		if err != nil {
-			return err
-		}
-	}
-	cloudConfig, err := cloudinit.MergeUsers(*base, *bootstrapConfig)
+
+	vmName := s.scope.Name()
+	cloudConfig, err := mergeUserDatas(bootstrapConfig, baseUserData(vmName), s.scope.GetCloudInit().User)
 	if err != nil {
 		return err
 	}
+
 	configYaml, err := cloudinit.GenerateUserYaml(*cloudConfig)
 	if err != nil {
 		return err
 	}
-	klog.Info(configYaml)
 
 	// to do: should be set via API
 	vnc, err := s.vncClient(s.scope.NodeName())
@@ -79,6 +83,23 @@ func (s *Service) reconcileCloudInitUser(ctx context.Context, bootstrap string) 
 	}
 
 	return nil
+}
+
+// a and b must not be nil
+// only c can be nil
+func mergeUserDatas(a, b, c *infrav1.User) (*infrav1.User, error) {
+	var err error
+	if c != nil {
+		b, err = cloudinit.MergeUsers(b, c)
+		if err != nil {
+			return nil, err
+		}
+	}
+	a, err = cloudinit.MergeUsers(a, b)
+	if err != nil {
+		return nil, err
+	}
+	return a, err
 }
 
 func userSnippetPath(vmName string) string {
