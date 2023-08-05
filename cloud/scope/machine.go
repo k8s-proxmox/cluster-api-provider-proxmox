@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -196,6 +197,10 @@ func (m *MachineScope) SetProviderID(uuid string) error {
 
 func (m *MachineScope) SetVMID(vmid int) {
 	m.ProxmoxMachine.Spec.VMID = &vmid
+}
+
+func (m *MachineScope) SetConfigStatus(config api.VirtualMachineConfig) {
+	m.ProxmoxMachine.Status.Config = config
 }
 
 func (m *MachineScope) SetReady() {
