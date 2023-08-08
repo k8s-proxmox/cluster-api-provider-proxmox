@@ -17,13 +17,11 @@ limitations under the License.
 package v1beta1
 
 import (
+	"github.com/sp-yduck/proxmox-go/api"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/errors"
 )
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
 	// MachineFinalizer
@@ -32,9 +30,6 @@ const (
 
 // ProxmoxMachineSpec defines the desired state of ProxmoxMachine
 type ProxmoxMachineSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// ProviderID
 	ProviderID *string `json:"providerID,omitempty"`
 
@@ -60,9 +55,11 @@ type ProxmoxMachineSpec struct {
 	// Network
 	Network Network `json:"network,omitempty"`
 
+	// Options
+	// +optional
+	Options Options `json:"options,omitempty"`
+
 	// FailureDomain is the failure domain unique identifier this Machine should be attached to, as defined in Cluster API.
-	// For this infrastructure provider, the ID is equivalent to an AWS Availability Zone.
-	// If multiple subnets are matched for the availability zone, the first one returned is picked.
 	FailureDomain *string `json:"failureDomain,omitempty"`
 }
 
@@ -84,7 +81,10 @@ type ProxmoxMachineStatus struct {
 	// Conditions
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 
-	// InstanceStatus is the status of the GCP instance for this machine.
+	// Configuration
+	Config api.VirtualMachineConfig `json:"config,omitempty"`
+
+	// InstanceStatus is the status of the proxmox instance for this machine.
 	// +optional
 	InstanceStatus *InstanceStatus `json:"instanceStatus,omitempty"` // InstanceStatus
 }

@@ -40,7 +40,12 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.VM.Status))
 	s.scope.SetNodeName(instance.Node)
 	s.scope.SetVMID(instance.VM.VMID)
-	// s.scope.SetAddresses()
+
+	config, err := instance.GetConfig(ctx)
+	if err != nil {
+		return err
+	}
+	s.scope.SetConfigStatus(*config)
 	return nil
 }
 

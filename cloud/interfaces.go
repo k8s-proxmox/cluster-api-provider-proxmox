@@ -3,6 +3,7 @@ package cloud
 import (
 	"context"
 
+	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
@@ -61,6 +62,7 @@ type MachineGetter interface {
 	GetNetwork() infrav1.Network
 	GetHardware() infrav1.Hardware
 	GetVMID() *int
+	GetOptions() infrav1.Options
 }
 
 // MachineSetter is an interface which can set machine information.
@@ -69,6 +71,7 @@ type MachineSetter interface {
 	SetInstanceStatus(v infrav1.InstanceStatus)
 	SetNodeName(name string)
 	SetVMID(vmid int)
+	SetConfigStatus(config api.VirtualMachineConfig)
 	// SetFailureMessage(v error)
 	// SetFailureReason(v capierrors.MachineStatusError)
 	// SetAnnotation(key, value string)

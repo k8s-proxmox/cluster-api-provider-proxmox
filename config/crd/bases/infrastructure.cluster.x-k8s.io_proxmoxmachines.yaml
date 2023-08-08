@@ -94,17 +94,27 @@ spec:
                 type: object
               failureDomain:
                 description: FailureDomain is the failure domain unique identifier
-                  this Machine should be attached to, as defined in Cluster API. For
-                  this infrastructure provider, the ID is equivalent to an AWS Availability
-                  Zone. If multiple subnets are matched for the availability zone,
-                  the first one returned is picked.
+                  this Machine should be attached to, as defined in Cluster API.
                 type: string
               hardware:
                 description: Hardware
                 properties:
+                  bios:
+                    description: Select BIOS implementation. Defaults to seabios.
+                      seabios or ovmf. Defaults to seabios.
+                    enum:
+                    - seabios
+                    - ovmf
+                    type: string
                   cpu:
                     default: 2
                     description: 'number of CPU cores : 1 ~'
+                    type: integer
+                  cpuLimit:
+                    description: Limit of CPU usage. If the computer has 2 CPUs, it
+                      has total of '2' CPU time. Value '0' indicates no CPU limit.
+                      Defaults to 0.
+                    minimum: 0
                     type: integer
                   disk:
                     default: 50G
@@ -114,6 +124,10 @@ spec:
                     default: 4096
                     description: 'amount of RAM for the VM in MiB : 16 ~'
                     minimum: 16
+                    type: integer
+                  sockets:
+                    description: The number of CPU sockets. Defaults to 1.
+                    minimum: 1
                     type: integer
                 type: object
               image:
@@ -161,6 +175,146 @@ spec:
                 description: Node is proxmox node hosting vm instance which used for
                   ProxmoxMachine
                 type: string
+              options:
+                description: Options
+                properties:
+                  acpi:
+                    description: Enable/Disable ACPI. Defaults to true.
+                    type: boolean
+                  arch:
+                    description: Virtual processor architecture. Defaults to the host.
+                      x86_64 or aarch64.
+                    enum:
+                    - x86_64
+                    - aarch64
+                    type: string
+                  balloon:
+                    description: Amount of target RAM for the VM in MiB. Using zero
+                      disables the ballon driver.
+                    minimum: 0
+                    type: integer
+                  description:
+                    description: Description for the VM. Shown in the web-interface
+                      VM's summary. This is saved as comment inside the configuration
+                      file.
+                    type: string
+                  hugePages:
+                    description: enable/disable hugepages memory. 0 or 2 or 1024.
+                      0 indicated 'any'
+                    enum:
+                    - 0
+                    - 2
+                    - 1024
+                    type: integer
+                  keepHugePages:
+                    description: Use together with hugepages. If enabled, hugepages
+                      will not not be deleted after VM shutdown and can be used for
+                      subsequent starts. Defaults to false.
+                    type: boolean
+                  kvm:
+                    description: Enable/disable KVM hardware virtualization. Defaults
+                      to true.
+                    type: boolean
+                  localTime:
+                    description: Set the real time clock (RTC) to local time. This
+                      is enabled by default if the `ostype` indicates a Microsoft
+                      Windows OS.
+                    type: boolean
+                  lock:
+                    description: Lock/unlock the VM.
+                    enum:
+                    - backup
+                    - clone
+                    - create
+                    - migrate
+                    - rollback
+                    - snapshot
+                    - snapshot-delete
+                    - suspending
+                    - suspended
+                    type: string
+                  numa:
+                    description: Enable/disable NUMA.
+                    type: boolean
+                  onBoot:
+                    description: Specifies whether a VM will be started during system
+                      bootup.
+                    type: boolean
+                  osType:
+                    description: Specify guest operating system. This is used to enable
+                      special optimization/features for specific operating systems.
+                    enum:
+                    - other
+                    - wxp
+                    - w2k
+                    - w2k3
+                    - w2k8
+                    - wvista
+                    - win7
+                    - win8
+                    - win10
+                    - win11
+                    - l24
+                    - l26
+                    - solaris
+                    type: string
+                  protection:
+                    description: Sets the protection flag of the VM. This will disable
+                      the remove VM and remove disk operations. Defaults to false.
+                    type: boolean
+                  reboot:
+                    description: Allow reboot. If set to 'false' the VM exit on reboot.
+                      Defaults to true.
+                    type: boolean
+                  shares:
+                    description: Amount of memory shares for auto-ballooning. The
+                      larger the number is, the more memory this VM gets. Number is
+                      relative to weights of all other running VMs. Using zero disables
+                      auto-ballooning. Auto-ballooning is done by pvestatd. 0 ~ 5000.
+                      Defaults to 1000.
+                    maximum: 5000
+                    minimum: 0
+                    type: integer
+                  tablet:
+                    description: Enable/disable the USB tablet device. This device
+                      is usually needed to allow absolute mouse positioning with VNC.
+                      Else the mouse runs out of sync with normal VNC clients. If
+                      you're running lots of console-only guests on one host, you
+                      may consider disabling this to save some context switches. This
+                      is turned off by default if you use spice (`qm set <vmid> --vga
+                      qxl`). Defaults to true.
+                    type: boolean
+                  tags:
+                    description: Tags of the VM. This is only meta information.
+                    items:
+                      pattern: '[a-zA-Z0-9-_.;]+'
+                      type: string
+                    type: array
+                  template:
+                    description: Enable/disable Template. Defaults to false.
+                    type: boolean
+                  timeDriftFix:
+                    description: Enable/disable time drift fix. Defaults to false.
+                    type: boolean
+                  vcpus:
+                    description: Number of hotplugged vcpus. Defaults to 0.
+                    minimum: 0
+                    type: integer
+                  vmGenerationID:
+                    description: 'The VM generation ID (vmgenid) device exposes a
+                      128-bit integer value identifier to the guest OS. This allows
+                      to notify the guest operating system when the virtual machine
+                      is executed with a different configuration (e.g. snapshot execution
+                      or creation from a template). The guest operating system notices
+                      the change, and is then able to react as appropriate by marking
+                      its copies of distributed databases as dirty, re-initializing
+                      its random number generator, etc. Note that auto-creation only
+                      works when done through API/CLI create or update methods, but
+                      not when manually editing the config file. regex: (?:[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}|[01]).
+                      Defaults to 1 (autogenerated)'
+                    pattern: (?:[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}|[01])
+                    type: string
+                type: object
               providerID:
                 description: ProviderID
                 type: string
@@ -236,6 +390,194 @@ spec:
                   - type
                   type: object
                 type: array
+              config:
+                description: Configuration
+                properties:
+                  acpi:
+                    description: Enable/disable ACPI.
+                    type: integer
+                  affinity:
+                    description: 'List of host cores used to execute guest processes,
+                      for example: 0,5,8-11'
+                    type: string
+                  agent:
+                    description: Enable/disable communication with the QEMU Guest
+                      Agent and its properties.
+                    type: string
+                  arch:
+                    description: Virtual processor architecture. Defaults to the host.
+                    type: string
+                  args:
+                    description: 'Arbitrary arguments passed to kvm, for example:
+                      args: -no-reboot -no-hpet NOTE: this option is for experts only.'
+                    type: string
+                  audio0:
+                    description: Configure a audio device, useful in combination with
+                      QXL/Spice.
+                    type: string
+                  autostart:
+                    description: Automatic restart after crash (currently ignored).
+                    type: integer
+                  balloon:
+                    description: Amount of target RAM for the VM in MiB. Using zero
+                      disables the ballon driver.
+                    type: integer
+                  bios:
+                    description: Select BIOS implementation.
+                    type: string
+                  boot:
+                    description: 'boot order. ";" separated. : ''order=device1;device2;device3'''
+                    type: string
+                  cdrom:
+                    description: This is an alias for option -ide2
+                    type: string
+                  cicustom:
+                    description: 'cloud-init: Specify custom files to replace the
+                      automatically generated ones at start.'
+                    type: string
+                  cipassword:
+                    description: 'cloud-init: Password to assign the user. Using this
+                      is generally not recommended. Use ssh keys instead. Also note
+                      that older cloud-init versions do not support hashed passwords.'
+                    type: string
+                  citype:
+                    description: Specifies the cloud-init configuration format. The
+                      default depends on the configured operating system type (`ostype`.
+                      We use the `nocloud` format for Linux, and `configdrive2` for
+                      windows.
+                    type: string
+                  ciuser:
+                    description: 'cloud-init: User name to change ssh keys and password
+                      for instead of the image''s configured default user.'
+                    type: string
+                  cores:
+                    description: 'The number of cores per socket. : 1 ~'
+                    type: integer
+                  cpu:
+                    description: emulated cpu type
+                    type: string
+                  cpulimit:
+                    description: 'Limit of CPU usage. NOTE: If the computer has 2
+                      CPUs, it has total of ''2'' CPU time. Value ''0'' indicates
+                      no CPU limit.'
+                    type: integer
+                  cpuunits:
+                    description: CPU weight for a VM. Argument is used in the kernel
+                      fair scheduler. The larger the number is, the more CPU time
+                      this VM gets. Number is relative to weights of all the other
+                      running VMs.
+                    type: integer
+                  description:
+                    type: string
+                  efidisk0:
+                    type: integer
+                  freeze:
+                    type: integer
+                  hookscript:
+                    type: string
+                  hotplug:
+                    description: HostPci
+                    type: string
+                  hugepages:
+                    type: string
+                  ivshmem:
+                    type: string
+                  keephugepages:
+                    type: integer
+                  keyboard:
+                    type: string
+                  kvm:
+                    description: enable/disable KVM hardware virtualization
+                    type: integer
+                  localtime:
+                    type: integer
+                  lock:
+                    type: string
+                  machine:
+                    description: specifies the QEMU machine type
+                    type: string
+                  memory:
+                    description: 'amount of RAM for the VM in MiB : 16 ~'
+                    type: integer
+                  migrate_downtime:
+                    description: A Number represents a JSON number literal.
+                    type: string
+                  migrate_speed:
+                    type: integer
+                  name:
+                    description: name for VM. Only used on the configuration web interface
+                    type: string
+                  nameserver:
+                    description: 'cloud-init: Sets DNS server IP address for a container.
+                      Create will automatically use the setting from the host if neither
+                      searchdomain nor nameserver are set.'
+                    type: string
+                  numa:
+                    type: integer
+                  onboot:
+                    description: specifies whether a VM will be started during system
+                      bootup
+                    type: integer
+                  ostype:
+                    description: quest OS
+                    type: string
+                  protection:
+                    type: integer
+                  reboot:
+                    description: Allow reboot. if set to '0' the VM exit on reboot
+                    type: integer
+                  rng0:
+                    type: string
+                  scsihw:
+                    description: SCSI controller model
+                    type: string
+                  searchdomain:
+                    description: 'cloud-init: Sets DNS search domains for a container.
+                      Create will automatically use the setting from the host if neither
+                      searchdomain nor nameserver are set.'
+                    type: string
+                  shares:
+                    type: integer
+                  smbios1:
+                    type: string
+                  smp:
+                    type: integer
+                  sockets:
+                    description: number of sockets
+                    type: integer
+                  spice_enhancements:
+                    type: string
+                  sshkeys:
+                    description: cloud-init setup public ssh keys (one key per line,
+                      OpenSSH format)
+                    type: string
+                  startdate:
+                    type: string
+                  startup:
+                    type: integer
+                  tablet:
+                    type: integer
+                  tags:
+                    description: tags of the VM. only for meta information
+                    type: string
+                  tdf:
+                    type: integer
+                  template:
+                    description: enable/disable template
+                    type: integer
+                  tpmstate:
+                    type: string
+                  vcpus:
+                    type: integer
+                  vga:
+                    type: string
+                  vmgenid:
+                    type: string
+                  vmstatestorage:
+                    type: string
+                  watchdog:
+                    type: string
+                type: object
               failureMessage:
                 description: FailureMessage
                 type: string
@@ -243,8 +585,8 @@ spec:
                 description: FailureReason
                 type: string
               instanceStatus:
-                description: InstanceStatus is the status of the GCP instance for
-                  this machine.
+                description: InstanceStatus is the status of the proxmox instance
+                  for this machine.
                 type: string
               ready:
                 description: Ready is true when the provider resource is ready.

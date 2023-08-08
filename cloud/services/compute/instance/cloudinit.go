@@ -90,16 +90,16 @@ func (s *Service) reconcileCloudInitUser(ctx context.Context) error {
 func mergeUserDatas(a, b, c *infrav1.User) (*infrav1.User, error) {
 	var err error
 	if c != nil {
-		b, err = cloudinit.MergeUsers(b, c)
+		c, err = cloudinit.MergeUsers(c, b)
 		if err != nil {
 			return nil, err
 		}
 	}
-	a, err = cloudinit.MergeUsers(a, b)
+	c, err = cloudinit.MergeUsers(c, a)
 	if err != nil {
 		return nil, err
 	}
-	return a, err
+	return c, err
 }
 
 func userSnippetPath(vmName string) string {
