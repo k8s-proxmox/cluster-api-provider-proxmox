@@ -7,7 +7,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.10
 	github.com/pkg/errors v0.9.1
-	github.com/sp-yduck/proxmox-go v0.0.0-alpha9
+	github.com/sp-yduck/proxmox-go v0.0.0-alpha12
 	golang.org/x/crypto v0.12.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.26.1
@@ -42,6 +42,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
