@@ -185,6 +185,10 @@ func (m *MachineScope) GetHardware() infrav1.Hardware {
 	return m.ProxmoxMachine.Spec.Hardware
 }
 
+func (m *MachineScope) GetOptions() infrav1.Options {
+	return m.ProxmoxMachine.Spec.Options
+}
+
 // SetProviderID sets the ProxmoxMachine providerID in spec.
 func (m *MachineScope) SetProviderID(uuid string) error {
 	providerid, err := providerid.New(uuid)

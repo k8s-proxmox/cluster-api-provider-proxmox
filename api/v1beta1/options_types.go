@@ -1,5 +1,7 @@
 package v1beta1
 
+import "strconv"
+
 // import "encoding/json"
 
 // +kubebuilder:validation:Enum:=x86_64;aarch64
@@ -16,6 +18,28 @@ type Lock string
 
 // +kubebuilder:validation:Enum:=other;wxp;w2k;w2k3;w2k8;wvista;win7;win8;win10;win11;l24;l26;solaris
 type OSType string
+
+// +kubebuilder:validation:Pattern:="[a-zA-Z0-9-_.;]+"
+type Tag string
+
+type Tags []Tag
+
+func (h *HugePages) String() string {
+	if h == nil {
+		return ""
+	} else if *h == 0 {
+		return "any"
+	}
+	return strconv.Itoa(int(*h))
+}
+
+func (t *Tags) String() string {
+	var tags string
+	for _, tag := range *t {
+		tags += string(tag) + ";"
+	}
+	return tags
+}
 
 // Options
 type Options struct {
@@ -41,7 +65,7 @@ type Options struct {
 	// HotPlug []HotPlugDevice `json:"hotPlug,omitempty"`
 
 	// enable/disable hugepages memory. 0 or 2 or 1024. 0 indicated 'any'
-	HugePages HugePages `json:"hugePages,omitempty"`
+	HugePages *HugePages `json:"hugePages,omitempty"`
 
 	// Use together with hugepages. If enabled, hugepages will not not be deleted
 	// after VM shutdown and can be used for subsequent starts. Defaults to false.
@@ -105,7 +129,7 @@ type Options struct {
 	Tablet bool `json:"tablet,omitempty"`
 
 	// Tags of the VM. This is only meta information.
-	Tags []string `json:"tags,omitempty"`
+	Tags Tags `json:"tags,omitempty"`
 
 	// Enable/disable time drift fix. Defaults to false.
 	TimeDriftFix bool `json:"timeDriftFix,omitempty"`
@@ -121,6 +145,7 @@ type Options struct {
 
 	// VGA string `json:"vga,omitempty"`
 
+	// +kubebuilder:validation:Pattern:="(?:[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}|[01])"
 	// The VM generation ID (vmgenid) device exposes a 128-bit integer value identifier to the guest OS.
 	// This allows to notify the guest operating system when the virtual machine is executed with a different configuration
 	// (e.g. snapshot execution or creation from a template).

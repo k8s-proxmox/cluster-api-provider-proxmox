@@ -62,6 +62,7 @@ type MachineGetter interface {
 	GetNetwork() infrav1.Network
 	GetHardware() infrav1.Hardware
 	GetVMID() *int
+	GetOptions() infrav1.Options
 }
 
 // MachineSetter is an interface which can set machine information.
