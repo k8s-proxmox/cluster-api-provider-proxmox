@@ -18,7 +18,6 @@ type ServerRef struct {
 	// to do : client options like insecure tls verify
 
 	// SecretRef is a reference for secret which contains proxmox login secrets
-	// and ssh configs for proxmox nodes
 	SecretRef *ObjectReference `json:"secretRef"`
 }
 
