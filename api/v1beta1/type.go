@@ -12,9 +12,6 @@ type ServerRef struct {
 	// endpoint is the address of the Proxmox-VE REST API endpoint.
 	Endpoint string `json:"endpoint"`
 
-	// to do : login type should be an option
-	// user&pass or token
-
 	// to do : client options like insecure tls verify
 
 	// SecretRef is a reference for secret which contains proxmox login secrets
