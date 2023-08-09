@@ -47,6 +47,9 @@ func (s *Service) setCloudImage(ctx context.Context) error {
 	// workaround
 	// API does not support something equivalent of "qm importdisk"
 	vnc, err := s.vncClient(s.scope.NodeName())
+	if err != nil {
+		return errors.Errorf("failed to create vnc client: %v", err)
+	}
 	defer vnc.Close()
 	out, _, err := vnc.Exec(ctx, fmt.Sprintf("wget %s --directory-prefix %s -nc", url, rawImageDirPath))
 	if err != nil {

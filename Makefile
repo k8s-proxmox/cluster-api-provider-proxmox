@@ -57,6 +57,10 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
+.PHONY: lint
+lint: ## Run golangci-lint
+	$(GOLANGCI_LINT) run
+
 CLUSTER_NAME := cappx-test
 
 .PHONY: create-workload-cluster
@@ -180,6 +184,7 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 ENVSUBST ?= $(LOCALBIN)/envsubst
 KUBECTL ?= $(LOCALBIN)/kubectl
+GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.0.0
@@ -223,3 +228,8 @@ $(KUBECTL): $(LOCALBIN)
 setup-envtest: $(SETUP_ENVTEST)
 $(SETUP_ENVTEST): go.mod # Build setup-envtest from tools folder.
 	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(SETUP_ENVTEST_VER)
+
+.PHONY: golangci-lint
+golangci-lint: $(GOLANGCI_LINT)
+$(GOLANGCI_LINT): $(LOCALBIN)
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) v1.54.0
