@@ -59,13 +59,13 @@ kubectl delete cluster cappx-test
 
 - No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`. CAPPX bootstrap your vm from scratch.
 
-- Supports qcow2 image format. CAPPX uses VNC websocket for downloading/installing node images so it can support raw image format not ISO (Proxmox API can only support ISO)
+- Supports mutiple image format. CAPPX uses VNC websocket for downloading/installing node images so it can support multiple image format not only ISO (Proxmox API can only support ISO)
 
 - Supports custom cloud-config (user data). CAPPX uses VNC websockert for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
 
 ### Node Images
 
-CAPPX is compatible with `qcow2` image. You can build your own node image and use it for `ProxmoxMachine`.
+CAPPX is compatible with `iso`, `qcow2`, `qed`, `raw`, `vdi`, `vpc`, `vmdk` format of image. You can build your own node image and use it for `ProxmoxMachine`.
 
 CAPPX relies on a few prerequisites which have to be already installed in the used operating system images, e.g. a container runtime, kubelet, kubeadm,.. .
 
@@ -73,7 +73,7 @@ To build your custom node image, you can use [kubernetes-sigs/image-builder](htt
 
 Also there are some available out-of-box images published other communities such as [Metal3](https://github.com/metal3-io). For example https://artifactory.nordix.org/ui/native/metal3/images/. Example MD can be found [metal3-ubuntu2204-k8s127.yaml](examples/machine_deployment/metal3-ubuntu2204-k8s127.yaml).
 
-If it isn't possible to pre-install those prerequisites in the image, you can always deploy and execute some custom scripts through the `ProxmoxMachine.spec.cloudInit` or `KubeadmConfig` . Example MD can be found [ubuntu2204.yaml](examples/machine_deployment/ubuntu2204.yaml).
+If it isn't possible to pre-install those prerequisites in the image, you can always deploy and execute some custom scripts through the `ProxmoxMachine.spec.cloudInit` or `KubeadmConfig`. Example MD can be found [ubuntu2204.yaml](examples/machine_deployment/ubuntu2204.yaml).
 
 ## Compatibility
 

@@ -76,7 +76,7 @@ spec:
                     type: string
                   secretRef:
                     description: SecretRef is a reference for secret which contains
-                      proxmox login secrets and ssh configs for proxmox nodes
+                      proxmox login secrets
                     properties:
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'

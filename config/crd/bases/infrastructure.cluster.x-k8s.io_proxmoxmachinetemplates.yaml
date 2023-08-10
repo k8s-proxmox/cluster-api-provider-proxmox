@@ -159,13 +159,23 @@ spec:
                         description: Image is the image to be provisioned
                         properties:
                           checksum:
-                            description: Checksum
+                            description: Checksum Always better to specify checksum
+                              otherwise cappx will download same image for every time.
+                              If checksum is specified, cappx will try to avoid downloading
+                              existing image.
                             type: string
                           checksumType:
                             description: ChecksumType
+                            enum:
+                            - sha256
+                            - sha256sum
+                            - md5
+                            - md5sum
                             type: string
                           url:
                             description: URL is a location of an image to deploy.
+                              supported formats are iso/qcow2/qed/raw/vdi/vpc/vmdk.
+                            pattern: .*\.(iso|img|qcow2|qed|raw|vdi|vpc|vmdk)$
                             type: string
                         required:
                         - url
@@ -351,6 +361,7 @@ spec:
                         type: string
                       vmID:
                         description: VMID is proxmox qemu's id
+                        minimum: 0
                         type: integer
                     required:
                     - image
