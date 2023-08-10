@@ -32,12 +32,18 @@ type ObjectReference struct {
 
 // Image is the image to be provisioned
 type Image struct {
+	// +kubebuilder:validation:Pattern:=.*\.(iso|img|qcow2|qed|raw|vdi|vpc|vmdk)$
 	// URL is a location of an image to deploy.
+	// supported formats are iso/qcow2/qed/raw/vdi/vpc/vmdk.
 	URL string `json:"url"`
 
 	// Checksum
+	// Always better to specify checksum otherwise cappx will download
+	// same image for every time. If checksum is specified, cappx will try
+	// to avoid downloading existing image.
 	Checksum string `json:"checksum,omitempty"`
 
+	// +kubebuilder:validation:Enum:=sha256;sha256sum;md5;md5sum
 	// ChecksumType
 	ChecksumType *string `json:"checksumType,omitempty"`
 }
@@ -96,7 +102,8 @@ type Network struct {
 	SearchDomain string `json:"searchDomain,omitempty"`
 }
 
-// IPConfig defines IP addresses and gateways for corresponding interface
+// IPConfig defines IP addresses and gateways for corresponding interface.
+// it defaults to using dhcp on IPv4 if neither IP nor IP6 is specified.
 type IPConfig struct {
 	// IPv4 with CIDR
 	IP string `json:"ip,omitempty"`

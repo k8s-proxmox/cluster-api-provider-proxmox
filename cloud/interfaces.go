@@ -76,6 +76,7 @@ type MachineSetter interface {
 	// SetFailureReason(v capierrors.MachineStatusError)
 	// SetAnnotation(key, value string)
 	// SetAddresses(addressList []corev1.NodeAddress)
+	PatchObject() error
 }
 
 // Machine is an interface which can get and set machine information.

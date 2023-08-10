@@ -68,6 +68,9 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 		}
 		vmid = &nextid
 		s.scope.SetVMID(*vmid)
+		if err := s.scope.PatchObject(); err != nil {
+			return nil, err
+		}
 	}
 
 	vmoption := s.generateVMOptions()

@@ -201,6 +201,7 @@ func (r *ProxmoxMachineReconciler) reconcileDelete(ctx context.Context, machineS
 
 	controllerutil.RemoveFinalizer(machineScope.ProxmoxMachine, infrav1.MachineFinalizer)
 	record.Event(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "Reconciled")
+	log.Info("Reconciled ProxmoxMachine")
 	return ctrl.Result{}, nil
 }
 

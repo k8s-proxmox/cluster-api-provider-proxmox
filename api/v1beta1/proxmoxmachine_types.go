@@ -37,6 +37,7 @@ type ProxmoxMachineSpec struct {
 	// +optional
 	Node string `json:"node,omitempty"`
 
+	// +kubebuilder:validation:Minimum:=0
 	// VMID is proxmox qemu's id
 	// +optional
 	VMID *int `json:"vmID,omitempty"`

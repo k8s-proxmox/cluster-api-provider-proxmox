@@ -133,6 +133,7 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
+	log.Info("Reconciled ProxmoxCluster")
 	record.Eventf(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Got control-plane endpoint - %s", controlPlaneEndpoint.Host)
 	clusterScope.SetReady()
 	record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Reconciled")
@@ -155,6 +156,7 @@ func (r *ProxmoxClusterReconciler) reconcileDelete(ctx context.Context, clusterS
 		}
 	}
 
+	log.Info("Reconciled ProxmoxCluster")
 	controllerutil.RemoveFinalizer(clusterScope.ProxmoxCluster, infrav1.ClusterFinalizer)
 	record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Reconciled")
 	return ctrl.Result{}, nil
