@@ -2,11 +2,14 @@ apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
 metadata:
   name: ${CLUSTER_NAME}-md-2
+  namespace: ${NAMESPACE}
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   clusterName: ${CLUSTER_NAME}
-  replicas: 1
+  replicas: ${WORKER_MACHINE_COUNT}
   selector:
-    matchLabels: null
+    matchLabels: {}
   template:
     spec:
       bootstrap:
@@ -27,6 +30,9 @@ apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-2
+  namespace: ${NAMESPACE}
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   template:
     spec:
@@ -41,6 +47,9 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: ProxmoxMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-2
+  namespace: ${NAMESPACE}
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   template:
     spec:

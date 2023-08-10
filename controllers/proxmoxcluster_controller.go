@@ -48,7 +48,7 @@ type ProxmoxClusterReconciler struct {
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=proxmoxclusters/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=proxmoxclusters/finalizers,verbs=update
 //+kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;clusters/status,verbs=get;list;watch
-//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;update;patch
 
 func (r *ProxmoxClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
 	log := log.FromContext(ctx)
@@ -133,6 +133,7 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
+	log.Info("Reconciled ProxmoxCluster")
 	record.Eventf(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Got control-plane endpoint - %s", controlPlaneEndpoint.Host)
 	clusterScope.SetReady()
 	record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Reconciled")
@@ -155,6 +156,7 @@ func (r *ProxmoxClusterReconciler) reconcileDelete(ctx context.Context, clusterS
 		}
 	}
 
+	log.Info("Reconciled ProxmoxCluster")
 	controllerutil.RemoveFinalizer(clusterScope.ProxmoxCluster, infrav1.ClusterFinalizer)
 	record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Reconciled")
 	return ctrl.Result{}, nil

@@ -3,11 +3,11 @@ package cloud
 import (
 	"context"
 
+	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 )
 
 type Reconciler interface {
@@ -17,7 +17,6 @@ type Reconciler interface {
 
 type Client interface {
 	CloudClient() *proxmox.Service
-	RemoteClient() *scope.SSHClient
 }
 
 type Cluster interface {
@@ -63,6 +62,7 @@ type MachineGetter interface {
 	GetNetwork() infrav1.Network
 	GetHardware() infrav1.Hardware
 	GetVMID() *int
+	GetOptions() infrav1.Options
 }
 
 // MachineSetter is an interface which can set machine information.
@@ -71,10 +71,12 @@ type MachineSetter interface {
 	SetInstanceStatus(v infrav1.InstanceStatus)
 	SetNodeName(name string)
 	SetVMID(vmid int)
+	SetConfigStatus(config api.VirtualMachineConfig)
 	// SetFailureMessage(v error)
 	// SetFailureReason(v capierrors.MachineStatusError)
 	// SetAnnotation(key, value string)
 	// SetAddresses(addressList []corev1.NodeAddress)
+	PatchObject() error
 }
 
 // Machine is an interface which can get and set machine information.

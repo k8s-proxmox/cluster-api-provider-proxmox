@@ -35,10 +35,6 @@ spec:
     endpoint: "${PROXMOX_URL}"
     secretRef:
       name: "${CLUSTER_NAME}"
-  nodeRefs:
-    - name: mynode
-      secretRef:
-        name: "${CLUSTER_NAME}"
   storage:
     name: "${CLUSTER_NAME}"
     path: ""
@@ -155,8 +151,8 @@ spec:
   template:
     spec:
       image:
-        url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
-        checksum: 86e996f35732d26cd8b0888c46c4309d4d3b04eb6980378cf82b4d3eb2796549
+        url: https://cloud-images.ubuntu.com/jammy/20230801/jammy-server-cloudimg-amd64-disk-kvm.img
+        checksum: 6088ec131e248fec3dad91b3859a7ba74b6e56e00b293a913c8d1ada3351bb79
         checksumType: sha256
       hardware:
         cpu: 4
@@ -263,8 +259,8 @@ spec:
   template:
     spec:
       image:
-        url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
-        checksum: 86e996f35732d26cd8b0888c46c4309d4d3b04eb6980378cf82b4d3eb2796549
+        url: https://cloud-images.ubuntu.com/jammy/20230801/jammy-server-cloudimg-amd64-disk-kvm.img
+        checksum: 6088ec131e248fec3dad91b3859a7ba74b6e56e00b293a913c8d1ada3351bb79
         checksumType: sha256
       cloudInit:
         user:
@@ -318,9 +314,6 @@ stringData:
   PROXMOX_USER: ${PROXMOX_USER:=""}
   PROXMOX_TOKENID: ${PROXMOX_TOKENID:=""}
   PROXMOX_SECRET: ${PROXMOX_SECRET:=""}
-  NODE_URL: ${NODE_URL}
-  NODE_USER: ${NODE_USER}
-  NODE_PASSWORD: ${NODE_PASSWORD}
 kind: Secret
 metadata:
   name: "${CLUSTER_NAME}"

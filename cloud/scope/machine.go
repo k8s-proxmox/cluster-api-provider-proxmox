@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -80,10 +81,6 @@ type MachineScope struct {
 
 func (m *MachineScope) CloudClient() *proxmox.Service {
 	return m.ClusterGetter.CloudClient()
-}
-
-func (m *MachineScope) RemoteClient() *SSHClient {
-	return m.ClusterGetter.Remote
 }
 
 func (m *MachineScope) GetStorage() infrav1.Storage {
@@ -188,6 +185,10 @@ func (m *MachineScope) GetHardware() infrav1.Hardware {
 	return m.ProxmoxMachine.Spec.Hardware
 }
 
+func (m *MachineScope) GetOptions() infrav1.Options {
+	return m.ProxmoxMachine.Spec.Options
+}
+
 // SetProviderID sets the ProxmoxMachine providerID in spec.
 func (m *MachineScope) SetProviderID(uuid string) error {
 	providerid, err := providerid.New(uuid)
@@ -200,6 +201,10 @@ func (m *MachineScope) SetProviderID(uuid string) error {
 
 func (m *MachineScope) SetVMID(vmid int) {
 	m.ProxmoxMachine.Spec.VMID = &vmid
+}
+
+func (m *MachineScope) SetConfigStatus(config api.VirtualMachineConfig) {
+	m.ProxmoxMachine.Status.Config = config
 }
 
 func (m *MachineScope) SetReady() {

@@ -28,7 +28,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		return err
 	}
 
-	uuid, err := getBiosUUID(ctx, instance)
+	uuid, err := getBiosUUIDFromVM(ctx, instance)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,14 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		return err
 	}
 	s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.VM.Status))
-	// s.scope.SetAddresses()
+	s.scope.SetNodeName(instance.Node)
+	s.scope.SetVMID(instance.VM.VMID)
+
+	config, err := instance.GetConfig(ctx)
+	if err != nil {
+		return err
+	}
+	s.scope.SetConfigStatus(*config)
 	return nil
 }
 
@@ -47,11 +54,12 @@ func (s *Service) Delete(ctx context.Context) error {
 	log := log.FromContext(ctx)
 	log.Info("Deleting instance resources")
 
-	instance, err := s.getInstance(ctx)
+	instance, err := s.getQEMU(ctx, s.scope.GetVMID())
 	if err != nil {
 		if !rest.IsNotFound(err) {
 			return err
 		}
+		log.Info("qemu is not found or already deleted")
 		return nil
 	}
 
@@ -73,23 +81,11 @@ func (s *Service) Delete(ctx context.Context) error {
 func (s *Service) createOrGetInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
-	log.Info("Getting bootstrap data for machine")
-	bootstrapData, err := s.scope.GetBootstrapData()
-	if err != nil {
-		log.Error(err, "Error getting bootstrap data for machine")
-		return nil, errors.Wrap(err, "failed to retrieve bootstrap data")
-	}
-
-	if s.scope.GetBiosUUID() == nil {
-		log.Info("ProxmoxMachine doesn't have bios UUID. instance will be created")
-		return s.createInstance(ctx, bootstrapData)
-	}
-
 	instance, err := s.getInstance(ctx)
 	if err != nil {
 		if rest.IsNotFound(err) {
 			log.Info("instance wasn't found. new instance will be created")
-			return s.createInstance(ctx, bootstrapData)
+			return s.createInstance(ctx)
 		}
 		log.Error(err, "failed to get instance")
 		return nil, err
@@ -98,10 +94,13 @@ func (s *Service) createOrGetInstance(ctx context.Context) (*proxmox.VirtualMach
 	return instance, nil
 }
 
+// getInstance() gets proxmoxm vm from providerID
 func (s *Service) getInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
+
 	biosUUID := s.scope.GetBiosUUID()
 	if biosUUID == nil {
+		log.Info("instance does not have providerID yet")
 		return nil, rest.NotFoundErr
 	}
 
@@ -114,10 +113,11 @@ func (s *Service) getInstance(ctx context.Context) (*proxmox.VirtualMachine, err
 		log.Error(err, "failed to get instance from bios UUID")
 		return nil, err
 	}
+
 	return vm, nil
 }
 
-func getBiosUUID(ctx context.Context, vm *proxmox.VirtualMachine) (*string, error) {
+func getBiosUUIDFromVM(ctx context.Context, vm *proxmox.VirtualMachine) (*string, error) {
 	log := log.FromContext(ctx)
 	config, err := vm.GetConfig(ctx)
 	if err != nil {
@@ -133,7 +133,7 @@ func getBiosUUID(ctx context.Context, vm *proxmox.VirtualMachine) (*string, erro
 	return pointer.String(uuid), nil
 }
 
-func (s *Service) createInstance(ctx context.Context, bootstrap string) (*proxmox.VirtualMachine, error) {
+func (s *Service) createInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
 	// qemu
@@ -145,7 +145,7 @@ func (s *Service) createInstance(ctx context.Context, bootstrap string) (*proxmo
 	log.Info(fmt.Sprintf("reconciled qemu: node=%s,vmid=%d", instance.Node, vmid))
 
 	// cloud init
-	if err := s.reconcileCloudInit(bootstrap); err != nil {
+	if err := s.reconcileCloudInit(ctx); err != nil {
 		return nil, err
 	}
 
@@ -191,9 +191,7 @@ func ensureStoppedOrPaused(ctx context.Context, instance proxmox.VirtualMachine)
 			log.Error(err, "failed to stop instance process")
 			return err
 		}
-	case api.ProcessStatusPaused:
-		return nil
-	case api.ProcessStatusStopped:
+	case api.ProcessStatusPaused, api.ProcessStatusStopped:
 		return nil
 	default:
 		return errors.Errorf("unexpected status : %s", instance.VM.Status)

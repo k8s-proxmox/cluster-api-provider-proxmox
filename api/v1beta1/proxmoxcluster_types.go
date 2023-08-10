@@ -21,9 +21,6 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 const (
 	// ClusterFinalizer
 	ClusterFinalizer = "proxmoxcluster.infrastructure.cluster.x-k8s.io"
@@ -37,9 +34,6 @@ type ProxmoxClusterSpec struct {
 
 	// ServerRef is used for configuring Proxmox client
 	ServerRef ServerRef `json:"serverRef"`
-
-	// NodesRef contains reference of nodes used for ProxmoxCluster
-	NodeRefs []NodeRef `json:"nodeRefs,omitempty"`
 
 	// storage is for proxmox storage used by vm instances
 	// +optional

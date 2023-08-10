@@ -17,25 +17,20 @@ for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#ini
 ```sh
 # install cluster-api components
 export EXP_CLUSTER_RESOURCE_SET=true
-clusterctl init --infrastructure=proxmox:v0.2.3 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml
+clusterctl init --infrastructure=proxmox:v0.3.0 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml
 ```
 **Note:** container images are available at [ghcr.io/sp-yduck/cluster-api-provider-proxmox:\<tag\>](https://github.com/sp-yduck/cluster-api-provider-proxmox/pkgs/container/cluster-api-provider-proxmox)
 
 2. Create your first workload cluster
 ```sh
 # export env variables
-export CONTROLPLANE_HOST=X.X.X.X                          # control-plane vip
+export CONTROLPLANE_HOST=X.X.X.X                   # control-plane vip
 export PROXMOX_URL=https://X.X.X.X:8006/api2/json
-# export PROXMOX_PASSWORD=password                        # (optional)
-# export PROXMOX_USER=user@pam                            # (optional)
-export PROXMOX_TOKENID='root@pam!api-token-id'            # (optional)
-export PROXMOX_SECRET=aaaaaaaa-bbbb-cccc-dddd-ee12345678  # (optional)
-export NODE_URL=node.ssh.url:22
-export NODE_USER=node-ssh-user
-export NODE_PASSWORD=node-ssh-password
+export PROXMOX_PASSWORD=password
+export PROXMOX_USER=user@pam
 
 # generate manifests (available flags: --target-namespace, --kubernetes-version, --control-plane-machine-count, --worker-machine-count)
-clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.2.3 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.3.0 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
 vi cappx-test.yaml
@@ -62,13 +57,15 @@ kubectl delete cluster cappx-test
 
 ## Fetures
 
-- No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`.
+- No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`. CAPPX bootstrap your vm from scratch.
 
-- Supports custom cloud-config (user data). CAPPX uses ssh for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
+- Supports mutiple image format. CAPPX uses VNC websocket for downloading/installing node images so it can support multiple image format not only ISO (Proxmox API can only support ISO)
+
+- Supports custom cloud-config (user data). CAPPX uses VNC websockert for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
 
 ### Node Images
 
-CAPPX is compatible with `qcow2` image. You can build your own node image and use it for `ProxmoxMachine`.
+CAPPX is compatible with `iso`, `qcow2`, `qed`, `raw`, `vdi`, `vpc`, `vmdk` format of image. You can build your own node image and use it for `ProxmoxMachine`.
 
 CAPPX relies on a few prerequisites which have to be already installed in the used operating system images, e.g. a container runtime, kubelet, kubeadm,.. .
 
@@ -76,7 +73,7 @@ To build your custom node image, you can use [kubernetes-sigs/image-builder](htt
 
 Also there are some available out-of-box images published other communities such as [Metal3](https://github.com/metal3-io). For example https://artifactory.nordix.org/ui/native/metal3/images/. Example MD can be found [metal3-ubuntu2204-k8s127.yaml](examples/machine_deployment/metal3-ubuntu2204-k8s127.yaml).
 
-If it isn't possible to pre-install those prerequisites in the image, you can always deploy and execute some custom scripts through the `ProxmoxMachine.spec.cloudInit` or `KubeadmConfig` . Example MD can be found [ubuntu2204.yaml](examples/machine_deployment/ubuntu2204.yaml).
+If it isn't possible to pre-install those prerequisites in the image, you can always deploy and execute some custom scripts through the `ProxmoxMachine.spec.cloudInit` or `KubeadmConfig`. Example MD can be found [ubuntu2204.yaml](examples/machine_deployment/ubuntu2204.yaml).
 
 ## Compatibility
 
@@ -99,7 +96,7 @@ This project aims to follow the Cluster API [Provider contract](https://cluster-
 
 ### ProxmoxCluster
 
-Because Proxmox-VE does not provide LBaaS solution, CAPPX does not follow the [typical infra-cluster logic](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html#behavior). ProxmoxCluster controller reconciles only Proxmox storages used for instances. You need to prepare control plane load balancer by yourself if you creates HA control plane workload cluster.
+Because Proxmox-VE does not provide LBaaS solution, CAPPX does not follow the [typical infra-cluster logic](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html#behavior). ProxmoxCluster controller reconciles only Proxmox storages used for instances. You need to prepare control plane load balancer by yourself if you creates HA control plane workload cluster. In the [cluster-template.yaml](./templates/cluster-template.yaml), you can find HA control plane example with [kube-vip](https://github.com/kube-vip/kube-vip).
 
 ### ProxmoxMachine
 

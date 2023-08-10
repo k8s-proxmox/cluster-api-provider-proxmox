@@ -1,25 +1,34 @@
+## variables
+# CLUSTER_NAME
+# NAMESPACE
+# WORKER_MACHINE_COUNT
+# KUBERNETES_VERSION
+---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
 metadata:
   name: ${CLUSTER_NAME}-md-1
+  namespace: ${NAMESPACE}
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
-  clusterName: ${CLUSTER_NAME}
-  replicas: 1
+  clusterName: "${CLUSTER_NAME}"
+  replicas: ${WORKER_MACHINE_COUNT}
   selector:
-    matchLabels: null
+    matchLabels: {}
   template:
     spec:
+      clusterName: ${CLUSTER_NAME}
       bootstrap:
         configRef:
           apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
           kind: KubeadmConfigTemplate
           name: ${CLUSTER_NAME}-md-1
-      clusterName: ${CLUSTER_NAME}
       infrastructureRef:
         apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: ProxmoxMachineTemplate
         name: ${CLUSTER_NAME}-md-1
-      version: v1.26.5
+      version: ${KUBERNETES_VERSION:=v1.27.3}
 
 ---
 
@@ -27,13 +36,20 @@ apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-1
+  namespace: ${NAMESPACE}
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   template:
     spec:
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
-              cloud-provider: external
+            cloud-provider: external
+      postKubeadmCommands:
+        - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
+        - "chmod +x /usr/local/bin/kubectl"
+        - "reboot now"
 
 ---
 
@@ -41,12 +57,15 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: ProxmoxMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-1
+  namespace: ${NAMESPACE}
+  labels:
+    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
 spec:
   template:
     spec:
       image:
-        url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
-        checksum: 86e996f35732d26cd8b0888c46c4309d4d3b04eb6980378cf82b4d3eb2796549
+        url: https://cloud-images.ubuntu.com/jammy/20230801/jammy-server-cloudimg-amd64-disk-kvm.img
+        checksum: 6088ec131e248fec3dad91b3859a7ba74b6e56e00b293a913c8d1ada3351bb79
         checksumType: sha256
       cloudInit:
         user:
@@ -83,9 +102,9 @@ spec:
           - "mkdir -p /opt/cni/bin"
           - curl -L "https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz" | tar -C "/opt/cni/bin" -xz
           - curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.27.0/crictl-v1.27.0-linux-amd64.tar.gz" | tar -C "/usr/local/bin" -xz
-          - curl -L --remote-name-all https://dl.k8s.io/release/v1.26.5/bin/linux/amd64/kubeadm -o /usr/local/bin/kubeadm
+          - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubeadm -o /usr/local/bin/kubeadm
           - chmod +x /usr/local/bin/kubeadm
-          - curl -L --remote-name-all https://dl.k8s.io/release/v1.26.5/bin/linux/amd64/kubelet -o /usr/local/bin/kubelet
+          - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubelet -o /usr/local/bin/kubelet
           - chmod +x /usr/local/bin/kubelet
           - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service
           - mkdir -p /etc/systemd/system/kubelet.service.d

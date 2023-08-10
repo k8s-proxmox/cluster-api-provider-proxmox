@@ -18,10 +18,13 @@ package scope
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
@@ -29,10 +32,10 @@ import (
 
 type ProxmoxServices struct {
 	Compute *proxmox.Service
-	Remote  *SSHClient
 }
 
-func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClient client.Client) (*proxmox.Service, error) {
+func newComputeService(ctx context.Context, cluster *infrav1.ProxmoxCluster, crClient client.Client) (*proxmox.Service, error) {
+	serverRef := cluster.Spec.ServerRef
 	secretRef := serverRef.SecretRef
 	if secretRef == nil {
 		return nil, errors.New("failed to get proxmox client form nil secretRef")
@@ -41,7 +44,17 @@ func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClien
 	var secret corev1.Secret
 	key := client.ObjectKey{Namespace: secretRef.Namespace, Name: secretRef.Name}
 	if err := crClient.Get(ctx, key, &secret); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get secret from secretRef: %w", err)
+	}
+
+	secret.SetOwnerReferences(util.EnsureOwnerRef(secret.OwnerReferences, metav1.OwnerReference{
+		APIVersion: infrav1.GroupVersion.String(),
+		Kind:       "ProxmoxCluster",
+		Name:       cluster.Name,
+		UID:        cluster.UID,
+	}))
+	if err := crClient.Update(ctx, &secret); err != nil {
+		return nil, fmt.Errorf("failed to set ownerReference to secret: %w", err)
 	}
 
 	authConfig := proxmox.AuthConfig{
@@ -52,31 +65,4 @@ func newComputeService(ctx context.Context, serverRef infrav1.ServerRef, crClien
 	}
 
 	return proxmox.NewService(serverRef.Endpoint, authConfig, true)
-}
-
-func newRemoteClient(ctx context.Context, secretRef *infrav1.ObjectReference, crClient client.Client) (*SSHClient, error) {
-	if secretRef == nil {
-		return nil, errors.New("failed to get proxmox client form nil secretRef")
-	}
-
-	var secret corev1.Secret
-	key := client.ObjectKey{Namespace: secretRef.Namespace, Name: secretRef.Name}
-	if err := crClient.Get(ctx, key, &secret); err != nil {
-		return nil, err
-	}
-
-	nodeurl, ok := secret.Data["NODE_URL"]
-	if !ok {
-		return nil, errors.Errorf("failed to fetch NODE_URL from Secret : %v", key)
-	}
-	nodeuser, ok := secret.Data["NODE_USER"]
-	if !ok {
-		return nil, errors.Errorf("failed to fetch PROXMOX_USER from Secret : %v", key)
-	}
-	nodepassword, ok := secret.Data["NODE_PASSWORD"]
-	if !ok {
-		return nil, errors.Errorf("failed to fetch PROXMOX_PASSWORD from Secret : %v", key)
-	}
-
-	return NewSSHClient(string(nodeurl), string(nodeuser), string(nodepassword))
 }

@@ -25,9 +25,9 @@ func GenerateUserYaml(config infrav1.User) (string, error) {
 	return fmt.Sprintf("#cloud-config\n%s", string(b)), nil
 }
 
-func MergeUsers(a, b infrav1.User) (*infrav1.User, error) {
-	if err := mergo.Merge(&a, b, mergo.WithAppendSlice); err != nil {
+func MergeUsers(a, b *infrav1.User) (*infrav1.User, error) {
+	if err := mergo.Merge(a, b, mergo.WithAppendSlice); err != nil {
 		return nil, err
 	}
-	return &a, nil
+	return a, nil
 }

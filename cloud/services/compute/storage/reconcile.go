@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/sp-yduck/proxmox-go/proxmox"
 	"github.com/sp-yduck/proxmox-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -68,8 +69,10 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	var storage *proxmox.Storage
 	for _, node := range nodes {
-		storage, err := s.client.Storage(ctx, s.scope.Storage().Name)
+		storage, err = s.client.Storage(ctx, s.scope.Storage().Name)
 		if err != nil {
 			log.Info(err.Error())
 			continue
@@ -84,12 +87,12 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 		if len(contents) > 0 {
 			return errors.New("Storage must be empty to be deleted")
 		}
+	}
 
-		// delete
-		if err := storage.Delete(ctx); err != nil {
-			log.Info(err.Error())
-			return err
-		}
+	// delete
+	if err := storage.Delete(ctx); err != nil {
+		log.Info(err.Error())
+		return err
 	}
 	return nil
 }

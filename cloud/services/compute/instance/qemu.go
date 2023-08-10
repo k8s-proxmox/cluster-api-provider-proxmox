@@ -11,8 +11,10 @@ import (
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	"github.com/sp-yduck/proxmox-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+)
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+const (
+	bootDvice = "scsi0"
 )
 
 func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
@@ -21,19 +23,20 @@ func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, e
 
 	nodeName := s.scope.NodeName()
 	vmid := s.scope.GetVMID()
-	api, err := s.getQEMU(ctx, vmid)
-	if err == nil { // if api is found, return it
-		return api, nil
+	qemu, err := s.getQEMU(ctx, vmid)
+	if err == nil { // if qemu is found, return it
+		return qemu, nil
 	}
 	if !rest.IsNotFound(err) {
-		log.Error(err, fmt.Sprintf("failed to get api: node=%s,vmid=%d", nodeName, *vmid))
+		log.Error(err, fmt.Sprintf("failed to get qemu: node=%s,vmid=%d", nodeName, *vmid))
 		return nil, err
 	}
 
-	// no api found, create new one
+	// no qemu found, create new one
 	return s.createQEMU(ctx, nodeName, vmid)
 }
 
+// get QEMU gets proxmox vm from vmid
 func (s *Service) getQEMU(ctx context.Context, vmid *int) (*proxmox.VirtualMachine, error) {
 	if vmid != nil {
 		return s.client.VirtualMachine(ctx, *vmid)
@@ -44,10 +47,10 @@ func (s *Service) getQEMU(ctx context.Context, vmid *int) (*proxmox.VirtualMachi
 func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
-	// get nodej
+	// get node
 	if nodeName == "" {
 		// temp solution
-		node, err := s.getRandomNode()
+		node, err := s.getRandomNode(ctx)
 		if err != nil {
 			log.Error(err, "failed to get random node")
 			return nil, err
@@ -56,41 +59,40 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 		s.scope.SetNodeName(nodeName)
 	}
 
-	// (for multiple node proxmox cluster support)
-	// to do : set ssh client for specific node
-
 	// if vmid is empty, generate new vmid
 	if vmid == nil {
-		nextid, err := s.getNextID()
+		nextid, err := s.getNextID(ctx)
 		if err != nil {
 			log.Error(err, "failed to get available vmid")
 			return nil, err
 		}
 		vmid = &nextid
+		s.scope.SetVMID(*vmid)
+		if err := s.scope.PatchObject(); err != nil {
+			return nil, err
+		}
 	}
 
-	vmoption := generateVMOptions(s.scope.Name(), s.scope.GetStorage().Name, s.scope.GetNetwork(), s.scope.GetHardware())
-	// to do : do not use RESTClient()
-	_, err := s.client.RESTClient().CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
+	vmoption := s.generateVMOptions()
+	vm, err := s.client.CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
 	if err != nil {
-		log.Error(err, fmt.Sprintf("failed to get node %s", nodeName))
+		log.Error(err, fmt.Sprintf("failed to create qemu instance %s", vm.VM.Name))
 		return nil, err
 	}
-	s.scope.SetVMID(*vmid)
-	return s.client.VirtualMachine(ctx, *vmid)
+	return vm, nil
 }
 
-func (s *Service) getNextID() (int, error) {
-	return s.client.RESTClient().GetNextID(context.TODO())
+func (s *Service) getNextID(ctx context.Context) (int, error) {
+	return s.client.RESTClient().GetNextID(ctx)
 }
 
-func (s *Service) getNodes() ([]*api.Node, error) {
-	return s.client.Nodes(context.TODO())
+func (s *Service) getNodes(ctx context.Context) ([]*api.Node, error) {
+	return s.client.Nodes(ctx)
 }
 
 // GetRandomNode returns a node chosen randomly
-func (s *Service) getRandomNode() (*api.Node, error) {
-	nodes, err := s.getNodes()
+func (s *Service) getRandomNode(ctx context.Context) (*api.Node, error) {
+	nodes, err := s.getNodes(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -102,24 +104,60 @@ func (s *Service) getRandomNode() (*api.Node, error) {
 	return nodes[r.Intn(len(nodes))], nil
 }
 
-func generateVMOptions(vmName, storageName string, network infrav1.Network, hardware infrav1.Hardware) api.VirtualMachineCreateOptions {
+func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
+	vmName := s.scope.Name()
+	storageName := s.scope.GetStorage().Name
+	network := s.scope.GetNetwork()
+	hardware := s.scope.GetHardware()
+	options := s.scope.GetOptions()
+
 	vmoptions := api.VirtualMachineCreateOptions{
-		Agent:        "enabled=1",
-		Cores:        hardware.CPU,
-		Memory:       hardware.Memory,
-		Name:         vmName,
-		NameServer:   network.NameServer,
-		Boot:         "order=scsi0",
-		Ide:          api.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
-		CiCustom:     fmt.Sprintf("user=%s:%s", storageName, userSnippetPath(vmName)),
-		IPConfig:     api.IPConfig{IPConfig0: network.IPConfig.String()},
-		OSType:       api.L26,
-		Net:          api.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
-		Scsi:         api.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},
-		ScsiHw:       api.VirtioScsiPci,
-		SearchDomain: network.SearchDomain,
-		Serial:       api.Serial{Serial0: "socket"},
-		VGA:          "serial0",
+		ACPI:          boolToInt8(options.ACPI),
+		Agent:         "enabled=1",
+		Arch:          api.Arch(options.Arch),
+		Balloon:       options.Balloon,
+		BIOS:          string(hardware.BIOS),
+		Boot:          fmt.Sprintf("order=%s", bootDvice),
+		CiCustom:      fmt.Sprintf("user=%s:%s", storageName, userSnippetPath(vmName)),
+		Cores:         hardware.CPU,
+		CpuLimit:      hardware.CPULimit,
+		Description:   options.Description,
+		HugePages:     options.HugePages.String(),
+		Ide:           api.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
+		IPConfig:      api.IPConfig{IPConfig0: network.IPConfig.String()},
+		KeepHugePages: boolToInt8(options.KeepHugePages),
+		KVM:           boolToInt8(options.KVM),
+		LocalTime:     boolToInt8(options.LocalTime),
+		Lock:          string(options.Lock),
+		Memory:        hardware.Memory,
+		Name:          vmName,
+		NameServer:    network.NameServer,
+		Net:           api.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
+		Numa:          boolToInt8(options.NUMA),
+		OnBoot:        boolToInt8(options.OnBoot),
+		OSType:        api.OSType(options.OSType),
+		Protection:    boolToInt8(options.Protection),
+		Reboot:        int(boolToInt8(options.Reboot)),
+		Scsi:          api.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},
+		ScsiHw:        api.VirtioScsiPci,
+		SearchDomain:  network.SearchDomain,
+		Serial:        api.Serial{Serial0: "socket"},
+		Shares:        options.Shares,
+		Sockets:       hardware.Sockets,
+		Tablet:        boolToInt8(options.Tablet),
+		Tags:          options.Tags.String(),
+		TDF:           boolToInt8(options.TimeDriftFix),
+		Template:      boolToInt8(options.Template),
+		VCPUs:         options.VCPUs,
+		VMGenID:       options.VMGenerationID,
+		VGA:           "serial0",
 	}
 	return vmoptions
+}
+
+func boolToInt8(b bool) int8 {
+	if b {
+		return 1
+	}
+	return 0
 }
