@@ -24,7 +24,20 @@ runcmd:
   `
 	_, err := cloudinit.ParseUser(testYaml)
 	if err != nil {
-		t.Fatalf("failed to parse user: %v", err)
+		t.Errorf("failed to parse user: %v", err)
+	}
+
+	testYaml = `
+write_files:
+  - path: /run/kubeadm/kubeadm.yaml
+owner: root:root
+    permissions: '0640'
+    content: |
+      asdfasdfasdf
+  `
+	user, err := cloudinit.ParseUser(testYaml)
+	if err == nil {
+		t.Errorf("should returns an error. user=%v", *user)
 	}
 }
 
