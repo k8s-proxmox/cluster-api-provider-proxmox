@@ -178,7 +178,6 @@ func (m *MachineScope) GetHardware() infrav1.Hardware {
 	if m.ProxmoxMachine.Spec.Hardware.Memory == 0 {
 		m.ProxmoxMachine.Spec.Hardware.Memory = 4096
 	}
-	// to do: validation
 	if m.ProxmoxMachine.Spec.Hardware.Disk == "" {
 		m.ProxmoxMachine.Spec.Hardware.Disk = "50G"
 	}

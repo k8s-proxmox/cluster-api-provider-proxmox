@@ -84,6 +84,7 @@ type Hardware struct {
 	// SCSIHardWare SCSIHardWare `json:"scsiHardWare,omitempty"`
 
 	// hard disk size
+	// +kubebuilder:validation:Pattern:=\+?\d+(\.\d+)?[KMGT]?
 	// +kubebuilder:default:="50G"
 	Disk string `json:"disk,omitempty"`
 }
