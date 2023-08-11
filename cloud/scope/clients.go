@@ -38,7 +38,7 @@ func newComputeService(ctx context.Context, cluster *infrav1.ProxmoxCluster, crC
 	serverRef := cluster.Spec.ServerRef
 	secretRef := serverRef.SecretRef
 	if secretRef == nil {
-		return nil, errors.New("failed to get proxmox client form nil secretRef")
+		return nil, errors.New("failed to get proxmox client from nil secretRef")
 	}
 
 	var secret corev1.Secret
