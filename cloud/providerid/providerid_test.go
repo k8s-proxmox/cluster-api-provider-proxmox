@@ -13,7 +13,7 @@ func TestNew(t *testing.T) {
 
 	uuid = "asdf"
 	providerID, err = New(uuid)
-	if err != nil {
+	if err != nil || providerID.String() != "proxmox://asdf" {
 		t.Errorf("failed to create providerID: %v", err)
 	}
 }

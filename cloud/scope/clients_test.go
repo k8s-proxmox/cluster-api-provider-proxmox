@@ -56,7 +56,8 @@ var _ = Describe("newComputeService", func() {
 			secret := &corev1.Secret{}
 			secret.SetNamespace("default")
 			secret.SetName("foo")
-			k8sClient.Create(context.TODO(), secret)
+			err := k8sClient.Create(context.TODO(), secret)
+			Expect(err).To(BeNil())
 		})
 
 		It("Should return proper error", func() {
