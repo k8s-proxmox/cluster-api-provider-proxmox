@@ -55,8 +55,12 @@ func (s *Service) setCloudImage(ctx context.Context) error {
 	// download image
 	ok, _ := isChecksumOK(vnc, image, rawImageFilePath)
 	if !ok { // if checksum is ok, it means the image is already there. skip installing
+		out, _, err := vnc.Exec(ctx, fmt.Sprintf("mkdir -p %s && mkdir -p %s", etcCAPPX, rawImageDirPath))
+		if err != nil {
+			return errors.Errorf("failed to create dir %s: %s : %v", rawImageDirPath, out, err)
+		}
 		log.Info("downloading node image. this will take few mins.")
-		out, _, err := vnc.Exec(ctx, fmt.Sprintf("wget %s -O %s", image.URL, rawImageFilePath))
+		out, _, err = vnc.Exec(ctx, fmt.Sprintf("wget %s -O %s", image.URL, rawImageFilePath))
 		if err != nil {
 			return errors.Errorf("failed to download image: %s : %v", out, err)
 		}

@@ -20,11 +20,9 @@ import (
 )
 
 var (
-	cfg             *rest.Config
-	k8sClient       client.Client
-	testEnv         *envtest.Environment
-	proxmoxUser     string
-	proxmoxPassword string
+	cfg       *rest.Config
+	k8sClient client.Client
+	testEnv   *envtest.Environment
 )
 
 func TestScopes(t *testing.T) {
