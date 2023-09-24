@@ -119,6 +119,7 @@ spec:
                   disk:
                     default: 50G
                     description: hard disk size
+                    pattern: \+?\d+(\.\d+)?[KMGT]?
                     type: string
                   memory:
                     default: 4096
