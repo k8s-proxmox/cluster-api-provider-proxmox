@@ -89,6 +89,32 @@ spec:
                         properties:
                           user:
                             properties:
+                              bootcmd:
+                                items:
+                                  type: string
+                                type: array
+                              ca_certs:
+                                properties:
+                                  remove_defaults:
+                                    type: boolean
+                                  trusted:
+                                    items:
+                                      type: string
+                                    type: array
+                                type: object
+                              chpasswd:
+                                properties:
+                                  expire:
+                                    type: string
+                                type: object
+                              manage_etc_hosts:
+                                type: boolean
+                              no_ssh_fingerprints:
+                                type: boolean
+                              package_update:
+                                type: boolean
+                              package_upgrade:
+                                type: boolean
                               packages:
                                 items:
                                   type: string
@@ -99,12 +125,42 @@ spec:
                                 items:
                                   type: string
                                 type: array
+                              ssh:
+                                properties:
+                                  emit_keys_to_console:
+                                    type: boolean
+                                type: object
+                              ssh_authorized_keys:
+                                items:
+                                  type: string
+                                type: array
+                              ssh_keys:
+                                properties:
+                                  dsa_private:
+                                    type: string
+                                  dsa_public:
+                                    type: string
+                                  ecdsa_private:
+                                    type: string
+                                  ecdsa_public:
+                                    type: string
+                                  rsa_private:
+                                    type: string
+                                  rsa_public:
+                                    type: string
+                                type: object
+                              ssh_pwauth:
+                                type: boolean
                               user:
                                 type: string
                               writeFiles:
                                 items:
                                   properties:
                                     content:
+                                      type: string
+                                    defer:
+                                      type: boolean
+                                    encoding:
                                       type: string
                                     owner:
                                       type: string
