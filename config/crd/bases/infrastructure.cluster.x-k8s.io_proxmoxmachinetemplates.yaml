@@ -153,6 +153,64 @@ spec:
                                 type: boolean
                               user:
                                 type: string
+                              users:
+                                items:
+                                  properties:
+                                    expiredate:
+                                      pattern: ^/d{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$
+                                      type: string
+                                    gecos:
+                                      type: string
+                                    groups:
+                                      items:
+                                        type: string
+                                      type: array
+                                    homedir:
+                                      pattern: ^/.+
+                                      type: string
+                                    inactive:
+                                      minimum: 0
+                                      type: integer
+                                    lock_passwd:
+                                      type: boolean
+                                    name:
+                                      type: string
+                                    no_create_home:
+                                      type: boolean
+                                    no_log_init:
+                                      type: boolean
+                                    no_user_group:
+                                      type: boolean
+                                    passwd:
+                                      type: string
+                                    primary_group:
+                                      type: string
+                                    selinux_user:
+                                      type: string
+                                    shell:
+                                      type: string
+                                    snapuser:
+                                      type: string
+                                    ssh_authorized_keys:
+                                      items:
+                                        type: string
+                                      type: array
+                                    ssh_import_id:
+                                      items:
+                                        type: string
+                                      type: array
+                                    ssh_redirect_user:
+                                      type: boolean
+                                    sudo:
+                                      items:
+                                        type: string
+                                      type: array
+                                    system:
+                                      type: boolean
+                                  required:
+                                  - name
+                                  type: object
+                                type: array
                               writeFiles:
                                 items:
                                   properties:

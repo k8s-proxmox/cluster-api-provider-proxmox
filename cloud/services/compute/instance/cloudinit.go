@@ -20,7 +20,7 @@ func (s *Service) reconcileCloudInit(ctx context.Context) error {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling cloud init")
 
-	// user
+	// user-data
 	if err := s.reconcileCloudInitUser(ctx); err != nil {
 		return err
 	}
@@ -55,18 +55,18 @@ func (s *Service) reconcileCloudInitUser(ctx context.Context) error {
 		log.Error(err, "Error getting bootstrap data for machine")
 		return errors.Wrap(err, "failed to retrieve bootstrap data")
 	}
-	bootstrapConfig, err := cloudinit.ParseUser(bootstrap)
+	bootstrapConfig, err := cloudinit.ParseUserData(bootstrap)
 	if err != nil {
 		return err
 	}
 
 	vmName := s.scope.Name()
-	cloudConfig, err := mergeUserDatas(bootstrapConfig, baseUserData(vmName), s.scope.GetCloudInit().User)
+	cloudConfig, err := mergeUserDatas(bootstrapConfig, baseUserData(vmName), s.scope.GetCloudInit().UserData)
 	if err != nil {
 		return err
 	}
 
-	configYaml, err := cloudinit.GenerateUserYaml(*cloudConfig)
+	configYaml, err := cloudinit.GenerateUserDataYaml(*cloudConfig)
 	if err != nil {
 		return err
 	}
@@ -87,15 +87,15 @@ func (s *Service) reconcileCloudInitUser(ctx context.Context) error {
 
 // a and b must not be nil
 // only c can be nil
-func mergeUserDatas(a, b, c *infrav1.User) (*infrav1.User, error) {
+func mergeUserDatas(a, b, c *infrav1.UserData) (*infrav1.UserData, error) {
 	var err error
 	if c != nil {
-		c, err = cloudinit.MergeUsers(c, b)
+		c, err = cloudinit.MergeUserDatas(c, b)
 		if err != nil {
 			return nil, err
 		}
 	}
-	c, err = cloudinit.MergeUsers(c, a)
+	c, err = cloudinit.MergeUserDatas(c, a)
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +106,8 @@ func userSnippetPath(vmName string) string {
 	return fmt.Sprintf(userSnippetPathFormat, vmName)
 }
 
-func baseUserData(vmName string) *infrav1.User {
-	return &infrav1.User{
+func baseUserData(vmName string) *infrav1.UserData {
+	return &infrav1.UserData{
 		HostName: vmName,
 		Packages: []string{"qemu-guest-agent"},
 		RunCmd:   []string{"systemctl start qemu-guest-agent"},
