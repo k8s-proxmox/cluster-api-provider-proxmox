@@ -9,15 +9,15 @@ import (
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 )
 
-func ParseUser(content string) (*infrav1.User, error) {
-	var config *infrav1.User
+func ParseUserData(content string) (*infrav1.UserData, error) {
+	var config *infrav1.UserData
 	if err := yaml.Unmarshal([]byte(content), &config); err != nil {
 		return nil, err
 	}
 	return config, nil
 }
 
-func GenerateUserYaml(config infrav1.User) (string, error) {
+func GenerateUserDataYaml(config infrav1.UserData) (string, error) {
 	b, err := yaml.Marshal(&config)
 	if err != nil {
 		return "", err
@@ -25,7 +25,7 @@ func GenerateUserYaml(config infrav1.User) (string, error) {
 	return fmt.Sprintf("#cloud-config\n%s", string(b)), nil
 }
 
-func MergeUsers(a, b *infrav1.User) (*infrav1.User, error) {
+func MergeUserDatas(a, b *infrav1.UserData) (*infrav1.UserData, error) {
 	if err := mergo.Merge(a, b, mergo.WithAppendSlice); err != nil {
 		return nil, err
 	}

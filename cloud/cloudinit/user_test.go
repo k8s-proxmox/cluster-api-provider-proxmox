@@ -22,7 +22,7 @@ runcmd:
   - "chmod +x /usr/local/bin/kubectl"
   - "reboot now"
   `
-	_, err := cloudinit.ParseUser(testYaml)
+	_, err := cloudinit.ParseUserData(testYaml)
 	if err != nil {
 		t.Errorf("failed to parse user: %v", err)
 	}
@@ -35,7 +35,7 @@ owner: root:root
     content: |
       asdfasdfasdf
   `
-	user, err := cloudinit.ParseUser(testYaml)
+	user, err := cloudinit.ParseUserData(testYaml)
 	if err == nil {
 		t.Errorf("should returns an error. user=%v", *user)
 	}
@@ -56,31 +56,31 @@ runcmd:
   - "reboot now"
   `
 
-	uc, err := cloudinit.ParseUser(testYaml)
+	uc, err := cloudinit.ParseUserData(testYaml)
 	if err != nil {
 		t.Fatalf("failed to parse user: %v", err)
 	}
 
-	_, err = cloudinit.GenerateUserYaml(*uc)
+	_, err = cloudinit.GenerateUserDataYaml(*uc)
 	if err != nil {
 		t.Fatalf("generate : %v", err)
 	}
 }
 
 func TestMergeUsers(t *testing.T) {
-	a := infrav1.User{
+	a := infrav1.UserData{
 		User:   "override-user",
 		RunCmd: []string{"command A", "command B"},
 	}
-	b := infrav1.User{
+	b := infrav1.UserData{
 		User:   "test-user",
 		RunCmd: []string{"command C"},
 	}
-	expected := infrav1.User{
+	expected := infrav1.UserData{
 		User:   "override-user",
 		RunCmd: []string{"command A", "command B", "command C"},
 	}
-	c, err := cloudinit.MergeUsers(&a, &b)
+	c, err := cloudinit.MergeUserDatas(&a, &b)
 	if err != nil {
 		t.Errorf("failed to merge cloud init user data: %v", err)
 	}
