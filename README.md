@@ -102,6 +102,22 @@ Because Proxmox-VE does not provide LBaaS solution, CAPPX does not follow the [t
 
 ProxmoxMachine controller follows the [typical infra-machine logic](https://cluster-api.sigs.k8s.io/developer/providers/machine-infrastructure.html#behavior). To bootstrap your machine, CAPPX supports only `cloud-config` type bootstrap data secret. CAPPX is mainly tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
 
+## Development
+
+### Testing
+#### Unit Testing
+```
+make unit-test
+```
+#### Unit and Integration Testing
+```
+export PROXMOX_URL=https://X.X.X.X:8006/api2/json
+export PROXMOX_PASSWORD=password
+export PROXMOX_USER=user@pam
+
+make test
+```
+
 ## Contributing
 
 Are you interested in contributing to cluster-api-provider-proxmox? Do not hesitate to open GitHub issues.

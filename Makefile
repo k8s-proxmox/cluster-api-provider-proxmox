@@ -58,7 +58,7 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: lint
-lint: ## Run golangci-lint
+lint: golangci-lint ## Run golangci-lint
 	$(GOLANGCI_LINT) run
 
 CLUSTER_NAME := cappx-test
@@ -77,12 +77,22 @@ SETUP_ENVTEST_VER := v0.0.0-20211110210527-619e6b92dab9
 SETUP_ENVTEST := $(LOCALBIN)/setup-envtest
 
 .PHONY: test
-test: manifests generate fmt $(SETUP_ENVTEST)
+test: generate manifests fmt $(SETUP_ENVTEST)  ## Run unit and integration test
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... $(TEST_ARGS)
+
+.PHONY: unit-test  ## Run unit tests
+unit-test: generate manifests fmt $(SETUP_ENVTEST)
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... --ginkgo.label-filter=unit $(TEST_ARGS)
 
 .PHONY: test-cover
 test-cover: ## Run unit and integration tests and generate coverage report
 	$(MAKE) test TEST_ARGS="$(TEST_ARGS) -coverprofile=coverage.out"
+	go tool cover -func=coverage.out -o coverage.txt
+	go tool cover -html=coverage.out -o coverage.html
+
+.PHONY: unit-test-cover
+unit-test-cover: ## Run unit tests and generate coverage report
+	$(MAKE) unit-test TEST_ARGS="$(TEST_ARGS) -coverprofile=coverage.out"
 	go tool cover -func=coverage.out -o coverage.txt
 	go tool cover -html=coverage.out -o coverage.html
 

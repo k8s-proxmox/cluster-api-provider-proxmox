@@ -1,15 +1,27 @@
 package cloudinit_test
 
 import (
-	"reflect"
 	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/cloudinit"
 )
 
-func TestParseUser(t *testing.T) {
-	testYaml := `
+func TestCloudInit(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "CloudInit Suite")
+}
+
+var _ = Describe("ParseUserDatas", Label("unit", "cloudinit"), func() {
+	BeforeEach(func() {})
+	AfterEach(func() {})
+
+	Context("correct format", func() {
+		It("should no error", func() {
+			testYaml := `
 write_files:
   - path: /run/kubeadm/kubeadm.yaml
     owner: root:root
@@ -22,12 +34,15 @@ runcmd:
   - "chmod +x /usr/local/bin/kubectl"
   - "reboot now"
   `
-	_, err := cloudinit.ParseUserData(testYaml)
-	if err != nil {
-		t.Errorf("failed to parse user: %v", err)
-	}
+			userData, err := cloudinit.ParseUserData(testYaml)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(userData).NotTo(BeNil())
+		})
+	})
 
-	testYaml = `
+	Context("incorrect format", func() {
+		It("should error", func() {
+			testYaml := `
 write_files:
   - path: /run/kubeadm/kubeadm.yaml
 owner: root:root
@@ -35,39 +50,30 @@ owner: root:root
     content: |
       asdfasdfasdf
   `
-	user, err := cloudinit.ParseUserData(testYaml)
-	if err == nil {
-		t.Errorf("should returns an error. user=%v", *user)
-	}
-}
+			userData, err := cloudinit.ParseUserData(testYaml)
+			Expect(err).To(HaveOccurred())
+			Expect(userData).To(BeNil())
+		})
+	})
+})
 
-func TestGenerateUserYaml(t *testing.T) {
-	testYaml := `
-write_files:
-  - path: /run/kubeadm/kubeadm.yaml
-    owner: root:root
-    permissions: '0640'
-    content: |
-      asdfasdfasdf
-runcmd:
-  - 'kubeadm init --config /run/kubeadm/kubeadm.yaml  && echo success > /run/cluster-api/bootstrap-success.complete'
-  - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
-  - "chmod +x /usr/local/bin/kubectl"
-  - "reboot now"
-  `
+var _ = Describe("GenerateUserDataYaml", Label("unit", "cloudinit"), func() {
+	BeforeEach(func() {})
+	AfterEach(func() {})
 
-	uc, err := cloudinit.ParseUserData(testYaml)
-	if err != nil {
-		t.Fatalf("failed to parse user: %v", err)
-	}
+	Context("generate user-data yaml string", func() {
+		It("should no error", func() {
+			userData := infrav1.UserData{
+				RunCmd: []string{"echo", "pwd"},
+			}
+			yaml, err := cloudinit.GenerateUserDataYaml(userData)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(yaml).NotTo(BeNil())
+		})
+	})
+})
 
-	_, err = cloudinit.GenerateUserDataYaml(*uc)
-	if err != nil {
-		t.Fatalf("generate : %v", err)
-	}
-}
-
-func TestMergeUsers(t *testing.T) {
+var _ = Describe("MergeUserDatas", Label("unit", "cloudinit"), func() {
 	a := infrav1.UserData{
 		User:   "override-user",
 		RunCmd: []string{"command A", "command B"},
@@ -80,11 +86,8 @@ func TestMergeUsers(t *testing.T) {
 		User:   "override-user",
 		RunCmd: []string{"command A", "command B", "command C"},
 	}
+
 	c, err := cloudinit.MergeUserDatas(&a, &b)
-	if err != nil {
-		t.Errorf("failed to merge cloud init user data: %v", err)
-	}
-	if !reflect.DeepEqual(*c, expected) {
-		t.Errorf("%v is expected to same as %v", *c, expected)
-	}
-}
+	Expect(err).NotTo(HaveOccurred())
+	Expect(*c).To(Equal(expected))
+})

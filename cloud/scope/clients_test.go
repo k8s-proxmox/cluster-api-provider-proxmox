@@ -12,10 +12,8 @@ import (
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 )
 
-var _ = Describe("newComputeService", func() {
-	var (
-		cluster *infrav1.ProxmoxCluster
-	)
+var _ = Describe("newComputeService", Label("unit", "scope"), func() {
+	var cluster *infrav1.ProxmoxCluster
 
 	Context("When SecretRef is not present in ProxmoxCluster", func() {
 		BeforeEach(func() {
