@@ -115,6 +115,7 @@ generate-e2e-templates: $(KUSTOMIZE) ## Generate cluster-templates for e2e
 build-e2e-image: ## Build cappx image to be used for e2e test
 	IMG=${E2E_IMG} $(MAKE) docker-build
 
+USE_EXISTING_CLUSTER := false
 .PHONY: e2e
 e2e: generate-e2e-templates build-e2e-image cleanup-e2e-artifacts ## Run e2e test
 	go test $(E2E_DIR)/... -v \
@@ -181,7 +182,8 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | kubectl diff -f -
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
@@ -196,7 +198,9 @@ $(RELEASE_DIR):
 
 RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
 
-.PHONY: release ## Builds all the manifests/config files to publish with a release
+.PHONY: release
+release: ## Builds all the manifests/config files to publish with a release
+	@echo "Building assets for Release \"$(RELEASE_TAG)\""
 	$(MAKE) release-manifests
 	$(MAKE) release-metadata
 	$(MAKE) release-templates
