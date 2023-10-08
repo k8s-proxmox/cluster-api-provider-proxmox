@@ -1,8 +1,15 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+REGISTRY := ghcr.io
+PROJECT := sp-yduck/cluster-api-provider-proxmox
+RELEASE_TAG := latest
+IMG ?= $(REGISTRY)/$(PROJECT):$(RELEASE_TAG)
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.26.1
+
+# add localbin to PATH
+LOCALBIN ?= $(shell pwd)/bin
+export PATH := $(abspath $(LOCALBIN)):$(PATH)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -75,14 +82,15 @@ delete-workload-cluster: $(KUBECTL)
 
 SETUP_ENVTEST_VER := v0.0.0-20211110210527-619e6b92dab9
 SETUP_ENVTEST := $(LOCALBIN)/setup-envtest
+GINKGO_TIMEOUT ?= 30m
 
 .PHONY: test
 test: generate manifests fmt $(SETUP_ENVTEST)  ## Run unit and integration test
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... $(TEST_ARGS)
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./api/... ./cloud/... ./controllers/... $(TEST_ARGS)
 
 .PHONY: unit-test  ## Run unit tests
 unit-test: generate manifests fmt $(SETUP_ENVTEST)
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... --ginkgo.label-filter=unit $(TEST_ARGS)
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./api/... ./cloud/... ./controllers/... --ginkgo.label-filter=unit $(TEST_ARGS)
 
 .PHONY: test-cover
 test-cover: ## Run unit and integration tests and generate coverage report
@@ -95,6 +103,29 @@ unit-test-cover: ## Run unit tests and generate coverage report
 	$(MAKE) unit-test TEST_ARGS="$(TEST_ARGS) -coverprofile=coverage.out"
 	go tool cover -func=coverage.out -o coverage.txt
 	go tool cover -html=coverage.out -o coverage.html
+
+E2E_DIR = $(shell pwd)/internal/test/e2e
+E2E_IMG := ghcr.io/sp-yduck/cluster-api-provider-proxmox:e2e
+.PHONY: generate-e2e-templates
+generate-e2e-templates: $(KUSTOMIZE) ## Generate cluster-templates for e2e
+	cp templates/cluster-template* $(E2E_DIR)/data/infrastructure-proxmox/templates
+	$(KUSTOMIZE) build $(E2E_DIR)/data/infrastructure-proxmox/templates > $(E2E_DIR)/data/infrastructure-proxmox/main/cluster-template.yaml
+
+.PHONY: build-e2e-image
+build-e2e-image: ## Build cappx image to be used for e2e test
+	IMG=${E2E_IMG} $(MAKE) docker-build
+
+.PHONY: e2e
+e2e: generate-e2e-templates build-e2e-image cleanup-e2e-artifacts ## Run e2e test
+	go test $(E2E_DIR)/... -v \
+	-timeout=$(GINKGO_TIMEOUT) \
+	--e2e.artifacts-folder=$(E2E_DIR) \
+	--e2e.use-existing-cluster="$(USE_EXISTING_CLUSTER)"
+
+.PHONY: cleanup-e2e-artifacts
+cleanup-e2e-artifacts: ## delete some e2e artifacts 
+	rm -rf $(E2E_DIR)/clusters
+	rm -rf $(E2E_DIR)/kind
 
 ##@ Build
 
@@ -150,7 +181,6 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: undeploy
@@ -160,16 +190,20 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 ##@ Release
 
 ## Location to output for release
-RELEASE_DIR := out
+RELEASE_DIR := $(shell pwd)/out
 $(RELEASE_DIR):
 	mkdir -p $(RELEASE_DIR)
 
-# RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
+RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
 
-# .PHONY: release
+.PHONY: release ## Builds all the manifests/config files to publish with a release
+	$(MAKE) release-manifests
+	$(MAKE) release-metadata
+	$(MAKE) release-templates
 
 .PHONY: release-manifests
 release-manifests: $(KUSTOMIZE) $(RELEASE_DIR) ## Builds the manifests to publish with a release
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${REGISTRY}/${PROJECT}:${RELEASE_TAG}
 	$(KUSTOMIZE) build config/default > $(RELEASE_DIR)/infrastructure-components.yaml
 
 .PHONY: release-metadata
@@ -184,7 +218,6 @@ release-templates: $(RELEASE_DIR)
 ##@ Build Dependencies
 
 ## Location to install dependencies to
-LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 

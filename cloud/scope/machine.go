@@ -140,11 +140,11 @@ func (m *MachineScope) SetInstanceStatus(v infrav1.InstanceStatus) {
 }
 
 func (m *MachineScope) GetBiosUUID() *string {
-	parsed, err := noderefutil.NewProviderID(m.GetProviderID())
+	parsed, err := noderefutil.NewProviderID(m.GetProviderID()) //nolint: staticcheck
 	if err != nil {
 		return nil
 	}
-	return pointer.String(parsed.ID())
+	return pointer.String(parsed.ID()) //nolint: staticcheck
 }
 
 func (m *MachineScope) GetProviderID() string {
