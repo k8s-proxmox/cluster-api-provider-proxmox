@@ -74,20 +74,24 @@ var _ = Describe("GenerateUserDataYaml", Label("unit", "cloudinit"), func() {
 })
 
 var _ = Describe("MergeUserDatas", Label("unit", "cloudinit"), func() {
-	a := infrav1.UserData{
-		User:   "override-user",
-		RunCmd: []string{"command A", "command B"},
-	}
-	b := infrav1.UserData{
-		User:   "test-user",
-		RunCmd: []string{"command C"},
-	}
-	expected := infrav1.UserData{
-		User:   "override-user",
-		RunCmd: []string{"command A", "command B", "command C"},
-	}
+	var _ = Context("merge 2 user datas", func() {
+		var _ = It("should no error", func() {
+			a := infrav1.UserData{
+				User:   "override-user",
+				RunCmd: []string{"command A", "command B"},
+			}
+			b := infrav1.UserData{
+				User:   "test-user",
+				RunCmd: []string{"command C"},
+			}
+			expected := infrav1.UserData{
+				User:   "override-user",
+				RunCmd: []string{"command A", "command B", "command C"},
+			}
 
-	c, err := cloudinit.MergeUserDatas(&a, &b)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(*c).To(Equal(expected))
+			c, err := cloudinit.MergeUserDatas(&a, &b)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*c).To(Equal(expected))
+		})
+	})
 })
