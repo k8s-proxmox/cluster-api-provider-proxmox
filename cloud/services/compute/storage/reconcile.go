@@ -30,17 +30,19 @@ func (s *Service) Reconcile(ctx context.Context) error {
 }
 
 func (s *Service) Delete(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	log.Info("Deleteing storage")
 	return s.deleteStorage(ctx)
 }
 
 // createOrGetStorage gets Proxmox Storage for VMs
 func (s *Service) createOrGetStorage(ctx context.Context) error {
+	log := log.FromContext(ctx)
 	opts := generateVMStorageOptions(s.scope)
 	if err := s.getStorage(ctx, opts.Storage); err != nil {
 		if rest.IsNotFound(err) {
-			if err := s.createStorage(ctx, opts); err != nil {
-				return err
-			}
+			log.Info("storage %s not found. it will be created")
+			return s.createStorage(ctx, opts)
 		}
 		return err
 	}
@@ -65,18 +67,22 @@ func (s *Service) createStorage(ctx context.Context, options api.StorageCreateOp
 
 func (s *Service) deleteStorage(ctx context.Context) error {
 	log := log.FromContext(ctx)
+
+	var storage *proxmox.Storage
+	storage, err := s.client.Storage(ctx, s.scope.Storage().Name)
+	if err != nil {
+		if rest.IsNotFound(err) {
+			log.Info("storage not found or already deleted")
+			return nil
+		}
+		return err
+	}
+
 	nodes, err := s.client.Nodes(ctx)
 	if err != nil {
 		return err
 	}
-
-	var storage *proxmox.Storage
 	for _, node := range nodes {
-		storage, err = s.client.Storage(ctx, s.scope.Storage().Name)
-		if err != nil {
-			log.Info(err.Error())
-			continue
-		}
 		storage.Node = node.Node
 
 		// check if storage is empty
@@ -91,7 +97,6 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 
 	// delete
 	if err := storage.Delete(ctx); err != nil {
-		log.Info(err.Error())
 		return err
 	}
 	return nil

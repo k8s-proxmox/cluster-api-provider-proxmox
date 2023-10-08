@@ -8,5 +8,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - run: "make test-cover"
+    - run: "make unit-test-cover"
     - uses: codecov/codecov-action@v2

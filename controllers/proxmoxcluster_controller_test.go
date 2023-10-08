@@ -12,7 +12,7 @@ import (
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 )
 
-var _ = Describe("ProxmoxClusterReconciler", func() {
+var _ = Describe("ProxmoxClusterReconciler", Label("unit", "controllers"), func() {
 	BeforeEach(func() {})
 	AfterEach(func() {})
 

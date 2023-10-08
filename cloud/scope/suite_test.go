@@ -1,7 +1,6 @@
 package scope
 
 import (
-	// "os"
 	"path/filepath"
 	"testing"
 

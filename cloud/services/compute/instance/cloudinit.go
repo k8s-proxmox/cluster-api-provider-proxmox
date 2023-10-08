@@ -46,6 +46,8 @@ func (s *Service) deleteCloudConfig(ctx context.Context) error {
 	return storage.DeleteVolume(ctx, volumeID)
 }
 
+// get cloud-config user datas from Secret and ProxmoxMachine
+// then merge them and set merged user data file to Proxmox Storage
 func (s *Service) reconcileCloudInitUser(ctx context.Context) error {
 	log := log.FromContext(ctx)
 
