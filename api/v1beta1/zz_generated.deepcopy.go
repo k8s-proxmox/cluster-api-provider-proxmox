@@ -630,6 +630,11 @@ func (in *User) DeepCopyInto(out *User) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.LockPasswd != nil {
+		in, out := &in.LockPasswd, &out.LockPasswd
+		*out = new(bool)
+		**out = **in
+	}
 	if in.SSHImportID != nil {
 		in, out := &in.SSHImportID, &out.SSHImportID
 		*out = make([]string, len(*in))

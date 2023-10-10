@@ -59,7 +59,7 @@ type User struct {
 	PrimaryGroup string   `yaml:"primary_group,omitempty" json:"primary_group,omitempty"`
 	Groups       []string `yaml:"groups,omitempty" json:"groups,omitempty"`
 	SELinuxUser  string   `yaml:"selinux_user,omitempty" json:"selinux_user,omitempty"`
-	LockPasswd   bool     `yaml:"lock_passwd,omitempty" json:"lock_passwd,omitempty"`
+	LockPasswd   *bool    `yaml:"lock_passwd,omitempty" json:"lock_passwd,omitempty"`
 	// +kubebuilder:validation:Minimum:=0
 	Inactive          int      `yaml:"inactive,omitempty" json:"inactive,omitempty"`
 	Passwd            string   `yaml:"passwd,omitempty" json:"passwd,omitempty"`
