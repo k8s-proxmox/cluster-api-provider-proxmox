@@ -39,6 +39,18 @@ type ProxmoxClusterSpec struct {
 	// storage is for proxmox storage used by vm instances
 	// +optional
 	Storage Storage `json:"storage"`
+
+	// Nodes to be used for vm instances
+	// +optional
+	Nodes []string `json:"nodes,omitempty"`
+
+	// Provide config to enable failure domains
+	// +optional
+	FailureDomainConfig *ClusterFailureDomainConfig `json:"failureDomain,omitempty"`
+
+	// Proxmox resource pool to be used for all vms created
+	// +optional
+	ResourcePool string `json:"resourcePool,omitempty"`
 }
 
 // ProxmoxClusterStatus defines the observed state of ProxmoxCluster

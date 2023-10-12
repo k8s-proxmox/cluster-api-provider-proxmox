@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"strings"
 
 	"github.com/sp-yduck/proxmox-go/api"
@@ -83,10 +84,14 @@ type Hardware struct {
 	// SCSI controller model
 	// SCSIHardWare SCSIHardWare `json:"scsiHardWare,omitempty"`
 
-	// hard disk size
+	// boot disk size
 	// +kubebuilder:validation:Pattern:=\+?\d+(\.\d+)?[KMGT]?
 	// +kubebuilder:default:="50G"
 	Disk string `json:"disk,omitempty"`
+
+	// Storage name for the boot disk. If none is provided, the ProxmoxCluster storage name will be used
+	// +optional
+	StorageName string `json:"storage,omitempty"`
 }
 
 // Network
@@ -101,6 +106,14 @@ type Network struct {
 
 	// search domain
 	SearchDomain string `json:"searchDomain,omitempty"`
+
+	// +kubebuilder:default:="virtio"
+	Model string `json:"model,omitempty"`
+
+	// +kubebuilder:default:="vmbr0"
+	Bridge string `json:"bridge,omitempty"`
+
+	Tag int `json:"vlanTag,omitempty"`
 }
 
 // IPConfig defines IP addresses and gateways for corresponding interface.
@@ -117,6 +130,12 @@ type IPConfig struct {
 
 	// gateway IPv6
 	Gateway6 string `json:"gateway6,omitempty"`
+
+	// IPv4FromPoolRef is a reference to an IP pool to allocate an address from.
+	IPv4FromPoolRef *corev1.TypedLocalObjectReference `json:"IPv4FromPoolRef,omitempty"`
+
+	// IPv6FromPoolRef is a reference to an IP pool to allocate an address from.
+	IPv6FromPoolRef *corev1.TypedLocalObjectReference `json:"IPv6FromPoolRef,omitempty"`
 }
 
 func (c *IPConfig) String() string {
@@ -156,3 +175,9 @@ var (
 	InstanceStatusRunning = InstanceStatus(api.ProcessStatusRunning)
 	InstanceStatusStopped = InstanceStatus(api.ProcessStatusStopped)
 )
+
+type ClusterFailureDomainConfig struct {
+	// Treat each node as a failure domain for cluster api
+	// +optional
+	NodeAsFailureDomain bool `json:"nodeAsFailureDomain,omitempty"`
+}

@@ -134,6 +134,10 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
+	if err := clusterScope.SetFailureDomains(ctx); err != nil {
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, err
+	}
+
 	log.Info("Reconciled ProxmoxCluster")
 	record.Eventf(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Got control-plane endpoint - %s", controlPlaneEndpoint.Host)
 	clusterScope.SetReady()

@@ -18,6 +18,8 @@ package scope
 
 import (
 	"context"
+	"fmt"
+	"slices"
 
 	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox-go/proxmox"
@@ -96,6 +98,10 @@ func (s *ClusterScope) Storage() infrav1.Storage {
 	return s.ProxmoxCluster.Spec.Storage
 }
 
+func (s *ClusterScope) FailureDomains() clusterv1.FailureDomains {
+	return s.ProxmoxCluster.Status.FailureDomains
+}
+
 func (s *ClusterScope) CloudClient() *proxmox.Service {
 	return s.ProxmoxServices.Compute
 }
@@ -123,4 +129,34 @@ func (s *ClusterScope) SetStorage(storage infrav1.Storage) {
 // PatchObject persists the cluster configuration and status.
 func (s *ClusterScope) PatchObject() error {
 	return s.patchHelper.Patch(context.TODO(), s.ProxmoxCluster)
+}
+
+func (s *ClusterScope) SetFailureDomains(ctx context.Context) error {
+	if s.ProxmoxCluster.Spec.FailureDomainConfig == nil {
+		return nil
+	}
+
+	config := *s.ProxmoxCluster.Spec.FailureDomainConfig
+
+	if config.NodeAsFailureDomain {
+		nodes, err := s.Compute.Nodes(ctx)
+		if err != nil {
+			return fmt.Errorf("could not query nodes for failure domains: %v", err)
+		}
+
+		nodesConfigured := len(s.ProxmoxCluster.Spec.Nodes) > 0
+		domain := make(clusterv1.FailureDomains, len(nodes))
+		for _, node := range nodes {
+			if nodesConfigured && !slices.Contains(s.ProxmoxCluster.Spec.Nodes, node.Node) {
+				continue
+			}
+			domain[node.Node] = clusterv1.FailureDomainSpec{ControlPlane: true}
+		}
+
+		s.ProxmoxCluster.Status.FailureDomains = domain
+		return nil
+	}
+
+	// TODO: some other strategy based on Proxmox HA groups
+	return nil
 }

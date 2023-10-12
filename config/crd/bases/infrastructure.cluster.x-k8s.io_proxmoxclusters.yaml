@@ -67,6 +67,21 @@ spec:
                 - host
                 - port
                 type: object
+              failureDomain:
+                description: Provide config to enable failure domains
+                properties:
+                  nodeAsFailureDomain:
+                    description: Treat each node as a failure domain for cluster api
+                    type: boolean
+                type: object
+              nodes:
+                description: Nodes to be used for vm instances
+                items:
+                  type: string
+                type: array
+              resourcePool:
+                description: Proxmox resource pool to be used for all vms created
+                type: string
               serverRef:
                 description: ServerRef is used for configuring Proxmox client
                 properties:

@@ -30,6 +30,7 @@ import (
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/providerid"
@@ -79,6 +80,14 @@ type MachineScope struct {
 	ClusterGetter  *ClusterScope
 }
 
+func (m *MachineScope) GetProxmoxCluster() *infrav1.ProxmoxCluster {
+	return m.ClusterGetter.ProxmoxCluster
+}
+
+func (m *MachineScope) GetProxmoxMachine() *infrav1.ProxmoxMachine {
+	return m.ProxmoxMachine
+}
+
 func (m *MachineScope) CloudClient() *proxmox.Service {
 	return m.ClusterGetter.CloudClient()
 }
@@ -87,7 +96,7 @@ func (m *MachineScope) K8sClient() *client.Client {
 	return &m.client
 }
 
-func (m *MachineScope) GetStorage() infrav1.Storage {
+func (m *MachineScope) GetClusterStorage() infrav1.Storage {
 	return m.ClusterGetter.ProxmoxCluster.Spec.Storage
 }
 
@@ -99,12 +108,12 @@ func (m *MachineScope) Namespace() string {
 	return m.ProxmoxMachine.Namespace
 }
 
-func (m *MachineScope) NodeName() string {
+func (m *MachineScope) NodeName() *string {
 	return m.ProxmoxMachine.Spec.Node
 }
 
 func (m *MachineScope) SetNodeName(name string) {
-	m.ProxmoxMachine.Spec.Node = name
+	m.ProxmoxMachine.Spec.Node = &name
 }
 
 // func (m *MachineScope) Client() Compute {
@@ -112,6 +121,11 @@ func (m *MachineScope) SetNodeName(name string) {
 // }
 
 func (m *MachineScope) GetBootstrapData() (string, error) {
+
+	if !m.Machine.Status.BootstrapReady {
+		return "", errors.New("Bootstrap not yet ready")
+	}
+
 	if m.Machine.Spec.Bootstrap.DataSecretName == nil {
 		return "", errors.New("error retrieving bootstrap data: linked Machine's bootstrap.dataSecretName is nil")
 	}
@@ -171,6 +185,13 @@ func (m *MachineScope) GetCloudInit() infrav1.CloudInit {
 }
 
 func (m *MachineScope) GetNetwork() infrav1.Network {
+	if m.ProxmoxMachine.Spec.Network.Bridge == "" {
+		m.ProxmoxMachine.Spec.Network.Bridge = "vmbr0"
+	}
+	if m.ProxmoxMachine.Spec.Network.Model == "" {
+		m.ProxmoxMachine.Spec.Network.Model = "virtio"
+	}
+
 	return m.ProxmoxMachine.Spec.Network
 }
 
@@ -188,8 +209,41 @@ func (m *MachineScope) GetHardware() infrav1.Hardware {
 	return m.ProxmoxMachine.Spec.Hardware
 }
 
+func (m *MachineScope) GetBootDiskStorage() string {
+	if m.ProxmoxMachine.Spec.Hardware.StorageName != "" {
+		return m.ProxmoxMachine.Spec.Hardware.StorageName
+	} else {
+		return m.ClusterGetter.ProxmoxCluster.Spec.Storage.Name
+	}
+}
+
 func (m *MachineScope) GetOptions() infrav1.Options {
 	return m.ProxmoxMachine.Spec.Options
+}
+
+func (m *MachineScope) GetPool() *string {
+	return m.ProxmoxMachine.Spec.Pool
+}
+
+func (m *MachineScope) GetProxmoxMachineTemplate(ctx context.Context) *infrav1.ProxmoxMachineTemplate {
+	log := log.FromContext(ctx)
+
+	templateName := m.ProxmoxMachine.Annotations[clusterv1.TemplateClonedFromNameAnnotation]
+	templateKind := m.ProxmoxMachine.Annotations[clusterv1.TemplateClonedFromGroupKindAnnotation]
+	if templateKind != "ProxmoxMachineTemplate.infrastructure.cluster.x-k8s.io" {
+		return nil
+	}
+
+	template := &infrav1.ProxmoxMachineTemplate{}
+
+	objKey := types.NamespacedName{Namespace: m.Namespace(), Name: templateName}
+
+	if err := m.client.Get(ctx, objKey, template); err != nil {
+		log.Info("ProxmoxCluster is not available yet")
+		return nil
+	}
+
+	return template
 }
 
 // SetProviderID sets the ProxmoxMachine providerID in spec.
@@ -204,6 +258,10 @@ func (m *MachineScope) SetProviderID(uuid string) error {
 
 func (m *MachineScope) SetVMID(vmid int) {
 	m.ProxmoxMachine.Spec.VMID = &vmid
+}
+
+func (m *MachineScope) SetPool(pool string) {
+	m.ProxmoxMachine.Spec.Pool = &pool
 }
 
 func (m *MachineScope) SetConfigStatus(config api.VirtualMachineConfig) {
@@ -229,4 +287,8 @@ func (m *MachineScope) SetFailureReason(v capierrors.MachineStatusError) {
 // PatchObject persists the cluster configuration and status.
 func (s *MachineScope) PatchObject() error {
 	return s.patchHelper.Patch(context.TODO(), s.ProxmoxMachine)
+}
+
+func (m *MachineScope) SetFailureDomain(failureDomain string) {
+	m.ProxmoxMachine.Spec.FailureDomain = &failureDomain
 }

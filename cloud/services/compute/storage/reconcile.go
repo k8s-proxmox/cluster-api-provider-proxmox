@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"k8s.io/utils/pointer"
+	"strings"
 
 	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
@@ -41,7 +43,7 @@ func (s *Service) createOrGetStorage(ctx context.Context) error {
 	opts := generateVMStorageOptions(s.scope)
 	if err := s.getStorage(ctx, opts.Storage); err != nil {
 		if rest.IsNotFound(err) {
-			log.Info("storage %s not found. it will be created")
+			log.Info(fmt.Sprintf("storage %s not found. it will be created", opts.Storage))
 			return s.createStorage(ctx, opts)
 		}
 		return err
@@ -59,10 +61,51 @@ func (s *Service) getStorage(ctx context.Context, name string) error {
 }
 
 func (s *Service) createStorage(ctx context.Context, options api.StorageCreateOptions) error {
+
+	if options.Mkdir != nil && *options.Mkdir == false {
+		if err := s.createStorageDirs(ctx, options); err != nil {
+			return err
+		}
+	}
+
 	if _, err := s.client.CreateStorage(ctx, options.Storage, options.StorageType, options); err != nil {
 		return err
 	}
+
 	return nil
+}
+
+func (s *Service) createStorageDirs(ctx context.Context, options api.StorageCreateOptions) error {
+	log := log.FromContext(ctx)
+
+	nodes, err := s.client.Nodes(ctx)
+	if err != nil {
+		return err
+	}
+
+	hasFailure := false
+	for _, node := range nodes {
+		vnc, err := s.client.NewNodeVNCWebSocketConnection(context.TODO(), node.Node)
+		if err != nil {
+			log.Error(err, fmt.Sprintf("Failed to create shell to node %s", node.Node))
+			hasFailure = true
+		}
+
+		for _, dir := range strings.Split(options.Content, ",") {
+			_, _, err := vnc.Exec(ctx, fmt.Sprintf("mkdir -p %s/%s", options.Path, dir))
+			if err != nil {
+				log.Error(err, fmt.Sprintf("Failed creating content dir %s", dir))
+				hasFailure = true
+			}
+		}
+		vnc.Close()
+	}
+
+	if hasFailure {
+		return fmt.Errorf("failed creating content directories for storage %s", options.Storage)
+	} else {
+		return nil
+	}
 }
 
 func (s *Service) deleteStorage(ctx context.Context) error {
@@ -103,12 +146,17 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 }
 
 func generateVMStorageOptions(scope Scope) api.StorageCreateOptions {
+
+	// when using non-root user, we need to create directories ourselves. Otherwise they will be owned by root.
+	// We assume we have permission for base storage path.
+	mkdirs := scope.CloudClient().RESTClient().Credentials().Username == "root@pam"
+
 	storageSpec := scope.Storage()
 	options := api.StorageCreateOptions{
 		Storage:     storageSpec.Name,
 		StorageType: "dir",
 		Content:     "images,snippets",
-		Mkdir:       true,
+		Mkdir:       pointer.Bool(mkdirs),
 		Path:        storageSpec.Path,
 	}
 	if options.Storage == "" {

@@ -31,10 +31,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
+	services "github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/instance"
 )
 
@@ -48,6 +50,12 @@ type ProxmoxMachineReconciler struct {
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=proxmoxmachines/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=proxmoxmachines/finalizers,verbs=update
 //+kubebuilder:rbac:groups=cluster.x-k8s.io,resources=machines;machines/status,verbs=get;list;watch
+
+// +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddressclaims,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddressclaims/status,verbs=get;watch
+// +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddresses,verbs=get;list;watch
+// +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddresses/status,verbs=get
+
 // +kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:groups="",resources=secrets;,verbs=get;list;watch
 
@@ -150,6 +158,13 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 
 	reconcilers := []cloud.Reconciler{
 		instance.NewService(machineScope),
+	}
+
+	if machineScope.Machine.Spec.FailureDomain != nil {
+		machineScope.SetFailureDomain(*machineScope.Machine.Spec.FailureDomain)
+		if machineScope.GetProxmoxCluster().Spec.FailureDomainConfig != nil && machineScope.GetProxmoxCluster().Spec.FailureDomainConfig.NodeAsFailureDomain && machineScope.NodeName() == nil {
+			machineScope.SetNodeName(*machineScope.Machine.Spec.FailureDomain)
+		}
 	}
 
 	for _, r := range reconcilers {
