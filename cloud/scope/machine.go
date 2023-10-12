@@ -214,6 +214,10 @@ func (m *MachineScope) SetReady() {
 	m.ProxmoxMachine.Status.Ready = true
 }
 
+func (m *MachineScope) SetNotReady() {
+	m.ProxmoxMachine.Status.Ready = false
+}
+
 func (m *MachineScope) SetFailureMessage(v error) {
 	m.ProxmoxMachine.Status.FailureMessage = pointer.String(v.Error())
 }

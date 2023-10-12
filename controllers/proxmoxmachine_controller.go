@@ -156,7 +156,7 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 		if err := r.Reconcile(ctx); err != nil {
 			log.Error(err, "Reconcile error")
 			record.Warnf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "Reconcile error - %v", err)
-			return ctrl.Result{RequeueAfter: 5 * time.Second}, err
+			return checkReconcileError(err, "Failed to reconcile machine")
 		}
 	}
 
@@ -171,10 +171,12 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 	case infrav1.InstanceStatusStopped:
 		log.Info("ProxmoxMachine instance is stopped", "instance-id", *machineScope.GetBiosUUID())
 		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is stopped - bios-uuid: %s", *machineScope.GetBiosUUID())
+		machineScope.SetNotReady()
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	case infrav1.InstanceStatusPaused:
 		log.Info("ProxmoxMachine instance is paused", "instance-id", *machineScope.GetBiosUUID())
 		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is paused - bios-uuid: %s", *machineScope.GetBiosUUID())
+		machineScope.SetNotReady()
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	default:
 		machineScope.SetFailureReason(capierrors.UpdateMachineError)
@@ -210,4 +212,20 @@ func (r *ProxmoxMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrav1.ProxmoxMachine{}).
 		Complete(r)
+}
+
+func checkReconcileError(err error, errMessage string) (ctrl.Result, error) {
+	if err == nil {
+		return ctrl.Result{}, nil
+	}
+	var reconcileError services.ReconcileError
+	if errors.As(err, &reconcileError) {
+		if reconcileError.IsTransient() {
+			return reconcile.Result{Requeue: true, RequeueAfter: reconcileError.GetRequeueAfter()}, nil
+		}
+		if reconcileError.IsTerminal() {
+			return reconcile.Result{}, nil
+		}
+	}
+	return ctrl.Result{}, errors.Wrap(err, errMessage)
 }
