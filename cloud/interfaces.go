@@ -17,6 +17,7 @@ type Reconciler interface {
 
 type Client interface {
 	CloudClient() *proxmox.Service
+	K8sClient() *client.Client
 }
 
 type Cluster interface {

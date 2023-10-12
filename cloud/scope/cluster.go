@@ -100,6 +100,10 @@ func (s *ClusterScope) CloudClient() *proxmox.Service {
 	return s.ProxmoxServices.Compute
 }
 
+func (m *ClusterScope) K8sClient() *client.Client {
+	return &m.client
+}
+
 func (s *ClusterScope) Close() error {
 	return s.PatchObject()
 }

@@ -83,6 +83,10 @@ func (m *MachineScope) CloudClient() *proxmox.Service {
 	return m.ClusterGetter.CloudClient()
 }
 
+func (m *MachineScope) K8sClient() *client.Client {
+	return &m.client
+}
+
 func (m *MachineScope) GetStorage() infrav1.Storage {
 	return m.ClusterGetter.ProxmoxCluster.Spec.Storage
 }

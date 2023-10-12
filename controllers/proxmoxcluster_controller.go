@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"time"
 
 	"github.com/pkg/errors"
@@ -156,10 +157,34 @@ func (r *ProxmoxClusterReconciler) reconcileDelete(ctx context.Context, clusterS
 		}
 	}
 
+	if err := r.RemoveProxmoxSecretFinalizer(ctx, clusterScope); err != nil {
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, err
+	}
+
 	log.Info("Reconciled ProxmoxCluster")
 	controllerutil.RemoveFinalizer(clusterScope.ProxmoxCluster, infrav1.ClusterFinalizer)
 	record.Event(clusterScope.ProxmoxCluster, "ProxmoxClusterReconcile", "Reconciled")
 	return ctrl.Result{}, nil
+}
+
+func (r *ProxmoxClusterReconciler) RemoveProxmoxSecretFinalizer(ctx context.Context, clusterScope *scope.ClusterScope) error {
+	serverRef := clusterScope.ProxmoxCluster.Spec.ServerRef
+	secretRef := serverRef.SecretRef
+	if secretRef != nil {
+		var secret corev1.Secret
+		key := client.ObjectKey{Namespace: secretRef.Namespace, Name: secretRef.Name}
+		k8sClient := *clusterScope.K8sClient()
+		if err := k8sClient.Get(ctx, key, &secret); err != nil {
+			return err
+		}
+		updated := controllerutil.RemoveFinalizer(&secret, infrav1.ClusterSecretFinalizer)
+		if updated {
+			if err := k8sClient.Update(ctx, &secret); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

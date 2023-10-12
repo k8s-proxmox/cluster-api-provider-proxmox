@@ -23,7 +23,8 @@ import (
 
 const (
 	// ClusterFinalizer
-	ClusterFinalizer = "proxmoxcluster.infrastructure.cluster.x-k8s.io"
+	ClusterFinalizer       = "proxmoxcluster.infrastructure.cluster.x-k8s.io"
+	ClusterSecretFinalizer = ClusterFinalizer + "/secret"
 )
 
 // ProxmoxClusterSpec defines the desired state of ProxmoxCluster
