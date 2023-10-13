@@ -17,6 +17,7 @@ const (
 	bootDvice = "scsi0"
 )
 
+// reconciles QEMU instance
 func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 	log.Info("Reconciling QEMU")
@@ -67,16 +68,16 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 			return nil, err
 		}
 		vmid = &nextid
-		s.scope.SetVMID(*vmid)
-		if err := s.scope.PatchObject(); err != nil {
-			return nil, err
-		}
 	}
 
 	vmoption := s.generateVMOptions()
 	vm, err := s.client.CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("failed to create qemu instance %s", vm.VM.Name))
+		return nil, err
+	}
+	s.scope.SetVMID(*vmid)
+	if err := s.scope.PatchObject(); err != nil {
 		return nil, err
 	}
 	return vm, nil
