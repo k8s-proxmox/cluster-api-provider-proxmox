@@ -37,7 +37,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	if err := s.scope.SetProviderID(*uuid); err != nil {
 		return err
 	}
-	s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.VM.Status))
+
 	s.scope.SetNodeName(instance.Node)
 	s.scope.SetVMID(instance.VM.VMID)
 
@@ -46,6 +46,14 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		return err
 	}
 	s.scope.SetConfigStatus(*config)
+
+	if instance.VM.Status != api.ProcessStatusRunning {
+		err = s.ensureRunning(ctx, *instance)
+		s.scope.SetInstanceStatus(infrav1.InstanceStatusRunning)
+	} else {
+		s.scope.SetInstanceStatus(infrav1.InstanceStatus(instance.VM.Status))
+	}
+
 	return nil
 }
 
@@ -65,7 +73,7 @@ func (s *Service) Delete(ctx context.Context) error {
 
 	// must stop or pause instance before deletion
 	// otherwise deletion will be fail
-	if err := ensureStoppedOrPaused(ctx, *instance); err != nil {
+	if err := s.ensureStoppedOrPaused(ctx, *instance); err != nil {
 		return err
 	}
 
@@ -155,13 +163,13 @@ func (s *Service) createInstance(ctx context.Context) (*proxmox.VirtualMachine, 
 	}
 
 	// vm status
-	if err := ensureRunning(ctx, *instance); err != nil {
+	if err := s.ensureRunning(ctx, *instance); err != nil {
 		return nil, err
 	}
 	return instance, nil
 }
 
-func ensureRunning(ctx context.Context, instance proxmox.VirtualMachine) error {
+func (s *Service) ensureRunning(ctx context.Context, instance proxmox.VirtualMachine) error {
 	log := log.FromContext(ctx)
 	// ensure instance is running
 	switch instance.VM.Status {
@@ -172,18 +180,20 @@ func ensureRunning(ctx context.Context, instance proxmox.VirtualMachine) error {
 			log.Error(err, "failed to start instance process")
 			return err
 		}
+		instance.VM.Status = api.ProcessStatusRunning
 	case api.ProcessStatusPaused:
 		if err := instance.Resume(ctx, api.VirtualMachineResumeOption{}); err != nil {
 			log.Error(err, "failed to resume instance process")
 			return err
 		}
+		instance.VM.Status = api.ProcessStatusRunning
 	default:
 		return errors.Errorf("unexpected status : %s", instance.VM.Status)
 	}
 	return nil
 }
 
-func ensureStoppedOrPaused(ctx context.Context, instance proxmox.VirtualMachine) error {
+func (s *Service) ensureStoppedOrPaused(ctx context.Context, instance proxmox.VirtualMachine) error {
 	log := log.FromContext(ctx)
 	switch instance.VM.Status {
 	case api.ProcessStatusRunning:

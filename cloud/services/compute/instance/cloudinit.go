@@ -3,7 +3,6 @@ package instance
 import (
 	"context"
 	"fmt"
-
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -30,11 +29,11 @@ func (s *Service) reconcileCloudInit(ctx context.Context) error {
 
 // delete CloudConfig
 func (s *Service) deleteCloudConfig(ctx context.Context) error {
-	storageName := s.scope.GetStorage().Name
+	storageName := s.scope.GetClusterStorage().Name
 	path := userSnippetPath(s.scope.Name())
 	volumeID := fmt.Sprintf("%s:%s", storageName, path)
 
-	node, err := s.client.Node(ctx, s.scope.NodeName())
+	node, err := s.client.Node(ctx, *s.scope.NodeName())
 	if err != nil {
 		return err
 	}
@@ -52,6 +51,7 @@ func (s *Service) reconcileCloudInitUser(ctx context.Context) error {
 	log := log.FromContext(ctx)
 
 	// cloud init from bootstrap provider
+	// check bootstrapReady: true
 	bootstrap, err := s.scope.GetBootstrapData()
 	if err != nil {
 		log.Error(err, "Error getting bootstrap data for machine")
@@ -74,12 +74,12 @@ func (s *Service) reconcileCloudInitUser(ctx context.Context) error {
 	}
 
 	// to do: should be set via API
-	vnc, err := s.vncClient(s.scope.NodeName())
+	vnc, err := s.vncClient(*s.scope.NodeName())
 	if err != nil {
 		return err
 	}
 	defer vnc.Close()
-	filePath := fmt.Sprintf("%s/%s", s.scope.GetStorage().Path, userSnippetPath(vmName))
+	filePath := fmt.Sprintf("%s/%s", s.scope.GetClusterStorage().Path, userSnippetPath(vmName))
 	if err := vnc.WriteFile(context.TODO(), configYaml, filePath); err != nil {
 		return errors.Errorf("failed to write file error : %v", err)
 	}

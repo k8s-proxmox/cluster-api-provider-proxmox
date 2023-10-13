@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Teppei Sudo.
+Copyright 2023 Simplysoft GmbH.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,18 +21,53 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // ProxmoxMachineTemplateSpec defines the desired state of ProxmoxMachineTemplate
 type ProxmoxMachineTemplateSpec struct {
-	Template ProxmoxMachineTemplateResource `json:"template"`
+	Template ProxmoxMachineTemplateSpecTemplate `json:"template"`
+
+	// VM ID Range that will be used for individual machines
+	// +optional
+	VMIDs *ProxmoxMachineTemplateVmIdRange `json:"vmIDs,omitempty"`
+
+	// Restrict template to specific proxmox nodes. When failure domains are enabled, they will have
+	// priority the configured nodes in the template
+	// +optional
+	Nodes []string `json:"nodes,omitempty"`
 }
 
-type ProxmoxMachineTemplateResource struct {
+type ProxmoxMachineTemplateSpecTemplate struct {
 	// +optional
-	ObjectMeta clusterv1.ObjectMeta `json:"metadata.omitempty"`
-	Spec       ProxmoxMachineSpec   `json:"spec"`
+	ObjectMeta clusterv1.ObjectMeta                   `json:"metadata.omitempty"`
+	Spec       ProxmoxMachineTemplateSpecTemplateSpec `json:"spec"`
+}
+
+type ProxmoxMachineTemplateSpecTemplateSpec struct {
+	// Image is the image to be provisioned
+	Image Image `json:"image"`
+
+	// CloudInit defines options related to the bootstrapping systems where
+	// CloudInit is used.
+	// +optional
+	CloudInit CloudInit `json:"cloudInit,omitempty"`
+
+	// Hardware
+	Hardware Hardware `json:"hardware,omitempty"`
+
+	// Network
+	Network Network `json:"network,omitempty"`
+
+	// Options
+	// +optional
+	Options Options `json:"options,omitempty"`
+}
+
+type ProxmoxMachineTemplateVmIdRange struct {
+	// Start of VM ID range
+	Start int `json:"start"`
+
+	// End of VM ID range
+	// +optional
+	End int `json:"end,omitempty"`
 }
 
 // ProxmoxMachineTemplateStatus defines the observed state of ProxmoxMachineTemplate

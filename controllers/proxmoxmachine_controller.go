@@ -31,10 +31,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
+	services "github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/instance"
 )
 
@@ -48,6 +50,12 @@ type ProxmoxMachineReconciler struct {
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=proxmoxmachines/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=proxmoxmachines/finalizers,verbs=update
 //+kubebuilder:rbac:groups=cluster.x-k8s.io,resources=machines;machines/status,verbs=get;list;watch
+
+// +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddressclaims,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddressclaims/status,verbs=get;watch
+// +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddresses,verbs=get;list;watch
+// +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddresses/status,verbs=get
+
 // +kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:groups="",resources=secrets;,verbs=get;list;watch
 
@@ -152,11 +160,18 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 		instance.NewService(machineScope),
 	}
 
+	if machineScope.Machine.Spec.FailureDomain != nil {
+		machineScope.SetFailureDomain(*machineScope.Machine.Spec.FailureDomain)
+		if machineScope.GetProxmoxCluster().Spec.FailureDomainConfig != nil && machineScope.GetProxmoxCluster().Spec.FailureDomainConfig.NodeAsFailureDomain && machineScope.NodeName() == nil {
+			machineScope.SetNodeName(*machineScope.Machine.Spec.FailureDomain)
+		}
+	}
+
 	for _, r := range reconcilers {
 		if err := r.Reconcile(ctx); err != nil {
 			log.Error(err, "Reconcile error")
 			record.Warnf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "Reconcile error - %v", err)
-			return ctrl.Result{RequeueAfter: 5 * time.Second}, err
+			return checkReconcileError(err, "Failed to reconcile machine")
 		}
 	}
 
@@ -171,10 +186,12 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 	case infrav1.InstanceStatusStopped:
 		log.Info("ProxmoxMachine instance is stopped", "instance-id", *machineScope.GetBiosUUID())
 		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is stopped - bios-uuid: %s", *machineScope.GetBiosUUID())
+		machineScope.SetNotReady()
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	case infrav1.InstanceStatusPaused:
 		log.Info("ProxmoxMachine instance is paused", "instance-id", *machineScope.GetBiosUUID())
 		record.Eventf(machineScope.ProxmoxMachine, "ProxmoxMachineReconcile", "ProxmoxMachine instance is paused - bios-uuid: %s", *machineScope.GetBiosUUID())
+		machineScope.SetNotReady()
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	default:
 		machineScope.SetFailureReason(capierrors.UpdateMachineError)
@@ -210,4 +227,20 @@ func (r *ProxmoxMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrav1.ProxmoxMachine{}).
 		Complete(r)
+}
+
+func checkReconcileError(err error, errMessage string) (ctrl.Result, error) {
+	if err == nil {
+		return ctrl.Result{}, nil
+	}
+	var reconcileError services.ReconcileError
+	if errors.As(err, &reconcileError) {
+		if reconcileError.IsTransient() {
+			return reconcile.Result{Requeue: true, RequeueAfter: reconcileError.GetRequeueAfter()}, nil
+		}
+		if reconcileError.IsTerminal() {
+			return reconcile.Result{}, nil
+		}
+	}
+	return ctrl.Result{}, errors.Wrap(err, errMessage)
 }

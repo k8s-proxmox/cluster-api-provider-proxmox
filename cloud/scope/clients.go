@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 )
@@ -53,6 +54,10 @@ func newComputeService(ctx context.Context, cluster *infrav1.ProxmoxCluster, crC
 		Name:       cluster.Name,
 		UID:        cluster.UID,
 	}))
+
+	// Add finalizer to ensure secret remains present until we have cleaned up everything ourselves
+	controllerutil.AddFinalizer(&secret, infrav1.ClusterSecretFinalizer)
+
 	if err := crClient.Update(ctx, &secret); err != nil {
 		return nil, fmt.Errorf("failed to set ownerReference to secret: %w", err)
 	}

@@ -25,7 +25,8 @@ import (
 
 const (
 	// MachineFinalizer
-	MachineFinalizer = "proxmoxmachine.infrastructure.cluster.x-k8s.io"
+	MachineFinalizer               = "proxmoxmachine.infrastructure.cluster.x-k8s.io"
+	MachineFinalizerIPAddressClaim = "proxmoxmachine.infrastructure.cluster.x-k8s.io/IPAddressClaim"
 )
 
 // ProxmoxMachineSpec defines the desired state of ProxmoxMachine
@@ -35,12 +36,16 @@ type ProxmoxMachineSpec struct {
 
 	// Node is proxmox node hosting vm instance which used for ProxmoxMachine
 	// +optional
-	Node string `json:"node,omitempty"`
+	Node *string `json:"node,omitempty"`
 
 	// +kubebuilder:validation:Minimum:=0
 	// VMID is proxmox qemu's id
 	// +optional
 	VMID *int `json:"vmID,omitempty"`
+
+	// Pool the vm is attached to
+	// +optional
+	Pool *string `json:"pool,omitempty"`
 
 	// Image is the image to be provisioned
 	Image Image `json:"image"`
@@ -94,7 +99,8 @@ type ProxmoxMachineStatus struct {
 //+kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this VSphereMachine belongs"
 // +kubebuilder:printcolumn:name="Machine",type="string",JSONPath=".metadata.ownerReferences[?(@.kind==\"Machine\")].name",description="Machine object which owns with this ProxmoxMachine",priority=1
-// +kubebuilder:printcolumn:name="vmid",type=string,JSONPath=`.spec.vmID`,priority=1
+// +kubebuilder:printcolumn:name="VmID",type=string,JSONPath=`.spec.vmID`,priority=1
+// +kubebuilder:printcolumn:name="Node",type=string,JSONPath=`.spec.node`,priority=2
 // +kubebuilder:printcolumn:name="ProviderID",type=string,JSONPath=`.spec.providerID`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.instanceStatus`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="Time duration since creation of Machine"

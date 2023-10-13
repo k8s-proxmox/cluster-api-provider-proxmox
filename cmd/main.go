@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"os"
+	caipamv1 "sigs.k8s.io/cluster-api/exp/ipam/api/v1alpha1"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -48,6 +49,7 @@ func init() {
 	utilruntime.Must(infrastructurev1beta1.AddToScheme(scheme))
 	utilruntime.Must(infrastructurev1beta1.AddToScheme(scheme))
 	_ = clusterv1.AddToScheme(scheme)
+	_ = caipamv1.AddToScheme(scheme)
 	//+kubebuilder:scaffold:scheme
 }
 

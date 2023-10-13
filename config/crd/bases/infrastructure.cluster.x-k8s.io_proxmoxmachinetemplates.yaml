@@ -36,6 +36,13 @@ spec:
           spec:
             description: ProxmoxMachineTemplateSpec defines the desired state of ProxmoxMachineTemplate
             properties:
+              nodes:
+                description: Restrict template to specific proxmox nodes. When failure
+                  domains are enabled, they will have priority the configured nodes
+                  in the template
+                items:
+                  type: string
+                type: array
               template:
                 properties:
                   metadata.omitempty:
@@ -81,7 +88,6 @@ spec:
                         type: object
                     type: object
                   spec:
-                    description: ProxmoxMachineSpec defines the desired state of ProxmoxMachine
                     properties:
                       cloudInit:
                         description: CloudInit defines options related to the bootstrapping
@@ -230,11 +236,6 @@ spec:
                                 type: array
                             type: object
                         type: object
-                      failureDomain:
-                        description: FailureDomain is the failure domain unique identifier
-                          this Machine should be attached to, as defined in Cluster
-                          API.
-                        type: string
                       hardware:
                         description: Hardware
                         properties:
@@ -257,7 +258,7 @@ spec:
                             type: integer
                           disk:
                             default: 50G
-                            description: hard disk size
+                            description: boot disk size
                             pattern: \+?\d+(\.\d+)?[KMGT]?
                             type: string
                           memory:
@@ -269,6 +270,10 @@ spec:
                             description: The number of CPU sockets. Defaults to 1.
                             minimum: 1
                             type: integer
+                          storage:
+                            description: Storage name for the boot disk. If none is
+                              provided, the ProxmoxCluster storage name will be used
+                            type: string
                         type: object
                       image:
                         description: Image is the image to be provisioned
@@ -298,9 +303,60 @@ spec:
                       network:
                         description: Network
                         properties:
+                          bridge:
+                            default: vmbr0
+                            type: string
                           ipConfig:
                             description: 'to do : should accept multiple IPConfig'
                             properties:
+                              IPv4FromPoolRef:
+                                description: IPv4FromPoolRef is a reference to an
+                                  IP pool to allocate an address from.
+                                properties:
+                                  apiGroup:
+                                    description: APIGroup is the group for the resource
+                                      being referenced. If APIGroup is not specified,
+                                      the specified Kind must be in the core API group.
+                                      For any other third-party types, APIGroup is
+                                      required.
+                                    type: string
+                                  kind:
+                                    description: Kind is the type of resource being
+                                      referenced
+                                    type: string
+                                  name:
+                                    description: Name is the name of resource being
+                                      referenced
+                                    type: string
+                                required:
+                                - kind
+                                - name
+                                type: object
+                                x-kubernetes-map-type: atomic
+                              IPv6FromPoolRef:
+                                description: IPv6FromPoolRef is a reference to an
+                                  IP pool to allocate an address from.
+                                properties:
+                                  apiGroup:
+                                    description: APIGroup is the group for the resource
+                                      being referenced. If APIGroup is not specified,
+                                      the specified Kind must be in the core API group.
+                                      For any other third-party types, APIGroup is
+                                      required.
+                                    type: string
+                                  kind:
+                                    description: Kind is the type of resource being
+                                      referenced
+                                    type: string
+                                  name:
+                                    description: Name is the name of resource being
+                                      referenced
+                                    type: string
+                                required:
+                                - kind
+                                - name
+                                type: object
+                                x-kubernetes-map-type: atomic
                               gateway:
                                 description: gateway IPv4
                                 type: string
@@ -314,17 +370,18 @@ spec:
                                 description: IPv6 with CIDR
                                 type: string
                             type: object
+                          model:
+                            default: virtio
+                            type: string
                           nameServer:
                             description: DNS server
                             type: string
                           searchDomain:
                             description: search domain
                             type: string
+                          vlanTag:
+                            type: integer
                         type: object
-                      node:
-                        description: Node is proxmox node hosting vm instance which
-                          used for ProxmoxMachine
-                        type: string
                       options:
                         description: Options
                         properties:
@@ -471,18 +528,23 @@ spec:
                             pattern: (?:[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}|[01])
                             type: string
                         type: object
-                      providerID:
-                        description: ProviderID
-                        type: string
-                      vmID:
-                        description: VMID is proxmox qemu's id
-                        minimum: 0
-                        type: integer
                     required:
                     - image
                     type: object
                 required:
                 - spec
+                type: object
+              vmIDs:
+                description: VM ID Range that will be used for individual machines
+                properties:
+                  end:
+                    description: End of VM ID range
+                    type: integer
+                  start:
+                    description: Start of VM ID range
+                    type: integer
+                required:
+                - start
                 type: object
             required:
             - template

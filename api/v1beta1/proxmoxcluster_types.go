@@ -23,7 +23,8 @@ import (
 
 const (
 	// ClusterFinalizer
-	ClusterFinalizer = "proxmoxcluster.infrastructure.cluster.x-k8s.io"
+	ClusterFinalizer       = "proxmoxcluster.infrastructure.cluster.x-k8s.io"
+	ClusterSecretFinalizer = ClusterFinalizer + "/secret"
 )
 
 // ProxmoxClusterSpec defines the desired state of ProxmoxCluster
@@ -38,6 +39,18 @@ type ProxmoxClusterSpec struct {
 	// storage is for proxmox storage used by vm instances
 	// +optional
 	Storage Storage `json:"storage"`
+
+	// Nodes to be used for vm instances
+	// +optional
+	Nodes []string `json:"nodes,omitempty"`
+
+	// Provide config to enable failure domains
+	// +optional
+	FailureDomainConfig *ClusterFailureDomainConfig `json:"failureDomain,omitempty"`
+
+	// Proxmox resource pool to be used for all vms created
+	// +optional
+	ResourcePool string `json:"resourcePool,omitempty"`
 }
 
 // ProxmoxClusterStatus defines the observed state of ProxmoxCluster

@@ -3,12 +3,14 @@ package fake
 import (
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 )
 
 type FakeClusterScope struct {
 	cloudClient          *proxmox.Service
+	k8sClient            *client.Client
 	name                 string
 	namespace            string
 	controlPlaneEndpoint clusterv1.APIEndpoint
@@ -34,6 +36,9 @@ func (f *FakeClusterScope) Name() string {
 func (f *FakeClusterScope) Namespace() string {
 	return f.namespace
 }
+func (f *FakeClusterScope) FailureDomains() clusterv1.FailureDomains {
+	return clusterv1.FailureDomains{}
+}
 
 func (f *FakeClusterScope) ControlPlaneEndpoint() clusterv1.APIEndpoint {
 	return f.controlPlaneEndpoint
@@ -45,6 +50,10 @@ func (f *FakeClusterScope) Storage() infrav1.Storage {
 
 func (f *FakeClusterScope) CloudClient() *proxmox.Service {
 	return f.cloudClient
+}
+
+func (f *FakeClusterScope) K8sClient() *client.Client {
+	return f.k8sClient
 }
 
 func (f *FakeClusterScope) SetControlPlaneEndpoint(endpoint clusterv1.APIEndpoint) {
