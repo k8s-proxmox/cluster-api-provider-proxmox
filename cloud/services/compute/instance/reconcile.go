@@ -133,6 +133,7 @@ func getBiosUUIDFromVM(ctx context.Context, vm *proxmox.VirtualMachine) (*string
 	return pointer.String(uuid), nil
 }
 
+// reconciles qemu, cloud-config, os image and storage
 func (s *Service) createInstance(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
