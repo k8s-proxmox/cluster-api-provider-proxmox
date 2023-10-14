@@ -25,6 +25,7 @@ clusterctl init --infrastructure=proxmox:v0.3.1 --config https://raw.githubuserc
 ```sh
 # export env variables
 export CONTROLPLANE_HOST=X.X.X.X                   # control-plane vip
+export PROXMOX_IMAGE_STORAGE="local-lvm"           # storage used VM boot disk
 export PROXMOX_URL=https://X.X.X.X:8006/api2/json
 export PROXMOX_PASSWORD=password
 export PROXMOX_USER=user@pam
@@ -96,7 +97,7 @@ This project aims to follow the Cluster API [Provider contract](https://cluster-
 
 ### ProxmoxCluster
 
-Because Proxmox-VE does not provide LBaaS solution, CAPPX does not follow the [typical infra-cluster logic](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html#behavior). ProxmoxCluster controller reconciles only Proxmox storages used for instances. You need to prepare control plane load balancer by yourself if you creates HA control plane workload cluster. In the [cluster-template.yaml](./templates/cluster-template.yaml), you can find HA control plane example with [kube-vip](https://github.com/kube-vip/kube-vip).
+Because Proxmox-VE does not provide LBaaS solution, CAPPX does not follow the [typical infra-cluster logic](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html#behavior). You need to prepare control plane load balancer by yourself if you creates HA control plane workload cluster. In the [cluster-template.yaml](./templates/cluster-template.yaml), you can find HA control plane example with [kube-vip](https://github.com/kube-vip/kube-vip).
 
 ### ProxmoxMachine
 
@@ -122,6 +123,7 @@ make test
 #### E2E Testing
 ```
 export CONTROLPLANE_HOST=X.X.X.X
+export PROXMOX_IMAGE_STORAGE="local-lvm"
 export PROXMOX_URL=https://X.X.X.X:8006/api2/json
 export PROXMOX_PASSWORD=password
 export PROXMOX_USER=user@pam
