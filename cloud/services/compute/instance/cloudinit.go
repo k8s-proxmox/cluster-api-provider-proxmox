@@ -30,7 +30,7 @@ func (s *Service) reconcileCloudInit(ctx context.Context) error {
 
 // delete CloudConfig
 func (s *Service) deleteCloudConfig(ctx context.Context) error {
-	storageName := s.scope.GetStorage().Name
+	storageName := s.scope.GetStorage().SnippetStorage.Name
 	path := userSnippetPath(s.scope.Name())
 	volumeID := fmt.Sprintf("%s:%s", storageName, path)
 
@@ -79,7 +79,7 @@ func (s *Service) reconcileCloudInitUser(ctx context.Context) error {
 		return err
 	}
 	defer vnc.Close()
-	filePath := fmt.Sprintf("%s/%s", s.scope.GetStorage().Path, userSnippetPath(vmName))
+	filePath := fmt.Sprintf("%s/%s", s.scope.GetStorage().SnippetStorage.Path, userSnippetPath(vmName))
 	if err := vnc.WriteFile(context.TODO(), configYaml, filePath); err != nil {
 		return errors.Errorf("failed to write file error : %v", err)
 	}

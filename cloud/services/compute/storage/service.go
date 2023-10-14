@@ -7,7 +7,7 @@ import (
 )
 
 type Scope interface {
-	cloud.Cluster
+	cloud.Machine
 }
 
 type Service struct {

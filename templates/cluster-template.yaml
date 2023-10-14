@@ -35,9 +35,6 @@ spec:
     endpoint: "${PROXMOX_URL}"
     secretRef:
       name: "${CLUSTER_NAME}"
-  storage:
-    name: "${CLUSTER_NAME}"
-    path: ""
 
 ---
 
@@ -154,6 +151,12 @@ spec:
         url: https://cloud-images.ubuntu.com/releases/jammy/release-20230914/ubuntu-22.04-server-cloudimg-amd64-disk-kvm.img
         checksum: c5eed826009c9f671bc5f7c9d5d63861aa2afe91aeff1c0d3a4cb5b28b2e35d6
         checksumType: sha256
+      storage:
+        snippetStorage:
+          name: ${PROXMOX_SNIPPET_STORAGE}
+          path: ""
+        imageStorage:
+          name: ${PROXMOX_IMAGE_STORAGE}
       hardware:
         cpu: 4
         memory: 8192
@@ -262,6 +265,12 @@ spec:
         url: https://cloud-images.ubuntu.com/releases/jammy/release-20230914/ubuntu-22.04-server-cloudimg-amd64-disk-kvm.img
         checksum: c5eed826009c9f671bc5f7c9d5d63861aa2afe91aeff1c0d3a4cb5b28b2e35d6
         checksumType: sha256
+      storage:
+        snippetStorage:
+          name: ${PROXMOX_SNIPPET_STORAGE}
+          path: ""
+        imageStorage:
+          name: ${PROXMOX_IMAGE_STORAGE}
       cloudInit:
         user:
           packages:

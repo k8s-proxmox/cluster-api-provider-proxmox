@@ -92,10 +92,6 @@ func (s *ClusterScope) ControlPlaneEndpoint() clusterv1.APIEndpoint {
 	return s.ProxmoxCluster.Spec.ControlPlaneEndpoint
 }
 
-func (s *ClusterScope) Storage() infrav1.Storage {
-	return s.ProxmoxCluster.Spec.Storage
-}
-
 func (s *ClusterScope) CloudClient() *proxmox.Service {
 	return s.ProxmoxServices.Compute
 }
@@ -110,10 +106,6 @@ func (s *ClusterScope) SetReady() {
 
 func (s *ClusterScope) SetControlPlaneEndpoint(endpoint clusterv1.APIEndpoint) {
 	s.ProxmoxCluster.Spec.ControlPlaneEndpoint = endpoint
-}
-
-func (s *ClusterScope) SetStorage(storage infrav1.Storage) {
-	s.ProxmoxCluster.Spec.Storage = storage
 }
 
 // PatchObject persists the cluster configuration and status.

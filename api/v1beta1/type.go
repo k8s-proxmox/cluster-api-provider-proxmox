@@ -7,6 +7,14 @@ import (
 	"github.com/sp-yduck/proxmox-go/api"
 )
 
+type InstanceStatus string
+
+var (
+	InstanceStatusPaused  = InstanceStatus(api.ProcessStatusPaused)
+	InstanceStatusRunning = InstanceStatus(api.ProcessStatusRunning)
+	InstanceStatusStopped = InstanceStatus(api.ProcessStatusStopped)
+)
+
 // ServerRef is used for configuring Proxmox client
 type ServerRef struct {
 	// endpoint is the address of the Proxmox-VE REST API endpoint.
@@ -46,6 +54,35 @@ type Image struct {
 	// +kubebuilder:validation:Enum:=sha256;sha256sum;md5;md5sum
 	// ChecksumType
 	ChecksumType *string `json:"checksumType,omitempty"`
+}
+
+// Storage
+type Storage struct {
+	// SnippetStorage is used for storing cloud-init snippets
+	SnippetStorage SnippetStorage `json:"snippetStorage,omitempty"`
+
+	// ImageStorage is used for storing VM images (boot disk)
+	ImageStorage ImageStorage `json:"imageStorage"`
+}
+
+// Dir type of storage used for cloud-init snippets
+type SnippetStorage struct {
+	// storage name
+	Name string `json:"name,omitempty"`
+
+	// path of the dir type storage
+	Path string `json:"path,omitempty"`
+
+	// set to true if you want to preserve proxmox storage when deleting a VM
+	// default to true
+	SkipDeletion *bool `json:"skipDeletion,omitempty"`
+}
+
+// ImageStorage is used for storing VM images (boot disk).
+// storage must support 'images' type of content
+type ImageStorage struct {
+	// storage name
+	Name string `json:"name"`
 }
 
 // Hardware
@@ -142,17 +179,3 @@ func (c *IPConfig) String() string {
 
 	return ipconfig
 }
-
-// Storage for image and snippets
-type Storage struct {
-	Name string `json:"name,omitempty"`
-	Path string `json:"path,omitempty"`
-}
-
-type InstanceStatus string
-
-var (
-	InstanceStatusPaused  = InstanceStatus(api.ProcessStatusPaused)
-	InstanceStatusRunning = InstanceStatus(api.ProcessStatusRunning)
-	InstanceStatusStopped = InstanceStatus(api.ProcessStatusStopped)
-)

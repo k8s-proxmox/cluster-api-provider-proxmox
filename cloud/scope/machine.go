@@ -83,8 +83,8 @@ func (m *MachineScope) CloudClient() *proxmox.Service {
 	return m.ClusterGetter.CloudClient()
 }
 
-func (m *MachineScope) GetStorage() infrav1.Storage {
-	return m.ClusterGetter.ProxmoxCluster.Spec.Storage
+func (m *MachineScope) ClusterName() string {
+	return m.ClusterGetter.Name()
 }
 
 func (m *MachineScope) Name() string {
@@ -135,8 +135,8 @@ func (m *MachineScope) GetInstanceStatus() *infrav1.InstanceStatus {
 }
 
 // SetInstanceStatus sets the ProxmoxMachine instance status.
-func (m *MachineScope) SetInstanceStatus(v infrav1.InstanceStatus) {
-	m.ProxmoxMachine.Status.InstanceStatus = &v
+func (m *MachineScope) SetInstanceStatus(status infrav1.InstanceStatus) {
+	m.ProxmoxMachine.Status.InstanceStatus = &status
 }
 
 func (m *MachineScope) GetBiosUUID() *string {
@@ -160,6 +160,13 @@ func (m *MachineScope) GetVMID() *int {
 
 func (m *MachineScope) GetImage() infrav1.Image {
 	return m.ProxmoxMachine.Spec.Image
+}
+
+func (m *MachineScope) GetStorage() infrav1.Storage {
+	if m.ProxmoxMachine.Spec.Storage.SnippetStorage.SkipDeletion == nil {
+		m.ProxmoxMachine.Spec.Storage.SnippetStorage.SkipDeletion = pointer.Bool(true)
+	}
+	return m.ProxmoxMachine.Spec.Storage
 }
 
 func (m *MachineScope) GetCloudInit() infrav1.CloudInit {
@@ -200,6 +207,14 @@ func (m *MachineScope) SetProviderID(uuid string) error {
 
 func (m *MachineScope) SetVMID(vmid int) {
 	m.ProxmoxMachine.Spec.VMID = &vmid
+}
+
+func (m *MachineScope) SetSnippetStorage(storage infrav1.SnippetStorage) {
+	m.ProxmoxMachine.Spec.Storage.SnippetStorage = storage
+}
+
+func (m *MachineScope) SetImageStorage(storage infrav1.ImageStorage) {
+	m.ProxmoxMachine.Spec.Storage.ImageStorage = storage
 }
 
 func (m *MachineScope) SetConfigStatus(config api.VirtualMachineConfig) {

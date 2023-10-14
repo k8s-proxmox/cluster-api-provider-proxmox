@@ -45,6 +45,9 @@ type ProxmoxMachineSpec struct {
 	// Image is the image to be provisioned
 	Image Image `json:"image"`
 
+	// Storages used for cloud-init snippet and boot disk
+	Storage Storage `json:"storage,omitempty"`
+
 	// CloudInit defines options related to the bootstrapping systems where
 	// CloudInit is used.
 	// +optional

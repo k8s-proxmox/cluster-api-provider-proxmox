@@ -34,17 +34,16 @@ type ClusterGetter interface {
 	// AdditionalLabels() infrav1.Labels
 	// FailureDomains() clusterv1.FailureDomains
 	ControlPlaneEndpoint() clusterv1.APIEndpoint
-	Storage() infrav1.Storage
 }
 
 type ClusterSettter interface {
 	SetControlPlaneEndpoint(endpoint clusterv1.APIEndpoint)
-	SetStorage(storage infrav1.Storage)
 }
 
 // MachineGetter is an interface which can get machine information.
 type MachineGetter interface {
 	Client
+	ClusterName() string
 	Name() string
 	Namespace() string
 	// Zone() string
@@ -68,9 +67,11 @@ type MachineGetter interface {
 // MachineSetter is an interface which can set machine information.
 type MachineSetter interface {
 	SetProviderID(uuid string) error
-	SetInstanceStatus(v infrav1.InstanceStatus)
+	SetInstanceStatus(status infrav1.InstanceStatus)
 	SetNodeName(name string)
 	SetVMID(vmid int)
+	SetSnippetStorage(storage infrav1.SnippetStorage)
+	SetImageStorage(storage infrav1.ImageStorage)
 	SetConfigStatus(config api.VirtualMachineConfig)
 	// SetFailureMessage(v error)
 	// SetFailureReason(v capierrors.MachineStatusError)

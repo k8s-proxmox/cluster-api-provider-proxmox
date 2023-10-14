@@ -37,7 +37,7 @@ type ProxmoxClusterSpec struct {
 
 	// storage is for proxmox storage used by vm instances
 	// +optional
-	Storage Storage `json:"storage"`
+	// Storage Storage `json:"storage"`
 }
 
 // ProxmoxClusterStatus defines the observed state of ProxmoxCluster

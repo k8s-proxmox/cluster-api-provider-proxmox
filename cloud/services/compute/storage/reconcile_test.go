@@ -3,6 +3,7 @@ package storage_test
 import (
 	"context"
 	"fmt"
+	"os"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -16,7 +17,15 @@ var _ = Describe("Delete", Label("integration", "storage"), func() {
 	var service *storage.Service
 
 	BeforeEach(func() {
-		scope := fake.NewClusterScope(proxmoxSvc)
+		scope := fake.NewMachineScope(proxmoxSvc)
+		node, err := getRandomNode(scope)
+		Expect(err).ToNot(HaveOccurred())
+		scope.SetNodeName(node)
+		name := "cappx-integration-test"
+		scope.SetSnippetStorage(infrav1.SnippetStorage{
+			Name: "dir-" + name,
+			Path: fmt.Sprintf("/tmp/cappx-test/%s", name),
+		})
 		service = storage.NewService(scope)
 	})
 	AfterEach(func() {})
@@ -33,11 +42,17 @@ var _ = Describe("Reconcile", Label("integration", "storage"), func() {
 	var service *storage.Service
 
 	BeforeEach(func() {
-		scope := fake.NewClusterScope(proxmoxSvc)
+		scope := fake.NewMachineScope(proxmoxSvc)
+		node, err := getRandomNode(scope)
+		Expect(err).ToNot(HaveOccurred())
+		scope.SetNodeName(node)
 		name := "cappx-integration-test"
-		scope.SetStorage(infrav1.Storage{
-			Name: name,
+		scope.SetSnippetStorage(infrav1.SnippetStorage{
+			Name: "dir-" + name,
 			Path: fmt.Sprintf("/tmp/cappx-test/%s", name),
+		})
+		scope.SetImageStorage(infrav1.ImageStorage{
+			Name: os.Getenv("PROXMOX_IMAGE_STORAGE"),
 		})
 		service = storage.NewService(scope)
 	})
@@ -59,22 +74,22 @@ var _ = Describe("Reconcile", Label("integration", "storage"), func() {
 	})
 })
 
-var _ = Describe("generateVMStorageOptions", Label("unit", "storage"), func() {
-	var scope *fake.FakeClusterScope
+var _ = Describe("generateSnippetStorageOptions", Label("unit", "storage"), func() {
+	var scope *fake.FakeMachineScope
 
 	BeforeEach(func() {
-		scope = fake.NewClusterScope(nil)
+		scope = fake.NewMachineScope(nil)
 	})
 	AfterEach(func() {})
 
 	Context("both name and path are specified", func() {
 		It("option should inherit specified name and path", func() {
-			testStorage := infrav1.Storage{
+			testStorage := infrav1.SnippetStorage{
 				Name: "foo",
 				Path: "/bar/buz",
 			}
-			scope.SetStorage(testStorage)
-			option := storage.GenerateVMStorageOptions(scope)
+			scope.SetSnippetStorage(testStorage)
+			option := storage.GenerateSnippetStorageOptions(scope)
 			Expect(option.Storage).To(Equal("foo"))
 			Expect(option.Path).To(Equal("/bar/buz"))
 		})
@@ -83,10 +98,19 @@ var _ = Describe("generateVMStorageOptions", Label("unit", "storage"), func() {
 	Context("both name and path are NOT specified", func() {
 		It("option should have default name and path", func() {
 			scope.SetName("foo-cluster")
-			scope.SetStorage(infrav1.Storage{})
-			option := storage.GenerateVMStorageOptions(scope)
+			scope.SetSnippetStorage(infrav1.SnippetStorage{})
+			option := storage.GenerateSnippetStorageOptions(scope)
 			Expect(option.Storage).To(Equal("local-dir-foo-cluster"))
 			Expect(option.Path).To(Equal("/var/lib/vz/local-dir-foo-cluster"))
 		})
 	})
 })
+
+func getRandomNode(scope storage.Scope) (string, error) {
+	client := scope.CloudClient()
+	nodes, err := client.Nodes(context.Background())
+	if err != nil {
+		return "", err
+	}
+	return nodes[0].Node, nil
+}

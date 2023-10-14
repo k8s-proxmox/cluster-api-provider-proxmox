@@ -91,14 +91,6 @@ spec:
                 - endpoint
                 - secretRef
                 type: object
-              storage:
-                description: storage is for proxmox storage used by vm instances
-                properties:
-                  name:
-                    type: string
-                  path:
-                    type: string
-                type: object
             required:
             - serverRef
             type: object

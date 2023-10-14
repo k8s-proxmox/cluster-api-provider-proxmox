@@ -442,6 +442,36 @@ spec:
               providerID:
                 description: ProviderID
                 type: string
+              storage:
+                description: Storages used for cloud-init snippet and boot disk
+                properties:
+                  imageStorage:
+                    description: ImageStorage is used for storing ISO images (boot
+                      disk)
+                    properties:
+                      name:
+                        description: storage name
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  snippetStorage:
+                    description: SnippetStorage is used for storing cloud-init snippets
+                    properties:
+                      name:
+                        description: storage name
+                        type: string
+                      path:
+                        description: path of the dir type storage
+                        type: string
+                      skipDeletion:
+                        description: set to true if you want to preserve proxmox storage
+                          when deleting a VM default to true
+                        type: boolean
+                    type: object
+                required:
+                - imageStorage
+                type: object
               vmID:
                 description: VMID is proxmox qemu's id
                 minimum: 0

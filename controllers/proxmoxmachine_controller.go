@@ -36,6 +36,7 @@ import (
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/instance"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/storage"
 )
 
 // ProxmoxMachineReconciler reconciles a ProxmoxMachine object
@@ -149,6 +150,8 @@ func (r *ProxmoxMachineReconciler) reconcile(ctx context.Context, machineScope *
 	}
 
 	reconcilers := []cloud.Reconciler{
+		// storage must be ready before instance creation
+		storage.NewService(machineScope),
 		instance.NewService(machineScope),
 	}
 
@@ -188,7 +191,9 @@ func (r *ProxmoxMachineReconciler) reconcileDelete(ctx context.Context, machineS
 	log.Info("Reconciling Delete ProxmoxMachine")
 
 	reconcilers := []cloud.Reconciler{
+		// instance must be removed before storage deletion
 		instance.NewService(machineScope),
+		storage.NewService(machineScope),
 	}
 
 	for _, r := range reconcilers {
