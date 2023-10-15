@@ -3,10 +3,7 @@ package instance
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	"github.com/sp-yduck/proxmox-go/rest"
@@ -50,19 +47,17 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 
 	// get node
 	if nodeName == "" {
-		// temp solution
-		node, err := s.getRandomNode(ctx)
+		node, err := s.scheduler.GetNode(ctx)
 		if err != nil {
-			log.Error(err, "failed to get random node")
+			log.Error(err, "failed to get proxmox node")
 			return nil, err
 		}
-		nodeName = node.Node
-		s.scope.SetNodeName(nodeName)
+		s.scope.SetNodeName(node.Node)
 	}
 
 	// if vmid is empty, generate new vmid
 	if vmid == nil {
-		nextid, err := s.getNextID(ctx)
+		nextid, err := s.scheduler.GetID(ctx)
 		if err != nil {
 			log.Error(err, "failed to get available vmid")
 			return nil, err
@@ -73,7 +68,7 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 	vmoption := s.generateVMOptions()
 	vm, err := s.client.CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
 	if err != nil {
-		log.Error(err, fmt.Sprintf("failed to create qemu instance %s", vm.VM.Name))
+		log.Error(err, "failed to create qemu instance")
 		return nil, err
 	}
 	s.scope.SetVMID(*vmid)
@@ -81,28 +76,6 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 		return nil, err
 	}
 	return vm, nil
-}
-
-func (s *Service) getNextID(ctx context.Context) (int, error) {
-	return s.client.RESTClient().GetNextID(ctx)
-}
-
-func (s *Service) getNodes(ctx context.Context) ([]*api.Node, error) {
-	return s.client.Nodes(ctx)
-}
-
-// GetRandomNode returns a node chosen randomly
-func (s *Service) getRandomNode(ctx context.Context) (*api.Node, error) {
-	nodes, err := s.getNodes(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if len(nodes) <= 0 {
-		return nil, errors.Errorf("no nodes found")
-	}
-	src := rand.NewSource(time.Now().Unix())
-	r := rand.New(src)
-	return nodes[r.Intn(len(nodes))], nil
 }
 
 func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {

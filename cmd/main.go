@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	infrastructurev1beta1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
 	controller "github.com/sp-yduck/cluster-api-provider-proxmox/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -93,8 +94,9 @@ func main() {
 	}
 
 	if err = (&controller.ProxmoxMachineReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Scheduler: scheduler.New(mgr.GetClient()),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ProxmoxMachine")
 		os.Exit(1)

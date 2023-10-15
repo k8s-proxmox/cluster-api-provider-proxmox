@@ -33,6 +33,7 @@ import (
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/providerid"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
 )
 
 type MachineScopeParams struct {
@@ -41,6 +42,7 @@ type MachineScopeParams struct {
 	Machine        *clusterv1.Machine
 	ProxmoxMachine *infrav1.ProxmoxMachine
 	ClusterGetter  *ClusterScope
+	Scheduler      *scheduler.Scheduler
 }
 
 func NewMachineScope(params MachineScopeParams) (*MachineScope, error) {
@@ -56,6 +58,9 @@ func NewMachineScope(params MachineScopeParams) (*MachineScope, error) {
 	if params.ClusterGetter == nil {
 		return nil, errors.New("failed to generate new scope form nil ClusterScope")
 	}
+	if params.Scheduler == nil {
+		return nil, errors.New("failed to generate new scope form nil Scheduler")
+	}
 
 	helper, err := patch.NewHelper(params.ProxmoxMachine, params.Client)
 	if err != nil {
@@ -68,6 +73,7 @@ func NewMachineScope(params MachineScopeParams) (*MachineScope, error) {
 		ProxmoxMachine: params.ProxmoxMachine,
 		patchHelper:    helper,
 		ClusterGetter:  params.ClusterGetter,
+		Scheduler:      params.Scheduler,
 	}, err
 }
 
@@ -77,10 +83,15 @@ type MachineScope struct {
 	Machine        *clusterv1.Machine
 	ProxmoxMachine *infrav1.ProxmoxMachine
 	ClusterGetter  *ClusterScope
+	Scheduler      *scheduler.Scheduler
 }
 
 func (m *MachineScope) CloudClient() *proxmox.Service {
 	return m.ClusterGetter.CloudClient()
+}
+
+func (m *MachineScope) GetScheduler() *scheduler.Scheduler {
+	return m.Scheduler
 }
 
 func (m *MachineScope) GetStorage() infrav1.Storage {

@@ -34,6 +34,7 @@ import (
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/instance"
 )
@@ -41,7 +42,8 @@ import (
 // ProxmoxMachineReconciler reconciles a ProxmoxMachine object
 type ProxmoxMachineReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme    *runtime.Scheme
+	Scheduler *scheduler.Scheduler
 }
 
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=proxmoxmachines,verbs=get;list;watch;create;update;patch;delete
@@ -115,6 +117,7 @@ func (r *ProxmoxMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		Machine:        machine,
 		ProxmoxMachine: proxmoxMachine,
 		ClusterGetter:  clusterScope,
+		Scheduler:      r.Scheduler,
 	})
 	if err != nil {
 		return ctrl.Result{}, errors.Errorf("failed to create scope: %+v", err)
