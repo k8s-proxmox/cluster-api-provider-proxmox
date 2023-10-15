@@ -106,12 +106,12 @@ ProxmoxMachine controller follows the [typical infra-machine logic](https://clus
 
 ### Testing
 #### Unit Testing
-```
+```sh
 make unit-test
 ```
 
 #### Unit and Integration Testing
-```
+```sh
 export PROXMOX_URL=https://X.X.X.X:8006/api2/json
 export PROXMOX_PASSWORD=password
 export PROXMOX_USER=user@pam
@@ -120,7 +120,7 @@ make test
 ```
 
 #### E2E Testing
-```
+```sh
 export CONTROLPLANE_HOST=X.X.X.X
 export PROXMOX_URL=https://X.X.X.X:8006/api2/json
 export PROXMOX_PASSWORD=password
