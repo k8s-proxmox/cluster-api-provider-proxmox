@@ -46,7 +46,7 @@ type ClusterSettter interface {
 // MachineGetter is an interface which can get machine information.
 type MachineGetter interface {
 	Client
-	GetScheduler() *scheduler.Scheduler
+	GetScheduler(client *proxmox.Service) *scheduler.Scheduler
 	Name() string
 	Namespace() string
 	// Zone() string

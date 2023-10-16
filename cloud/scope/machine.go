@@ -38,11 +38,11 @@ import (
 
 type MachineScopeParams struct {
 	ProxmoxServices
-	Client         client.Client
-	Machine        *clusterv1.Machine
-	ProxmoxMachine *infrav1.ProxmoxMachine
-	ClusterGetter  *ClusterScope
-	Scheduler      *scheduler.Scheduler
+	Client           client.Client
+	Machine          *clusterv1.Machine
+	ProxmoxMachine   *infrav1.ProxmoxMachine
+	ClusterGetter    *ClusterScope
+	SchedulerManager *scheduler.Manager
 }
 
 func NewMachineScope(params MachineScopeParams) (*MachineScope, error) {
@@ -58,8 +58,8 @@ func NewMachineScope(params MachineScopeParams) (*MachineScope, error) {
 	if params.ClusterGetter == nil {
 		return nil, errors.New("failed to generate new scope form nil ClusterScope")
 	}
-	if params.Scheduler == nil {
-		return nil, errors.New("failed to generate new scope form nil Scheduler")
+	if params.SchedulerManager == nil {
+		return nil, errors.New("failed to generate new scope form nil SchedulerManager")
 	}
 
 	helper, err := patch.NewHelper(params.ProxmoxMachine, params.Client)
@@ -68,30 +68,30 @@ func NewMachineScope(params MachineScopeParams) (*MachineScope, error) {
 	}
 
 	return &MachineScope{
-		client:         params.Client,
-		Machine:        params.Machine,
-		ProxmoxMachine: params.ProxmoxMachine,
-		patchHelper:    helper,
-		ClusterGetter:  params.ClusterGetter,
-		Scheduler:      params.Scheduler,
+		client:           params.Client,
+		Machine:          params.Machine,
+		ProxmoxMachine:   params.ProxmoxMachine,
+		patchHelper:      helper,
+		ClusterGetter:    params.ClusterGetter,
+		SchedulerManager: params.SchedulerManager,
 	}, err
 }
 
 type MachineScope struct {
-	client         client.Client
-	patchHelper    *patch.Helper
-	Machine        *clusterv1.Machine
-	ProxmoxMachine *infrav1.ProxmoxMachine
-	ClusterGetter  *ClusterScope
-	Scheduler      *scheduler.Scheduler
+	client           client.Client
+	patchHelper      *patch.Helper
+	Machine          *clusterv1.Machine
+	ProxmoxMachine   *infrav1.ProxmoxMachine
+	ClusterGetter    *ClusterScope
+	SchedulerManager *scheduler.Manager
 }
 
 func (m *MachineScope) CloudClient() *proxmox.Service {
 	return m.ClusterGetter.CloudClient()
 }
 
-func (m *MachineScope) GetScheduler() *scheduler.Scheduler {
-	return m.Scheduler
+func (m *MachineScope) GetScheduler(client *proxmox.Service) *scheduler.Scheduler {
+	return m.SchedulerManager.NewScheduler(client)
 }
 
 func (m *MachineScope) GetStorage() infrav1.Storage {

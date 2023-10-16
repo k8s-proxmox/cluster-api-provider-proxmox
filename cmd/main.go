@@ -94,9 +94,9 @@ func main() {
 	}
 
 	if err = (&controller.ProxmoxMachineReconciler{
-		Client:    mgr.GetClient(),
-		Scheme:    mgr.GetScheme(),
-		Scheduler: scheduler.New(mgr.GetClient()),
+		Client:           mgr.GetClient(),
+		Scheme:           mgr.GetScheme(),
+		SchedulerManager: scheduler.NewManager(scheduler.SchedulerParams{Logger: zap.New(zap.UseFlagOptions(&opts))}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ProxmoxMachine")
 		os.Exit(1)

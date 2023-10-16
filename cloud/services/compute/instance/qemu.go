@@ -19,43 +19,41 @@ func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, e
 	log := log.FromContext(ctx)
 	log.Info("Reconciling QEMU")
 
-	nodeName := s.scope.NodeName()
-	vmid := s.scope.GetVMID()
-	qemu, err := s.getQEMU(ctx, vmid)
+	qemu, err := s.getQEMU(ctx)
 	if err == nil { // if qemu is found, return it
 		return qemu, nil
 	}
 	if !rest.IsNotFound(err) {
-		log.Error(err, fmt.Sprintf("failed to get qemu: node=%s,vmid=%d", nodeName, *vmid))
+		log.Error(err, "failed to get qemu")
 		return nil, err
 	}
 
 	// no qemu found, create new one
-	return s.createQEMU(ctx, nodeName, vmid)
+	return s.createQEMU(ctx)
 }
 
 // get QEMU gets proxmox vm from vmid
-func (s *Service) getQEMU(ctx context.Context, vmid *int) (*proxmox.VirtualMachine, error) {
+func (s *Service) getQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
+	vmid := s.scope.GetVMID()
 	if vmid != nil {
 		return s.client.VirtualMachine(ctx, *vmid)
 	}
 	return nil, rest.NotFoundErr
 }
 
-func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*proxmox.VirtualMachine, error) {
+func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
-	// get node
-	if nodeName == "" {
-		node, err := s.scheduler.GetNode(ctx)
-		if err != nil {
-			log.Error(err, "failed to get proxmox node")
-			return nil, err
-		}
-		s.scope.SetNodeName(node.Node)
+	vmoption := s.generateVMOptions()
+	nodeName, err := s.scheduler.SelectNode(ctx, vmoption)
+	if err != nil {
+		log.Error(err, "failed to select proxmox node")
+		return nil, err
 	}
+	s.scope.SetNodeName(nodeName)
 
 	// if vmid is empty, generate new vmid
+	vmid := s.scope.GetVMID()
 	if vmid == nil {
 		nextid, err := s.scheduler.GetID(ctx)
 		if err != nil {
@@ -65,7 +63,6 @@ func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*
 		vmid = &nextid
 	}
 
-	vmoption := s.generateVMOptions()
 	vm, err := s.client.CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
 	if err != nil {
 		log.Error(err, "failed to create qemu instance")
@@ -108,6 +105,7 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 		NameServer:    network.NameServer,
 		Net:           api.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
 		Numa:          boolToInt8(options.NUMA),
+		Node:          s.scope.NodeName(),
 		OnBoot:        boolToInt8(options.OnBoot),
 		OSType:        api.OSType(options.OSType),
 		Protection:    boolToInt8(options.Protection),

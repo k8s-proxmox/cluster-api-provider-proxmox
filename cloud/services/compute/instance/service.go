@@ -23,7 +23,7 @@ func NewService(s Scope) *Service {
 	return &Service{
 		scope:     s,
 		client:    *s.CloudClient(),
-		scheduler: s.GetScheduler().WithClient(s.CloudClient()),
+		scheduler: s.GetScheduler(s.CloudClient()),
 	}
 }
 
