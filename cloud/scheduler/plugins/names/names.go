@@ -9,4 +9,8 @@ const (
 	// score plugins
 
 	Random = "Random"
+
+	// vmid plugins
+
+	NextID = "NextID"
 )

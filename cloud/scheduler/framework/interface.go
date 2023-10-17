@@ -20,3 +20,8 @@ type NodeScorePlugin interface {
 	Plugin
 	Score(ctx context.Context, state *CycleState, config api.VirtualMachineCreateOptions, nodeInfo *NodeInfo) (int64, *Status)
 }
+
+type VMIDPlugin interface {
+	Plugin
+	Select(ctx context.Context, state *CycleState, config api.VirtualMachineCreateOptions) (int, error)
+}

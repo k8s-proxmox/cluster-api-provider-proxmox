@@ -49,6 +49,7 @@ type MachineGetter interface {
 	GetScheduler(client *proxmox.Service) *scheduler.Scheduler
 	Name() string
 	Namespace() string
+	Annotations() map[string]string
 	// Zone() string
 	// Role() string
 	// IsControlPlane() bool

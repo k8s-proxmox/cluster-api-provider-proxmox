@@ -6,7 +6,7 @@ import (
 	"github.com/sp-yduck/proxmox-go/api"
 
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/node/names"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/names"
 )
 
 type NodeName struct{}

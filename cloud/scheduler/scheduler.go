@@ -30,15 +30,12 @@ func NewManager(params SchedulerParams) *Manager {
 
 func (m *Manager) NewScheduler(client *proxmox.Service) *Scheduler {
 	logger := m.params.Logger.WithName("[qemu-scheduler]")
-	nodeScheduler := NodeScheduler{filterPlugins: plugins.NewNodeFilterPlugins(), scorePlugins: plugins.NewNodeScorePlugins()}
-	return &Scheduler{client: client, nodeScheduler: nodeScheduler, logger: logger}
+	return &Scheduler{client: client, logger: logger}
 }
 
 type Scheduler struct {
-	client        *proxmox.Service
-	nodeScheduler NodeScheduler
-	vmidScheduler VMIDScheduler
-	logger        logr.Logger
+	client *proxmox.Service
+	logger logr.Logger
 }
 
 type SchedulerParams struct {
@@ -46,21 +43,55 @@ type SchedulerParams struct {
 }
 
 type NodeScheduler struct {
+	client        *proxmox.Service
 	filterPlugins []framework.NodeFilterPlugin
 	scorePlugins  []framework.NodeScorePlugin
+	logger        logr.Logger
 }
 
 type VMIDScheduler struct {
+	client *proxmox.Service
+	plugin framework.VMIDPlugin
+	logger logr.Logger
 }
 
-// just poc codes
-// return nextID fetched from Proxmox rest API nextID endpoint
-func (s *Scheduler) GetID(ctx context.Context) (int, error) {
-	return s.client.RESTClient().GetNextID(ctx)
+func (s *Scheduler) NewNodeScheduler() NodeScheduler {
+	return NodeScheduler{
+		client:        s.client,
+		filterPlugins: plugins.NewNodeFilterPlugins(),
+		scorePlugins:  plugins.NewNodeScorePlugins(),
+		logger:        s.logger.WithValues("qemu-scheduler", "node"),
+	}
+}
+
+func (s *Scheduler) NewVMIDScheduler(name string) (VMIDScheduler, error) {
+	plugin, err := plugins.NewVMIDPlugin(s.client, name)
+	if err != nil {
+		return VMIDScheduler{}, err
+	}
+	return VMIDScheduler{
+		client: s.client,
+		plugin: plugin,
+		logger: s.logger.WithValues("qemu-scheduler", "vmid"),
+	}, nil
 }
 
 func (s *Scheduler) SelectNode(ctx context.Context, config api.VirtualMachineCreateOptions) (string, error) {
 	s.logger.Info("finding proxmox node matching qemu")
+	sched := s.NewNodeScheduler()
+	return sched.run(ctx, config)
+}
+
+func (s *Scheduler) SelectVMID(ctx context.Context, config api.VirtualMachineCreateOptions) (int, error) {
+	s.logger.Info("finding proxmox vmid to be assigned to qemu")
+	sched, err := s.NewVMIDScheduler("NextID")
+	if err != nil {
+		return 0, err
+	}
+	return sched.run(ctx, config)
+}
+
+func (s *NodeScheduler) run(ctx context.Context, config api.VirtualMachineCreateOptions) (string, error) {
 	nodes, err := s.client.Nodes(ctx)
 	if err != nil {
 		return "", err
@@ -88,7 +119,7 @@ func (s *Scheduler) SelectNode(ctx context.Context, config api.VirtualMachineCre
 	return selectedNode, nil
 }
 
-func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) ([]*api.Node, error) {
+func (s *NodeScheduler) RunFilterPlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) ([]*api.Node, error) {
 	s.logger.Info("filtering proxmox node")
 	feasibleNodes := make([]*api.Node, 0, len(nodes))
 	nodeInfos, err := framework.GetNodeInfoList(ctx, s.client)
@@ -97,7 +128,7 @@ func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.Cycle
 	}
 	for _, nodeInfo := range nodeInfos {
 		status := framework.NewStatus()
-		for _, pl := range s.nodeScheduler.filterPlugins {
+		for _, pl := range s.filterPlugins {
 			status = pl.Filter(ctx, state, config, nodeInfo)
 			if !status.IsSuccess() {
 				status.SetFailedPlugin(pl.Name())
@@ -111,7 +142,7 @@ func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.Cycle
 	return feasibleNodes, nil
 }
 
-func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) (framework.NodeScoreList, *framework.Status) {
+func (s *NodeScheduler) RunScorePlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) (framework.NodeScoreList, *framework.Status) {
 	s.logger.Info("scoring proxmox node")
 	var scoresMap map[string](map[int]framework.NodeScore)
 	nodeInfos, err := framework.GetNodeInfoList(ctx, s.client)
@@ -121,7 +152,7 @@ func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleS
 		return nil, status
 	}
 	for index, nodeInfo := range nodeInfos {
-		for _, pl := range s.nodeScheduler.scorePlugins {
+		for _, pl := range s.scorePlugins {
 			score, status := pl.Score(ctx, state, config, nodeInfo)
 			if !status.IsSuccess() {
 				return nil, status
@@ -153,4 +184,8 @@ func selectHighestScoreNode(scoreList framework.NodeScoreList) (string, error) {
 		}
 	}
 	return selectedScore.Name, nil
+}
+
+func (s *VMIDScheduler) run(ctx context.Context, config api.VirtualMachineCreateOptions) (int, error) {
+	return s.plugin.Select(ctx, nil, config)
 }

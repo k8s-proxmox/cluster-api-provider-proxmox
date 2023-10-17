@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
 	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	"github.com/sp-yduck/proxmox-go/rest"
@@ -44,31 +45,31 @@ func (s *Service) getQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) 
 func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
+	// bind annotation key-values to context
+	schedCtx := framework.ContextWithMap(ctx, s.scope.Annotations())
+
+	// node assignment
 	vmoption := s.generateVMOptions()
-	nodeName, err := s.scheduler.SelectNode(ctx, vmoption)
+	nodeName, err := s.scheduler.SelectNode(schedCtx, vmoption)
 	if err != nil {
 		log.Error(err, "failed to select proxmox node")
 		return nil, err
 	}
 	s.scope.SetNodeName(nodeName)
 
-	// if vmid is empty, generate new vmid
-	vmid := s.scope.GetVMID()
-	if vmid == nil {
-		nextid, err := s.scheduler.GetID(ctx)
-		if err != nil {
-			log.Error(err, "failed to get available vmid")
-			return nil, err
-		}
-		vmid = &nextid
+	// vmid assignment
+	vmid, err := s.scheduler.SelectVMID(schedCtx, vmoption)
+	if err != nil {
+		log.Error(err, "failed to get available vmid")
+		return nil, err
 	}
 
-	vm, err := s.client.CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
+	vm, err := s.client.CreateVirtualMachine(ctx, nodeName, vmid, vmoption)
 	if err != nil {
 		log.Error(err, "failed to create qemu instance")
 		return nil, err
 	}
-	s.scope.SetVMID(*vmid)
+	s.scope.SetVMID(vmid)
 	if err := s.scope.PatchObject(); err != nil {
 		return nil, err
 	}
@@ -122,6 +123,7 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 		Template:      boolToInt8(options.Template),
 		VCPUs:         options.VCPUs,
 		VMGenID:       options.VMGenerationID,
+		VMID:          s.scope.GetVMID(),
 		VGA:           "serial0",
 	}
 	return vmoptions

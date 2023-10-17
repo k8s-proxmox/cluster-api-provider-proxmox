@@ -106,6 +106,10 @@ func (m *MachineScope) Namespace() string {
 	return m.ProxmoxMachine.Namespace
 }
 
+func (m *MachineScope) Annotations() map[string]string {
+	return m.ProxmoxMachine.Annotations
+}
+
 func (m *MachineScope) NodeName() string {
 	return m.ProxmoxMachine.Spec.Node
 }
