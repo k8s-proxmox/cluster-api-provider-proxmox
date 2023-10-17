@@ -187,5 +187,8 @@ func selectHighestScoreNode(scoreList framework.NodeScoreList) (string, error) {
 }
 
 func (s *VMIDScheduler) run(ctx context.Context, config api.VirtualMachineCreateOptions) (int, error) {
+	if config.VMID != nil {
+		return *config.VMID, nil
+	}
 	return s.plugin.Select(ctx, nil, config)
 }

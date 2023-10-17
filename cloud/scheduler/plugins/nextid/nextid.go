@@ -33,7 +33,7 @@ func (pl *NextID) Name() string {
 
 // select minimum id being not used and matching regex
 // regex is specified in ctx value (key=vmid.qemu-scheduler/regex)
-func (pl *NextID) Select(ctx context.Context, _ *framework.CycleState, _ api.VirtualMachineCreateOptions) (int, error) {
+func (pl *NextID) Select(ctx context.Context, _ *framework.CycleState, config api.VirtualMachineCreateOptions) (int, error) {
 	nextid, err := pl.client.RESTClient().GetNextID(ctx)
 	if err != nil {
 		return 0, err
