@@ -23,5 +23,6 @@ type NodeScorePlugin interface {
 
 type VMIDPlugin interface {
 	Plugin
-	Select(ctx context.Context, state *CycleState, config api.VirtualMachineCreateOptions) (int, error)
+	PluginKey() CtxKey
+	Select(ctx context.Context, state *CycleState, config api.VirtualMachineCreateOptions, nextid int, usedID map[int]bool) (int, error)
 }

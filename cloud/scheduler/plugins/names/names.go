@@ -12,5 +12,6 @@ const (
 
 	// vmid plugins
 
-	NextID = "NextID"
+	Range = "Range"
+	Regex = "Regex"
 )

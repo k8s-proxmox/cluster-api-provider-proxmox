@@ -242,18 +242,15 @@ func (s *Scheduler) SelectVMID(ctx context.Context, config api.VirtualMachineCre
 	if config.VMID != nil {
 		return *config.VMID, nil
 	}
-
 	nextid, err := s.client.NextID(ctx)
 	if err != nil {
 		return 0, err
 	}
-
-	qemus, err := s.client.VirtualMachines(ctx)
+	usedID, err := usedIDMap(ctx, s.client)
 	if err != nil {
 		return 0, err
 	}
-
-	return s.RunVMIDPlugins(ctx, nil, config, nextid, qemus)
+	return s.RunVMIDPlugins(ctx, nil, config, nextid, *usedID)
 }
 
 func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) ([]*api.Node, error) {
@@ -323,9 +320,28 @@ func selectHighestScoreNode(scoreList framework.NodeScoreList) (string, error) {
 	return selectedScore.Name, nil
 }
 
-func (s *Scheduler) RunVMIDPlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nextid int, qemus []*api.VirtualMachine) (int, error) {
-
-	// to do
-
+func (s *Scheduler) RunVMIDPlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nextid int, usedID map[int]bool) (int, error) {
+	for _, pl := range s.vmidPlugins {
+		key := pl.PluginKey()
+		value := ctx.Value(key)
+		if value != nil {
+			s.logger.WithValues("vmid plugin", pl.Name()).Info("selecting vmid")
+			return pl.Select(ctx, state, config, nextid, usedID)
+		}
+	}
+	s.logger.Info("no vmid key found. using nextid")
 	return nextid, nil
+}
+
+// return map[vmid]bool
+func usedIDMap(ctx context.Context, client *proxmox.Service) (*map[int]bool, error) {
+	vms, err := client.VirtualMachines(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[int]bool)
+	for _, vm := range vms {
+		result[vm.VMID] = true
+	}
+	return &result, nil
 }
