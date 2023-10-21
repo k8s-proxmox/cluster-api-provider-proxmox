@@ -53,6 +53,7 @@ func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, erro
 	result, err := s.scheduler.CreateQEMU(schedCtx, &vmoption)
 	if err != nil {
 		log.Error(err, "failed to create qemu instance")
+		return nil, err
 	}
 
 	s.scope.SetNodeName(result.Node())

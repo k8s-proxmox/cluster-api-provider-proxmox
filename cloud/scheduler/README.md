@@ -2,18 +2,38 @@
 
 Scheduling refers to making sure that VM(QEMU) are matched to Proxmox Nodes.
 
+## How qemu-scheduler select proxmox node to run qemu
+
+Basic flow of the node selection process is `filter => score => select one node which has highest score`
+
+### Filter Plugins
+
+Filter plugins filter the node based on nodename, overcommit ratio etc.
+
+#### regex plugin
+
+Regex plugin is a one of the default Filter Plugin of qemu-scheduler. You can specify node name as regex format. 
+```sh
+key: node.qemu-scheduler/reges
+value(example): node[0-9]+
+```
+
+### Score Plugins
+
+Score plugins score the nodes based on resource etc.
+
 ## How to specify vmid
 qemu-scheduler reads context and find key registerd to scheduler. If the context has any value of the registerd key, qemu-scheduler uses the plugin that matchies the key.
 
 ### Range Plugin
 You can specify vmid range with `(start id)-(end id)` format.
-```
+```sh
 key: vmid.qemu-scheduler/range
 value(example): 100-150
 ```
 
 ### Regex Plugin
-```
+```sh
 key: vmid.qemu-scheduler/regex
 value(example): (12[0-9]|130)
 ```
@@ -43,5 +63,5 @@ spec:
   template:
     metadata:
       annotations:
-        vmid.qemu-scheduler/range: 100-150 # this annotation will be propagated to your ProxmoxMachine via MachineSet
+        node.qemu-scheduler/regex: node[0-9]+ # this annotation will be propagated to your ProxmoxMachine via MachineSet
 ```

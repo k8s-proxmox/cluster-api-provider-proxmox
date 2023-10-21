@@ -77,6 +77,10 @@ func (n NodeInfo) Node() *api.Node {
 	return n.node
 }
 
+func (n NodeInfo) QEMUs() []*api.VirtualMachine {
+	return n.qemus
+}
+
 // NodeScoreList declares a list of nodes and their scores.
 type NodeScoreList []NodeScore
 

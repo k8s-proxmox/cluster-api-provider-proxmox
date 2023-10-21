@@ -41,10 +41,10 @@ func (c *CycleState) QEMU() *api.VirtualMachine {
 	return c.result.instance.VM
 }
 
-func (c *CycleState) UpdateState(completed bool, err error, result *SchedulerResult) {
+func (c *CycleState) UpdateState(completed bool, err error, result SchedulerResult) {
 	c.completed = completed
 	c.err = err
-	c.result = *result
+	c.result = result
 }
 
 func NewSchedulerResult(vmid int, node string, instance *proxmox.VirtualMachine) SchedulerResult {

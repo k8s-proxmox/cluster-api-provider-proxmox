@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/queue"
 	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/queue"
 )
 
 var (
@@ -73,7 +74,7 @@ func (m *Manager) NewScheduler(client *proxmox.Service, logger logr.Logger, canc
 		scorePlugins:  plugins.NewNodeScorePlugins(),
 		vmidPlugins:   plugins.NewVMIDPlugins(),
 
-		resultMap: make(map[string]chan framework.CycleState),
+		resultMap: make(map[string]chan *framework.CycleState),
 		logger:    logger,
 		cancel:    cancel,
 	}
@@ -104,7 +105,7 @@ type Scheduler struct {
 
 	// to do : cache
 
-	resultMap map[string]chan framework.CycleState
+	resultMap map[string]chan *framework.CycleState
 	logger    logr.Logger
 
 	// to stop itself
@@ -144,37 +145,37 @@ func (s *Scheduler) ScheduleOne(ctx context.Context) {
 	s.logger.Info("scheduling qemu")
 
 	state := framework.NewCycleState()
-	s.resultMap[config.Name] = make(chan framework.CycleState, 1)
-	defer func() { s.resultMap[config.Name] <- state }()
+	s.resultMap[config.Name] = make(chan *framework.CycleState, 1)
+	defer func() { s.resultMap[config.Name] <- &state }()
 
 	node, err := s.SelectNode(qemuCtx, *config)
 	if err != nil {
-		state.UpdateState(true, err, nil)
+		state.UpdateState(true, err, framework.SchedulerResult{})
 		return
 	}
 
 	// to do: do this parallel with SelectNode
 	vmid, err := s.SelectVMID(qemuCtx, *config)
 	if err != nil {
-		state.UpdateState(true, err, nil)
+		state.UpdateState(true, err, framework.SchedulerResult{})
 		return
 	}
 
 	vm, err := s.client.CreateVirtualMachine(ctx, node, vmid, *config)
 	if err != nil {
-		state.UpdateState(true, err, nil)
+		state.UpdateState(true, err, framework.SchedulerResult{})
 		return
 	}
 
 	result := framework.NewSchedulerResult(vmid, node, vm)
-	state.UpdateState(true, nil, &result)
+	state.UpdateState(true, nil, result)
 }
 
 // return status
 func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.CycleState, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
-	var done chan framework.CycleState
+	var done chan *framework.CycleState
 	ok := false
 	for !ok {
 		done, ok = s.resultMap[config.Name]
@@ -184,7 +185,8 @@ func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCr
 	}
 	select {
 	case state := <-done:
-		return state, nil
+		delete(s.resultMap, config.Name)
+		return *state, nil
 	case <-ctx.Done():
 		return framework.CycleState{}, fmt.Errorf("exceed timeout deadline")
 	}
@@ -194,13 +196,10 @@ func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCr
 func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.SchedulerResult, error) {
 	s.schedulingQueue.Add(ctx, config)
 	status := framework.NewCycleState()
-	// to do : timeout
-	for !status.IsCompleted() {
-		var err error
-		status, err = s.WaitStatus(ctx, config)
-		if err != nil {
-			return status.Result(), err
-		}
+	var err error
+	status, err = s.WaitStatus(ctx, config)
+	if err != nil {
+		return status.Result(), err
 	}
 	if status.Error() != nil {
 		return status.Result(), status.Error()
