@@ -14,7 +14,7 @@ Filter plugins filter the node based on nodename, overcommit ratio etc.
 
 Regex plugin is a one of the default Filter Plugin of qemu-scheduler. You can specify node name as regex format. 
 ```sh
-key: node.qemu-scheduler/reges
+key: node.qemu-scheduler/regex
 value(example): node[0-9]+
 ```
 

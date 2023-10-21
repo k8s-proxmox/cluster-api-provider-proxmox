@@ -195,9 +195,8 @@ func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCr
 // create new qemu with given spec and context
 func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.SchedulerResult, error) {
 	s.schedulingQueue.Add(ctx, config)
-	status := framework.NewCycleState()
 	var err error
-	status, err = s.WaitStatus(ctx, config)
+	status, err := s.WaitStatus(ctx, config)
 	if err != nil {
 		return status.Result(), err
 	}
