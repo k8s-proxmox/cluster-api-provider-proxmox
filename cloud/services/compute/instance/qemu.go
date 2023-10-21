@@ -50,30 +50,17 @@ func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, erro
 
 	// node assignment
 	vmoption := s.generateVMOptions()
-	nodeName, err := s.scheduler.SelectNode(schedCtx, vmoption)
-	if err != nil {
-		log.Error(err, "failed to select proxmox node")
-		return nil, err
-	}
-	s.scope.SetNodeName(nodeName)
-
-	// vmid assignment
-	vmid, err := s.scheduler.SelectVMID(schedCtx, vmoption)
-	if err != nil {
-		log.Error(err, "failed to get available vmid")
-		return nil, err
-	}
-
-	vm, err := s.client.CreateVirtualMachine(ctx, nodeName, vmid, vmoption)
+	result, err := s.scheduler.CreateQEMU(schedCtx, &vmoption)
 	if err != nil {
 		log.Error(err, "failed to create qemu instance")
-		return nil, err
 	}
-	s.scope.SetVMID(vmid)
+
+	s.scope.SetNodeName(result.Node())
+	s.scope.SetVMID(result.VMID())
 	if err := s.scope.PatchObject(); err != nil {
 		return nil, err
 	}
-	return vm, nil
+	return result.Instance(), nil
 }
 
 func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {

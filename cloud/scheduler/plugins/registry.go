@@ -1,8 +1,6 @@
 package plugins
 
 import (
-	"fmt"
-
 	"github.com/sp-yduck/proxmox-go/proxmox"
 
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
@@ -26,11 +24,6 @@ func NewNodeScorePlugins() []framework.NodeScorePlugin {
 	return []framework.NodeScorePlugin{&random.Random{}}
 }
 
-func NewVMIDPlugin(client *proxmox.Service, name string) (framework.VMIDPlugin, error) {
-	plugins := VMIDPlugins(client)
-	plugin, ok := plugins[name]
-	if !ok {
-		return nil, fmt.Errorf("vmid plugin %s not found", name)
-	}
-	return plugin, nil
+func NewVMIDPlugins() []framework.VMIDPlugin {
+	return []framework.VMIDPlugin{&nextid.NextID{}}
 }
