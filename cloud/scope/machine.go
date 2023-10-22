@@ -83,8 +83,12 @@ func (m *MachineScope) CloudClient() *proxmox.Service {
 	return m.ClusterGetter.CloudClient()
 }
 
-func (m *MachineScope) GetStorage() infrav1.Storage {
-	return m.ClusterGetter.ProxmoxCluster.Spec.Storage
+func (m *MachineScope) GetClusterStorage() infrav1.Storage {
+	return m.ClusterGetter.Storage()
+}
+
+func (m *MachineScope) GetStorage() string {
+	return m.ProxmoxMachine.Spec.Storage
 }
 
 func (m *MachineScope) Name() string {
@@ -101,6 +105,10 @@ func (m *MachineScope) NodeName() string {
 
 func (m *MachineScope) SetNodeName(name string) {
 	m.ProxmoxMachine.Spec.Node = name
+}
+
+func (m *MachineScope) SetStorage(name string) {
+	m.ProxmoxMachine.Spec.Storage = name
 }
 
 // func (m *MachineScope) Client() Compute {

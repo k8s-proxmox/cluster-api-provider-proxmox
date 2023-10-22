@@ -196,7 +196,7 @@ RELEASE_DIR := $(shell pwd)/out
 $(RELEASE_DIR):
 	mkdir -p $(RELEASE_DIR)
 
-RELEASE_TAG := $(shell git describe --abbrev=0 2>/dev/null)
+RELEASE_TAG := $(shell git describe --abbrev=0 --tags)
 
 .PHONY: release
 release: ## Builds all the manifests/config files to publish with a release

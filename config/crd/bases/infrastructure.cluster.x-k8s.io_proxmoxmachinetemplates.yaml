@@ -326,7 +326,7 @@ spec:
                           used for ProxmoxMachine
                         type: string
                       options:
-                        description: Options
+                        description: Options for QEMU instance
                         properties:
                           acpi:
                             description: Enable/Disable ACPI. Defaults to true.
@@ -473,6 +473,11 @@ spec:
                         type: object
                       providerID:
                         description: ProviderID
+                        type: string
+                      storage:
+                        description: Storage is name of proxmox storage used by this
+                          node. The storage must support "images(VM Disks)" type of
+                          content. cappx will use random storage if empty
                         type: string
                       vmID:
                         description: VMID is proxmox qemu's id
