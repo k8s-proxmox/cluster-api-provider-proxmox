@@ -18,6 +18,7 @@ package scope
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/sp-yduck/proxmox-go/proxmox"
@@ -26,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/storage"
 )
 
 type ClusterScopeParams struct {
@@ -92,7 +94,14 @@ func (s *ClusterScope) ControlPlaneEndpoint() clusterv1.APIEndpoint {
 	return s.ProxmoxCluster.Spec.ControlPlaneEndpoint
 }
 
+// return default values if they are not specified
 func (s *ClusterScope) Storage() infrav1.Storage {
+	if s.ProxmoxCluster.Spec.Storage.Name == "" {
+		s.ProxmoxCluster.Spec.Storage.Name = fmt.Sprintf("local-dir-%s", s.Name())
+	}
+	if s.ProxmoxCluster.Spec.Storage.Path == "" {
+		s.ProxmoxCluster.Spec.Storage.Path = fmt.Sprintf("%s/%s", storage.DefaultBasePath, s.ProxmoxCluster.Spec.Storage.Name)
+	}
 	return s.ProxmoxCluster.Spec.Storage
 }
 

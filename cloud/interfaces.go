@@ -57,7 +57,8 @@ type MachineGetter interface {
 	GetProviderID() string
 	GetBootstrapData() (string, error)
 	GetInstanceStatus() *infrav1.InstanceStatus
-	GetStorage() infrav1.Storage
+	GetClusterStorage() infrav1.Storage
+	GetStorage() string
 	GetCloudInit() infrav1.CloudInit
 	GetNetwork() infrav1.Network
 	GetHardware() infrav1.Hardware
@@ -72,6 +73,7 @@ type MachineSetter interface {
 	SetNodeName(name string)
 	SetVMID(vmid int)
 	SetConfigStatus(config api.VirtualMachineConfig)
+	SetStorage(name string)
 	// SetFailureMessage(v error)
 	// SetFailureReason(v capierrors.MachineStatusError)
 	// SetAnnotation(key, value string)

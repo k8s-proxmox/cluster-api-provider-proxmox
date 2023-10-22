@@ -36,7 +36,7 @@ func (s *Service) reconcileBootDevice(ctx context.Context, vm *proxmox.VirtualMa
 }
 
 // setCloudImage downloads OS image into Proxmox node
-// and then sets it to specified storage
+// so that proxmox can import image to the storage from there
 func (s *Service) setCloudImage(ctx context.Context) error {
 	log := log.FromContext(ctx)
 	log.Info("setting cloud image")
@@ -44,8 +44,6 @@ func (s *Service) setCloudImage(ctx context.Context) error {
 	image := s.scope.GetImage()
 	rawImageFilePath := rawImageFilePath(image)
 
-	// workaround
-	// API does not support something equivalent of "qm importdisk"
 	vnc, err := s.vncClient(s.scope.NodeName())
 	if err != nil {
 		return errors.Errorf("failed to create vnc client: %v", err)
@@ -67,14 +65,6 @@ func (s *Service) setCloudImage(ctx context.Context) error {
 		if _, err = isChecksumOK(vnc, image, rawImageFilePath); err != nil {
 			return errors.Errorf("failed to confirm checksum: %v", err)
 		}
-	}
-
-	// convert downloaded image to raw format and set it to storage
-	vmid := s.scope.GetVMID()
-	destPath := fmt.Sprintf("%s/images/%d/vm-%d-disk-0.raw", s.scope.GetStorage().Path, *vmid, *vmid)
-	out, _, err := vnc.Exec(context.TODO(), fmt.Sprintf("/usr/bin/qemu-img convert -O raw %s %s", rawImageFilePath, destPath))
-	if err != nil {
-		return errors.Errorf("failed to convert iamge : %s : %v", out, err)
 	}
 	return nil
 }

@@ -48,6 +48,10 @@ func (s *Service) getQEMU(ctx context.Context, vmid *int) (*proxmox.VirtualMachi
 func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
+	if err := s.ensureStorageAvailable(ctx); err != nil {
+		return nil, err
+	}
+
 	// get node
 	if nodeName == "" {
 		// temp solution
@@ -107,10 +111,15 @@ func (s *Service) getRandomNode(ctx context.Context) (*api.Node, error) {
 
 func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 	vmName := s.scope.Name()
-	storageName := s.scope.GetStorage().Name
+	snippetStorageName := s.scope.GetClusterStorage().Name
+	imageStorageName := s.scope.GetStorage()
 	network := s.scope.GetNetwork()
 	hardware := s.scope.GetHardware()
 	options := s.scope.GetOptions()
+	cicustom := fmt.Sprintf("user=%s:%s", snippetStorageName, userSnippetPath(vmName))
+	ide2 := fmt.Sprintf("file=%s:cloudinit,media=cdrom", imageStorageName)
+	scsi0 := fmt.Sprintf("%s:0,import-from=%s", imageStorageName, rawImageFilePath(s.scope.GetImage()))
+	net0 := "model=virtio,bridge=vmbr0,firewall=1"
 
 	vmoptions := api.VirtualMachineCreateOptions{
 		ACPI:          boolToInt8(options.ACPI),
@@ -119,12 +128,12 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 		Balloon:       options.Balloon,
 		BIOS:          string(hardware.BIOS),
 		Boot:          fmt.Sprintf("order=%s", bootDvice),
-		CiCustom:      fmt.Sprintf("user=%s:%s", storageName, userSnippetPath(vmName)),
+		CiCustom:      cicustom,
 		Cores:         hardware.CPU,
 		CpuLimit:      hardware.CPULimit,
 		Description:   options.Description,
 		HugePages:     options.HugePages.String(),
-		Ide:           api.Ide{Ide2: fmt.Sprintf("file=%s:cloudinit,media=cdrom", storageName)},
+		Ide:           api.Ide{Ide2: ide2},
 		IPConfig:      api.IPConfig{IPConfig0: network.IPConfig.String()},
 		KeepHugePages: boolToInt8(options.KeepHugePages),
 		KVM:           boolToInt8(options.KVM),
@@ -133,13 +142,13 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 		Memory:        hardware.Memory,
 		Name:          vmName,
 		NameServer:    network.NameServer,
-		Net:           api.Net{Net0: "model=virtio,bridge=vmbr0,firewall=1"},
+		Net:           api.Net{Net0: net0},
 		Numa:          boolToInt8(options.NUMA),
 		OnBoot:        boolToInt8(options.OnBoot),
 		OSType:        api.OSType(options.OSType),
 		Protection:    boolToInt8(options.Protection),
 		Reboot:        int(boolToInt8(options.Reboot)),
-		Scsi:          api.Scsi{Scsi0: fmt.Sprintf("file=%s:8", storageName)},
+		Scsi:          api.Scsi{Scsi0: scsi0},
 		ScsiHw:        api.VirtioScsiPci,
 		SearchDomain:  network.SearchDomain,
 		Serial:        api.Serial{Serial0: "socket"},
