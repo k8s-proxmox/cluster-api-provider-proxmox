@@ -26,7 +26,15 @@ spec:
       priority: 1
       type: string
     - jsonPath: .spec.vmID
-      name: vmid
+      name: VMID
+      priority: 1
+      type: string
+    - jsonPath: .spec.node
+      name: Node
+      priority: 1
+      type: string
+    - jsonPath: .spec.storage
+      name: Storage
       priority: 1
       type: string
     - jsonPath: .spec.providerID
@@ -300,7 +308,7 @@ spec:
                   ProxmoxMachine
                 type: string
               options:
-                description: Options
+                description: Options for QEMU instance
                 properties:
                   acpi:
                     description: Enable/Disable ACPI. Defaults to true.
@@ -441,6 +449,11 @@ spec:
                 type: object
               providerID:
                 description: ProviderID
+                type: string
+              storage:
+                description: Storage is name of proxmox storage used by this node.
+                  The storage must support "images(VM Disks)" type of content. cappx
+                  will use random storage if empty
                 type: string
               vmID:
                 description: VMID is proxmox qemu's id

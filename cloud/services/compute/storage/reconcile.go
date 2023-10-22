@@ -2,8 +2,6 @@ package storage
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
@@ -14,7 +12,7 @@ import (
 )
 
 const (
-	defaultBasePath = "/var/lib/vz"
+	DefaultBasePath = "/var/lib/vz"
 )
 
 func (s *Service) Reconcile(ctx context.Context) error {
@@ -91,7 +89,8 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 			return err
 		}
 		if len(contents) > 0 {
-			return errors.New("Storage must be empty to be deleted")
+			log.Info("storage not empty, skipping deletion")
+			return nil
 		}
 	}
 
@@ -108,15 +107,9 @@ func generateVMStorageOptions(scope Scope) api.StorageCreateOptions {
 	options := api.StorageCreateOptions{
 		Storage:     storageSpec.Name,
 		StorageType: "dir",
-		Content:     "images,snippets",
+		Content:     "snippets",
 		Mkdir:       &mkdir,
 		Path:        storageSpec.Path,
-	}
-	if options.Storage == "" {
-		options.Storage = fmt.Sprintf("local-dir-%s", scope.Name())
-	}
-	if options.Path == "" {
-		options.Path = fmt.Sprintf("%s/%s", defaultBasePath, options.Storage)
 	}
 	return options
 }

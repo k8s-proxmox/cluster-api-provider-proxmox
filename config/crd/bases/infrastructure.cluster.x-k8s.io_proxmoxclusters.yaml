@@ -92,7 +92,7 @@ spec:
                 - secretRef
                 type: object
               storage:
-                description: storage is for proxmox storage used by vm instances
+                description: storage is used for storing cloud init snippet
                 properties:
                   name:
                     type: string

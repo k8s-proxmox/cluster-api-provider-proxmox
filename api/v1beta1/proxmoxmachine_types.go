@@ -34,12 +34,15 @@ type ProxmoxMachineSpec struct {
 	ProviderID *string `json:"providerID,omitempty"`
 
 	// Node is proxmox node hosting vm instance which used for ProxmoxMachine
-	// +optional
 	Node string `json:"node,omitempty"`
+
+	// Storage is name of proxmox storage used by this node.
+	// The storage must support "images(VM Disks)" type of content.
+	// cappx will use random storage if empty
+	Storage string `json:"storage,omitempty"`
 
 	// +kubebuilder:validation:Minimum:=0
 	// VMID is proxmox qemu's id
-	// +optional
 	VMID *int `json:"vmID,omitempty"`
 
 	// Image is the image to be provisioned
@@ -47,7 +50,6 @@ type ProxmoxMachineSpec struct {
 
 	// CloudInit defines options related to the bootstrapping systems where
 	// CloudInit is used.
-	// +optional
 	CloudInit CloudInit `json:"cloudInit,omitempty"`
 
 	// Hardware
@@ -56,8 +58,7 @@ type ProxmoxMachineSpec struct {
 	// Network
 	Network Network `json:"network,omitempty"`
 
-	// Options
-	// +optional
+	// Options for QEMU instance
 	Options Options `json:"options,omitempty"`
 
 	// FailureDomain is the failure domain unique identifier this Machine should be attached to, as defined in Cluster API.
@@ -94,7 +95,9 @@ type ProxmoxMachineStatus struct {
 //+kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this VSphereMachine belongs"
 // +kubebuilder:printcolumn:name="Machine",type="string",JSONPath=".metadata.ownerReferences[?(@.kind==\"Machine\")].name",description="Machine object which owns with this ProxmoxMachine",priority=1
-// +kubebuilder:printcolumn:name="vmid",type=string,JSONPath=`.spec.vmID`,priority=1
+// +kubebuilder:printcolumn:name="VMID",type=string,JSONPath=`.spec.vmID`,priority=1
+// +kubebuilder:printcolumn:name="Node",type=string,JSONPath=`.spec.node`,priority=1
+// +kubebuilder:printcolumn:name="Storage",type=string,JSONPath=`.spec.storage`,priority=1
 // +kubebuilder:printcolumn:name="ProviderID",type=string,JSONPath=`.spec.providerID`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.instanceStatus`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="Time duration since creation of Machine"

@@ -35,9 +35,8 @@ type ProxmoxClusterSpec struct {
 	// ServerRef is used for configuring Proxmox client
 	ServerRef ServerRef `json:"serverRef"`
 
-	// storage is for proxmox storage used by vm instances
-	// +optional
-	Storage Storage `json:"storage"`
+	// storage is used for storing cloud init snippet
+	Storage Storage `json:"storage,omitempty"`
 }
 
 // ProxmoxClusterStatus defines the observed state of ProxmoxCluster

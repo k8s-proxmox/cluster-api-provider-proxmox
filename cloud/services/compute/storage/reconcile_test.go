@@ -79,14 +79,4 @@ var _ = Describe("generateVMStorageOptions", Label("unit", "storage"), func() {
 			Expect(option.Path).To(Equal("/bar/buz"))
 		})
 	})
-
-	Context("both name and path are NOT specified", func() {
-		It("option should have default name and path", func() {
-			scope.SetName("foo-cluster")
-			scope.SetStorage(infrav1.Storage{})
-			option := storage.GenerateVMStorageOptions(scope)
-			Expect(option.Storage).To(Equal("local-dir-foo-cluster"))
-			Expect(option.Path).To(Equal("/var/lib/vz/local-dir-foo-cluster"))
-		})
-	})
 })
