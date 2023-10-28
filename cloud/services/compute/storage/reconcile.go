@@ -103,11 +103,12 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 
 func generateVMStorageOptions(scope Scope) api.StorageCreateOptions {
 	storageSpec := scope.Storage()
+	mkdir := true
 	options := api.StorageCreateOptions{
 		Storage:     storageSpec.Name,
 		StorageType: "dir",
 		Content:     "snippets",
-		Mkdir:       true,
+		Mkdir:       &mkdir,
 		Path:        storageSpec.Path,
 	}
 	return options

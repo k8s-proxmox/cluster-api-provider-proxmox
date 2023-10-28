@@ -63,6 +63,9 @@ func newComputeService(ctx context.Context, cluster *infrav1.ProxmoxCluster, crC
 		TokenID:  string(secret.Data["PROXMOX_TOKENID"]),
 		Secret:   string(secret.Data["PROXMOX_SECRET"]),
 	}
-
-	return proxmox.NewService(serverRef.Endpoint, authConfig, true)
+	clientConfig := proxmox.ClientConfig{
+		InsecureSkipVerify: true,
+	}
+	param := proxmox.NewParams(serverRef.Endpoint, authConfig, clientConfig)
+	return proxmox.GetOrCreateService(param)
 }
