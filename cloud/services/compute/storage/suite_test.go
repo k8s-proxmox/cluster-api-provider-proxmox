@@ -37,8 +37,9 @@ var _ = BeforeSuite(func() {
 			TokenID:  tokenid,
 			Secret:   secret,
 		}
+		param := proxmox.NewParams(url, authConfig, proxmox.ClientConfig{InsecureSkipVerify: true})
 		var err error
-		proxmoxSvc, err = proxmox.NewService(url, authConfig, true)
+		proxmoxSvc, err = proxmox.GetOrCreateService(param)
 		Expect(err).NotTo(HaveOccurred())
 	}
 })
