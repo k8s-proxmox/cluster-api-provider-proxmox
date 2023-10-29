@@ -31,10 +31,11 @@ func (pl *Range) PluginKey() framework.CtxKey {
 
 // select minimum id being not used in specified range
 // range is specified in ctx value (key=vmid.qemu-scheduler/range)
-func (pl *Range) Select(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nextid int, usedID map[int]bool) (int, error) {
+func (pl *Range) Select(ctx context.Context, state *framework.CycleState, _ api.VirtualMachineCreateOptions, nextid int, usedID map[int]bool) (int, error) {
 	start, end, err := findVMIDRange(ctx)
 	if err != nil {
-		return 0, nil
+		state.SetMessage(pl.Name(), "no idrange is specified, use nextid.")
+		return nextid, nil
 	}
 	for i := start; i <= end; i++ {
 		_, used := usedID[i]

@@ -8,6 +8,7 @@ import (
 type CycleState struct {
 	completed bool
 	err       error
+	messages  map[string]string
 	result    SchedulerResult
 }
 
@@ -18,7 +19,7 @@ type SchedulerResult struct {
 }
 
 func NewCycleState() CycleState {
-	return CycleState{completed: false, err: nil}
+	return CycleState{completed: false, err: nil, messages: map[string]string{}}
 }
 
 func (c *CycleState) SetComplete() {
@@ -35,6 +36,14 @@ func (c *CycleState) SetError(err error) {
 
 func (c *CycleState) Error() error {
 	return c.err
+}
+
+func (c *CycleState) SetMessage(pluginName, message string) {
+	c.messages[pluginName] = message
+}
+
+func (c *CycleState) Messages() map[string]string {
+	return c.messages
 }
 
 func (c *CycleState) QEMU() *api.VirtualMachine {

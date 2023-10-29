@@ -25,10 +25,10 @@ func (pl *NodeRegex) Name() string {
 }
 
 // regex is specified in ctx value (key=node.qemu-scheduler/regex)
-func (pl *NodeRegex) Filter(ctx context.Context, _ *framework.CycleState, config api.VirtualMachineCreateOptions, nodeInfo *framework.NodeInfo) *framework.Status {
+func (pl *NodeRegex) Filter(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodeInfo *framework.NodeInfo) *framework.Status {
 	reg, err := findNodeRegex(ctx)
 	if err != nil {
-
+		state.SetMessage(pl.Name(), "no valid regex is specified, skip")
 		return &framework.Status{}
 	}
 	if !reg.MatchString(nodeInfo.Node().Node) {

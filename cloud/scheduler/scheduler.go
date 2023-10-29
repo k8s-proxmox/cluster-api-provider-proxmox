@@ -40,33 +40,34 @@ func NewManager(params SchedulerParams) *Manager {
 	return &Manager{ctx: context.Background(), params: params, table: table}
 }
 
-// return new/existing scheduler running
-func (m *Manager) GetScheduler(client *proxmox.Service) *Scheduler {
-	logger := m.params.Logger.WithValues("Name", "qemu-scheduler")
+// return new/existing scheduler
+func (m *Manager) GetOrCreateScheduler(client *proxmox.Service) *Scheduler {
+	m.params.Logger = m.params.Logger.WithValues("Name", "qemu-scheduler")
 	schedID, err := m.getSchedulerID(client)
 	if err != nil {
 		// create new scheduler without registering
 		// to not make it zombie scheduler set timeout to context
-		ctx, cancel := context.WithTimeout(m.ctx, 5*time.Minute)
-		sched := m.NewScheduler(client, logger, cancel)
-		return sched.WithRun(ctx)
+		sched := m.NewScheduler(client, WithCancelContext(context.WithTimeout(m.ctx, 5*time.Minute)))
+		return sched
 	}
-	logger = logger.WithValues("scheduler ID", *schedID)
+	m.params.Logger = m.params.Logger.WithValues("scheduler ID", *schedID)
 	sched, ok := m.table[*schedID]
 	if !ok {
 		// create and register new scheduler
-		logger.V(5).Info("registering new scheduler")
-		ctx, cancel := context.WithCancel(m.ctx)
-		sched := m.NewScheduler(client, logger, cancel)
+		m.params.Logger.V(5).Info("registering new scheduler")
+		sched := m.NewScheduler(client)
 		m.table[*schedID] = sched
-		return sched.WithRun(ctx)
+		return sched
 	}
-	logger.V(5).Info("using existing scheduler")
+	m.params.Logger.V(5).Info("using existing scheduler")
 	return sched
 }
 
-func (m *Manager) NewScheduler(client *proxmox.Service, logger logr.Logger, cancel context.CancelFunc) *Scheduler {
-	return &Scheduler{
+// return new scheduler.
+// usually better to use GetOrCreateScheduler instead.
+func (m *Manager) NewScheduler(client *proxmox.Service, opts ...SchedulerOption) *Scheduler {
+	ctx, cancel := context.WithCancel(m.ctx)
+	sched := &Scheduler{
 		client:          client,
 		schedulingQueue: queue.New(),
 
@@ -75,8 +76,25 @@ func (m *Manager) NewScheduler(client *proxmox.Service, logger logr.Logger, canc
 		vmidPlugins:   plugins.NewVMIDPlugins(),
 
 		resultMap: make(map[string]chan *framework.CycleState),
-		logger:    logger,
-		cancel:    cancel,
+		logger:    m.params.Logger,
+
+		ctx:    ctx,
+		cancel: cancel,
+	}
+
+	for _, fn := range opts {
+		fn(sched)
+	}
+
+	return sched
+}
+
+type SchedulerOption func(s *Scheduler)
+
+func WithCancelContext(ctx context.Context, cancel context.CancelFunc) SchedulerOption {
+	return func(s *Scheduler) {
+		s.ctx = ctx
+		s.cancel = cancel
 	}
 }
 
@@ -105,8 +123,15 @@ type Scheduler struct {
 
 	// to do : cache
 
+	// map[qemu name]*framework.CycleState
 	resultMap map[string]chan *framework.CycleState
 	logger    logr.Logger
+
+	// scheduler status
+	running bool
+
+	// scheduler runs until this context done
+	ctx context.Context
 
 	// to stop itself
 	cancel context.CancelFunc
@@ -122,23 +147,37 @@ type schedulerID struct {
 }
 
 // run scheduler
-func (s *Scheduler) Run(ctx context.Context) {
-	wait.UntilWithContext(ctx, s.ScheduleOne, 0)
+// and ensure only one process is running
+func (s *Scheduler) Run() {
+	if s.IsRunning() {
+		s.logger.Info("this scheduler is already running")
+		return
+	}
+	defer func() { s.running = false }()
+	s.running = true
+	s.logger.Info("Start Running Scheduler")
+	wait.UntilWithContext(s.ctx, s.ScheduleOne, 0)
+	s.logger.Info("Stop Running Scheduler")
 }
 
-// run scheduelr and return it
-func (s *Scheduler) WithRun(ctx context.Context) *Scheduler {
-	go s.Run(ctx)
-	return s
+func (s *Scheduler) IsRunning() bool {
+	return s.running
+}
+
+// run scheduelr in parallel
+func (s *Scheduler) RunAsync() {
+	go s.Run()
 }
 
 // stop scheduler
-func (s *Scheduler) Stop() {
-	s.cancel()
-}
+// func (s *Scheduler) Stop() {
+// 	defer s.cancel()
+// }
 
+// retrieve one qemuSpec from queue and try to create
+// new qemu according to the qemuSpec
 func (s *Scheduler) ScheduleOne(ctx context.Context) {
-	qemu := s.schedulingQueue.NextQEMU()
+	qemu := s.schedulingQueue.NextQEMU(ctx)
 	config := qemu.Config()
 	qemuCtx := qemu.Context()
 	s.logger = s.logger.WithValues("qemu", config.Name)
@@ -148,19 +187,22 @@ func (s *Scheduler) ScheduleOne(ctx context.Context) {
 	s.resultMap[config.Name] = make(chan *framework.CycleState, 1)
 	defer func() { s.resultMap[config.Name] <- &state }()
 
+	// select node to run qemu
 	node, err := s.SelectNode(qemuCtx, *config)
 	if err != nil {
 		state.UpdateState(true, err, framework.SchedulerResult{})
 		return
 	}
 
-	// to do: do this parallel with SelectNode
+	// select vmid to be assigned to qemu
+	// to do: do this in parallel with SelectNode
 	vmid, err := s.SelectVMID(qemuCtx, *config)
 	if err != nil {
 		state.UpdateState(true, err, framework.SchedulerResult{})
 		return
 	}
 
+	// actually create qemu
 	vm, err := s.client.CreateVirtualMachine(ctx, node, vmid, *config)
 	if err != nil {
 		state.UpdateState(true, err, framework.SchedulerResult{})
@@ -171,7 +213,7 @@ func (s *Scheduler) ScheduleOne(ctx context.Context) {
 	state.UpdateState(true, nil, result)
 }
 
-// return status
+// wait until CycleState is put into channel and then return it
 func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.CycleState, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
@@ -194,15 +236,20 @@ func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCr
 
 // create new qemu with given spec and context
 func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.SchedulerResult, error) {
+	// add qemu spec into the queue
 	s.schedulingQueue.Add(ctx, config)
+
+	// wait until the scheduller finishes its job
 	var err error
 	status, err := s.WaitStatus(ctx, config)
 	if err != nil {
 		return status.Result(), err
 	}
 	if status.Error() != nil {
+		s.logger.Error(status.Error(), fmt.Sprintf("failed to create qemu: %v", status.Messages()))
 		return status.Result(), status.Error()
 	}
+	s.logger.Info(fmt.Sprintf("%v", status.Messages()))
 	return status.Result(), nil
 }
 
@@ -213,8 +260,10 @@ func (s *Scheduler) SelectNode(ctx context.Context, config api.VirtualMachineCre
 		return "", err
 	}
 
+	state := framework.NewCycleState()
+
 	// filter
-	nodelist, _ := s.RunFilterPlugins(ctx, nil, config, nodes)
+	nodelist, _ := s.RunFilterPlugins(ctx, &state, config, nodes)
 	if len(nodelist) == 0 {
 		return "", ErrNoNodesAvailable
 	}
@@ -223,7 +272,7 @@ func (s *Scheduler) SelectNode(ctx context.Context, config api.VirtualMachineCre
 	}
 
 	// score
-	scorelist, status := s.RunScorePlugins(ctx, nil, config, nodelist)
+	scorelist, status := s.RunScorePlugins(ctx, &state, config, nodelist)
 	if !status.IsSuccess() {
 		s.logger.Error(status.Error(), "scoring failed")
 	}

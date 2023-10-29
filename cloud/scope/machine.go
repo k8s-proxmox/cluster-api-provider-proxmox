@@ -91,7 +91,9 @@ func (m *MachineScope) CloudClient() *proxmox.Service {
 }
 
 func (m *MachineScope) GetScheduler(client *proxmox.Service) *scheduler.Scheduler {
-	return m.SchedulerManager.GetScheduler(client)
+	sched := m.SchedulerManager.GetOrCreateScheduler(client)
+	sched.RunAsync()
+	return sched
 }
 
 func (m *MachineScope) GetClusterStorage() infrav1.Storage {

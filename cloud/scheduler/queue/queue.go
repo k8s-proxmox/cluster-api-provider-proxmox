@@ -19,7 +19,8 @@ func New() *SchedulingQueue {
 	}
 }
 
-// qemu create option with context
+// qemu create option and context.
+// each scheduling plugins retrieves values from this context
 type qemuSpec struct {
 	ctx    context.Context
 	config *api.VirtualMachineCreateOptions
@@ -34,15 +35,16 @@ func (s *SchedulingQueue) Add(ctx context.Context, config *api.VirtualMachineCre
 }
 
 // return next qemuSpec
-func (s *SchedulingQueue) NextQEMU() *qemuSpec {
+// to do : break if context is done
+func (s *SchedulingQueue) NextQEMU(ctx context.Context) *qemuSpec {
 	// wait
 	s.lock.L.Lock()
+	defer s.lock.L.Unlock()
 	for len(s.activeQ) == 0 {
 		s.lock.Wait()
 	}
 	spec := s.activeQ[0]
 	s.activeQ = s.activeQ[1:]
-	s.lock.L.Unlock()
 	return spec
 }
 

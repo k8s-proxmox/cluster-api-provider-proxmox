@@ -23,7 +23,8 @@ func (pl *Random) Name() string {
 	return Name
 }
 
-// return random score: 0 <= n < 100
+// return random score: 0 <= n < 100.
+// just a sample plugin
 func (pl *Random) Score(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodeInfo *framework.NodeInfo) (int64, *framework.Status) {
 	src := rand.NewSource(time.Now().Unix())
 	r := rand.New(src)
