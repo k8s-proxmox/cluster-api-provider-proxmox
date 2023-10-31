@@ -1,4 +1,6 @@
 # cluster-api-provider-proxmox (CAPPX)
+[![Go Reference](https://pkg.go.dev/badge/github.com/sp-yduck/cluster-api-provider-proxmox.svg)](https://pkg.go.dev/github.com/sp-yduck/cluster-api-provider-proxmox) [![Go Report Card](https://goreportcard.com/badge/github.com/sp-yduck/cluster-api-provider-proxmox)](https://goreportcard.com/report/github.com/sp-yduck/cluster-api-provider-proxmox) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/sp-yduck/cluster-api-provider-proxmox?sort=semver)
+----
 
 cluster-api-provider-proxmox is a Cluster API [infrastructure provider](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html) implementation for [Proxmox VE](https://pve.proxmox.com/wiki/Main_Page).
 
