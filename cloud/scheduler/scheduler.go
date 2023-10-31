@@ -47,7 +47,7 @@ func (m *Manager) GetOrCreateScheduler(client *proxmox.Service) *Scheduler {
 	if err != nil {
 		// create new scheduler without registering
 		// to not make it zombie scheduler set timeout to context
-		sched := m.NewScheduler(client, WithCancelContext(context.WithTimeout(m.ctx, 5*time.Minute)))
+		sched := m.NewScheduler(client, WithTimeout(1*time.Minute))
 		return sched
 	}
 	m.params.Logger = m.params.Logger.WithValues("scheduler ID", *schedID)
@@ -90,11 +90,17 @@ func (m *Manager) NewScheduler(client *proxmox.Service, opts ...SchedulerOption)
 }
 
 type SchedulerOption func(s *Scheduler)
+type CancelFunc func()
 
-func WithCancelContext(ctx context.Context, cancel context.CancelFunc) SchedulerOption {
+func (s *Scheduler) WithCancel() (*Scheduler, CancelFunc) {
+	return s, s.Stop
+}
+
+// set timeout to scheduler
+func WithTimeout(timeout time.Duration) SchedulerOption {
 	return func(s *Scheduler) {
-		s.ctx = ctx
-		s.cancel = cancel
+		s, cancel := s.WithCancel()
+		go time.AfterFunc(timeout, cancel)
 	}
 }
 
@@ -123,7 +129,7 @@ type Scheduler struct {
 
 	// to do : cache
 
-	// map[qemu name]*framework.CycleState
+	// map[qemu name]chan *framework.CycleState
 	resultMap map[string]chan *framework.CycleState
 	logger    logr.Logger
 
@@ -170,14 +176,18 @@ func (s *Scheduler) RunAsync() {
 }
 
 // stop scheduler
-// func (s *Scheduler) Stop() {
-// 	defer s.cancel()
-// }
+func (s *Scheduler) Stop() {
+	defer s.cancel()
+	s.schedulingQueue.ShutDown()
+}
 
 // retrieve one qemuSpec from queue and try to create
 // new qemu according to the qemuSpec
 func (s *Scheduler) ScheduleOne(ctx context.Context) {
-	qemu := s.schedulingQueue.NextQEMU(ctx)
+	qemu, shutdown := s.schedulingQueue.Get()
+	if shutdown {
+		return
+	}
 	config := qemu.Config()
 	qemuCtx := qemu.Context()
 	s.logger = s.logger.WithValues("qemu", config.Name)
@@ -230,7 +240,9 @@ func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCr
 		delete(s.resultMap, config.Name)
 		return *state, nil
 	case <-ctx.Done():
-		return framework.CycleState{}, fmt.Errorf("exceed timeout deadline")
+		err := fmt.Errorf("exceed timeout deadline. schedulingQueue might be shutdowned")
+		s.logger.Error(err, fmt.Sprintf("schedulingQueue: %v", *s.schedulingQueue))
+		return framework.CycleState{}, err
 	}
 }
 
