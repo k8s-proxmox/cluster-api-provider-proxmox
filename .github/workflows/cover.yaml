@@ -1,3 +1,5 @@
+name: unit test coverage
+
 # add public code coverage reports
 on:
   push:
