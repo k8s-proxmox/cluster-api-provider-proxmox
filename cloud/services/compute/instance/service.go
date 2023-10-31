@@ -6,6 +6,7 @@ import (
 	"github.com/sp-yduck/proxmox-go/proxmox"
 
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
 )
 
 type Scope interface {
@@ -13,14 +14,16 @@ type Scope interface {
 }
 
 type Service struct {
-	scope  Scope
-	client proxmox.Service
+	scope     Scope
+	client    proxmox.Service
+	scheduler *scheduler.Scheduler
 }
 
 func NewService(s Scope) *Service {
 	return &Service{
-		scope:  s,
-		client: *s.CloudClient(),
+		scope:     s,
+		client:    *s.CloudClient(),
+		scheduler: s.GetScheduler(s.CloudClient()),
 	}
 }
 

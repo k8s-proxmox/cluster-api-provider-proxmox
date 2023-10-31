@@ -54,7 +54,7 @@ func (s *Service) Delete(ctx context.Context) error {
 	log := log.FromContext(ctx)
 	log.Info("Deleting instance resources")
 
-	instance, err := s.getQEMU(ctx, s.scope.GetVMID())
+	instance, err := s.getQEMU(ctx)
 	if err != nil {
 		if !rest.IsNotFound(err) {
 			return err

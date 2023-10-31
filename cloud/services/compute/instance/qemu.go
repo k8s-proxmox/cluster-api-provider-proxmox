@@ -3,10 +3,8 @@ package instance
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"time"
 
-	"github.com/pkg/errors"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
 	"github.com/sp-yduck/proxmox-go/api"
 	"github.com/sp-yduck/proxmox-go/proxmox"
 	"github.com/sp-yduck/proxmox-go/rest"
@@ -22,91 +20,51 @@ func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, e
 	log := log.FromContext(ctx)
 	log.Info("Reconciling QEMU")
 
-	nodeName := s.scope.NodeName()
-	vmid := s.scope.GetVMID()
-	qemu, err := s.getQEMU(ctx, vmid)
+	qemu, err := s.getQEMU(ctx)
 	if err == nil { // if qemu is found, return it
 		return qemu, nil
 	}
 	if !rest.IsNotFound(err) {
-		log.Error(err, fmt.Sprintf("failed to get qemu: node=%s,vmid=%d", nodeName, *vmid))
+		log.Error(err, "failed to get qemu")
 		return nil, err
 	}
 
 	// no qemu found, create new one
-	return s.createQEMU(ctx, nodeName, vmid)
+	return s.createQEMU(ctx)
 }
 
 // get QEMU gets proxmox vm from vmid
-func (s *Service) getQEMU(ctx context.Context, vmid *int) (*proxmox.VirtualMachine, error) {
+func (s *Service) getQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
+	vmid := s.scope.GetVMID()
 	if vmid != nil {
 		return s.client.VirtualMachine(ctx, *vmid)
 	}
 	return nil, rest.NotFoundErr
 }
 
-func (s *Service) createQEMU(ctx context.Context, nodeName string, vmid *int) (*proxmox.VirtualMachine, error) {
+func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
 
 	if err := s.ensureStorageAvailable(ctx); err != nil {
 		return nil, err
 	}
 
-	// get node
-	if nodeName == "" {
-		// temp solution
-		node, err := s.getRandomNode(ctx)
-		if err != nil {
-			log.Error(err, "failed to get random node")
-			return nil, err
-		}
-		nodeName = node.Node
-		s.scope.SetNodeName(nodeName)
-	}
-
-	// if vmid is empty, generate new vmid
-	if vmid == nil {
-		nextid, err := s.getNextID(ctx)
-		if err != nil {
-			log.Error(err, "failed to get available vmid")
-			return nil, err
-		}
-		vmid = &nextid
-	}
-
+	// create qemu
 	vmoption := s.generateVMOptions()
-	vm, err := s.client.CreateVirtualMachine(ctx, nodeName, *vmid, vmoption)
+	// bind annotation key-values to context
+	schedCtx := framework.ContextWithMap(ctx, s.scope.Annotations())
+	result, err := s.scheduler.CreateQEMU(schedCtx, &vmoption)
 	if err != nil {
-		log.Error(err, fmt.Sprintf("failed to create qemu instance %s", vm.VM.Name))
+		log.Error(err, "failed to create qemu instance")
 		return nil, err
 	}
-	s.scope.SetVMID(*vmid)
+
+	s.scope.SetNodeName(result.Node())
+	s.scope.SetVMID(result.VMID())
 	if err := s.scope.PatchObject(); err != nil {
 		return nil, err
 	}
-	return vm, nil
-}
-
-func (s *Service) getNextID(ctx context.Context) (int, error) {
-	return s.client.RESTClient().GetNextID(ctx)
-}
-
-func (s *Service) getNodes(ctx context.Context) ([]*api.Node, error) {
-	return s.client.Nodes(ctx)
-}
-
-// GetRandomNode returns a node chosen randomly
-func (s *Service) getRandomNode(ctx context.Context) (*api.Node, error) {
-	nodes, err := s.getNodes(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if len(nodes) <= 0 {
-		return nil, errors.Errorf("no nodes found")
-	}
-	src := rand.NewSource(time.Now().Unix())
-	r := rand.New(src)
-	return nodes[r.Intn(len(nodes))], nil
+	return result.Instance(), nil
 }
 
 func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
@@ -144,6 +102,7 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 		NameServer:    network.NameServer,
 		Net:           api.Net{Net0: net0},
 		Numa:          boolToInt8(options.NUMA),
+		Node:          s.scope.NodeName(),
 		OnBoot:        boolToInt8(options.OnBoot),
 		OSType:        api.OSType(options.OSType),
 		Protection:    boolToInt8(options.Protection),
@@ -160,6 +119,7 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 		Template:      boolToInt8(options.Template),
 		VCPUs:         options.VCPUs,
 		VMGenID:       options.VMGenerationID,
+		VMID:          s.scope.GetVMID(),
 		VGA:           "serial0",
 	}
 	return vmoptions

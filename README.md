@@ -63,6 +63,8 @@ kubectl delete cluster cappx-test
 
 - Supports custom cloud-config (user data). CAPPX uses VNC websockert for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
 
+- Flexible vmid/node assigning. You can flexibly assign vmid to your qemu and flexibly schedule qemus to proxmox nodes. For more details please check [qemu-scheduler](./cloud/scheduler/).
+
 ### Node Images
 
 CAPPX is compatible with `iso`, `qcow2`, `qed`, `raw`, `vdi`, `vpc`, `vmdk` format of image. You can build your own node image and use it for `ProxmoxMachine`.

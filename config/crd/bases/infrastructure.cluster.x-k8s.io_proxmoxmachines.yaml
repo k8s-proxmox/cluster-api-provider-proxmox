@@ -613,10 +613,89 @@ spec:
                     type: integer
                   hookscript:
                     type: string
+                  hostpci0:
+                    type: string
+                  hostpci1:
+                    type: string
+                  hostpci2:
+                    type: string
+                  hostpci3:
+                    type: string
                   hotplug:
-                    description: HostPci
                     type: string
                   hugepages:
+                    type: string
+                  ide0:
+                    type: string
+                  ide1:
+                    type: string
+                  ide2:
+                    type: string
+                  ide3:
+                    type: string
+                  ipconfig0:
+                    type: string
+                  ipconfig1:
+                    type: string
+                  ipconfig2:
+                    type: string
+                  ipconfig3:
+                    type: string
+                  ipconfig4:
+                    type: string
+                  ipconfig5:
+                    type: string
+                  ipconfig6:
+                    type: string
+                  ipconfig7:
+                    type: string
+                  ipconfig8:
+                    type: string
+                  ipconfig9:
+                    type: string
+                  ipconfig10:
+                    type: string
+                  ipconfig11:
+                    type: string
+                  ipconfig12:
+                    type: string
+                  ipconfig13:
+                    type: string
+                  ipconfig14:
+                    type: string
+                  ipconfig15:
+                    type: string
+                  ipconfig16:
+                    type: string
+                  ipconfig17:
+                    type: string
+                  ipconfig18:
+                    type: string
+                  ipconfig19:
+                    type: string
+                  ipconfig20:
+                    type: string
+                  ipconfig21:
+                    type: string
+                  ipconfig22:
+                    type: string
+                  ipconfig23:
+                    type: string
+                  ipconfig24:
+                    type: string
+                  ipconfig25:
+                    type: string
+                  ipconfig26:
+                    type: string
+                  ipconfig27:
+                    type: string
+                  ipconfig28:
+                    type: string
+                  ipconfig29:
+                    type: string
+                  ipconfig30:
+                    type: string
+                  ipconfig31:
                     type: string
                   ivshmem:
                     type: string
@@ -650,14 +729,100 @@ spec:
                       Create will automatically use the setting from the host if neither
                       searchdomain nor nameserver are set.'
                     type: string
+                  net0:
+                    type: string
+                  net1:
+                    type: string
+                  net2:
+                    type: string
+                  net3:
+                    type: string
+                  net4:
+                    type: string
+                  net5:
+                    type: string
+                  net6:
+                    type: string
+                  net7:
+                    type: string
+                  net8:
+                    type: string
+                  net9:
+                    type: string
+                  net10:
+                    type: string
+                  net11:
+                    type: string
+                  net12:
+                    type: string
+                  net13:
+                    type: string
+                  net14:
+                    type: string
+                  net15:
+                    type: string
+                  net16:
+                    type: string
+                  net17:
+                    type: string
+                  net18:
+                    type: string
+                  net19:
+                    type: string
+                  net20:
+                    type: string
+                  net21:
+                    type: string
+                  net22:
+                    type: string
+                  net23:
+                    type: string
+                  net24:
+                    type: string
+                  net25:
+                    type: string
+                  net26:
+                    type: string
+                  net27:
+                    type: string
+                  net28:
+                    type: string
+                  net29:
+                    type: string
+                  net30:
+                    type: string
+                  net31:
+                    type: string
                   numa:
                     type: integer
+                  numa0:
+                    type: string
+                  numa1:
+                    type: string
+                  numa2:
+                    type: string
+                  numa3:
+                    type: string
+                  numa4:
+                    type: string
+                  numa5:
+                    type: string
+                  numa6:
+                    type: string
+                  numa7:
+                    type: string
                   onboot:
                     description: specifies whether a VM will be started during system
                       bootup
                     type: integer
                   ostype:
                     description: quest OS
+                    type: string
+                  parallel0:
+                    type: string
+                  parallel1:
+                    type: string
+                  parallel2:
                     type: string
                   protection:
                     type: integer
@@ -666,6 +831,80 @@ spec:
                     type: integer
                   rng0:
                     type: string
+                  sata0:
+                    type: string
+                  sata1:
+                    type: string
+                  sata2:
+                    type: string
+                  sata3:
+                    type: string
+                  sata4:
+                    type: string
+                  sata5:
+                    type: string
+                  scsi0:
+                    type: string
+                  scsi1:
+                    type: string
+                  scsi2:
+                    type: string
+                  scsi3:
+                    type: string
+                  scsi4:
+                    type: string
+                  scsi5:
+                    type: string
+                  scsi6:
+                    type: string
+                  scsi7:
+                    type: string
+                  scsi8:
+                    type: string
+                  scsi9:
+                    type: string
+                  scsi10:
+                    type: string
+                  scsi11:
+                    type: string
+                  scsi12:
+                    type: string
+                  scsi13:
+                    type: string
+                  scsi14:
+                    type: string
+                  scsi15:
+                    type: string
+                  scsi16:
+                    type: string
+                  scsi17:
+                    type: string
+                  scsi18:
+                    type: string
+                  scsi19:
+                    type: string
+                  scsi20:
+                    type: string
+                  scsi21:
+                    type: string
+                  scsi22:
+                    type: string
+                  scsi23:
+                    type: string
+                  scsi24:
+                    type: string
+                  scsi25:
+                    type: string
+                  scsi26:
+                    type: string
+                  scsi27:
+                    type: string
+                  scsi28:
+                    type: string
+                  scsi29:
+                    type: string
+                  scsi30:
+                    type: string
                   scsihw:
                     description: SCSI controller model
                     type: string
@@ -673,6 +912,14 @@ spec:
                     description: 'cloud-init: Sets DNS search domains for a container.
                       Create will automatically use the setting from the host if neither
                       searchdomain nor nameserver are set.'
+                    type: string
+                  serial0:
+                    type: string
+                  serial1:
+                    type: string
+                  serial2:
+                    type: string
+                  serial3:
                     type: string
                   shares:
                     type: integer
@@ -705,9 +952,57 @@ spec:
                     type: integer
                   tpmstate:
                     type: string
+                  unused0:
+                    type: string
+                  unused1:
+                    type: string
+                  unused2:
+                    type: string
+                  unused3:
+                    type: string
+                  unused4:
+                    type: string
+                  unused5:
+                    type: string
+                  unused6:
+                    type: string
+                  unused7:
+                    type: string
                   vcpus:
                     type: integer
                   vga:
+                    type: string
+                  virtio0:
+                    type: string
+                  virtio1:
+                    type: string
+                  virtio2:
+                    type: string
+                  virtio3:
+                    type: string
+                  virtio4:
+                    type: string
+                  virtio5:
+                    type: string
+                  virtio6:
+                    type: string
+                  virtio7:
+                    type: string
+                  virtio8:
+                    type: string
+                  virtio9:
+                    type: string
+                  virtio10:
+                    type: string
+                  virtio11:
+                    type: string
+                  virtio12:
+                    type: string
+                  virtio13:
+                    type: string
+                  virtio14:
+                    type: string
+                  virtio15:
                     type: string
                   vmgenid:
                     type: string
