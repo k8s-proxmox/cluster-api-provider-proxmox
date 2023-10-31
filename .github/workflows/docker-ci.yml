@@ -24,4 +24,4 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       
       - name: Build and push Docker image
-        run: "make docker-build docker-push IMG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${ GITHUB_SHA::7 }"
+        run: "make docker-build docker-push IMG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${GITHUB_SHA::7}"
