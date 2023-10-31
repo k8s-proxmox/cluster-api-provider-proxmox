@@ -6,7 +6,6 @@ import (
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/nodename"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/noderesource"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/overcommit"
-	// "github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/random"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/regex"
 )
 

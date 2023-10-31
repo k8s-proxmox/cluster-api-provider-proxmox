@@ -57,8 +57,9 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: fmt
-fmt: ## Run go fmt against code.
+fmt: goimports ## Run go fmt against code.
 	go fmt ./...
+	$(GOIMPORTS) -w ./
 
 .PHONY: vet
 vet: ## Run go vet against code.
@@ -232,6 +233,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 ENVSUBST ?= $(LOCALBIN)/envsubst
 KUBECTL ?= $(LOCALBIN)/kubectl
 GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
+GOIMPORTS ?= $(LOCALBIN)/goimports
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.0.0
@@ -280,3 +282,8 @@ $(SETUP_ENVTEST): go.mod # Build setup-envtest from tools folder.
 golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT): $(LOCALBIN)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) v1.54.0
+
+.PHONY: goimports
+goimports: $(GOIMPORTS)
+$(GOIMPORTS): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install golang.org/x/tools/cmd/goimports@latest
