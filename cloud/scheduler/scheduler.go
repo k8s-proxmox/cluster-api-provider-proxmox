@@ -99,7 +99,7 @@ func (s *Scheduler) WithCancel() (*Scheduler, CancelFunc) {
 // set timeout to scheduler
 func WithTimeout(timeout time.Duration) SchedulerOption {
 	return func(s *Scheduler) {
-		s, cancel := s.WithCancel()
+		_, cancel := s.WithCancel()
 		go time.AfterFunc(timeout, cancel)
 	}
 }
