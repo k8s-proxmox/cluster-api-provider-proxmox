@@ -12,7 +12,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: docker
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
