@@ -39,7 +39,7 @@ func (s *Service) createOrGetStorage(ctx context.Context) error {
 	opts := generateVMStorageOptions(s.scope)
 	if err := s.getStorage(ctx, opts.Storage); err != nil {
 		if rest.IsNotFound(err) {
-			log.Info("storage %s not found. it will be created")
+			log.Info("storage not found. it will be created")
 			return s.createStorage(ctx, opts)
 		}
 		return err

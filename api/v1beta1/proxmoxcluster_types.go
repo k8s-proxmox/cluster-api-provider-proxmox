@@ -37,6 +37,9 @@ type ProxmoxClusterSpec struct {
 
 	// storage is used for storing cloud init snippet
 	Storage Storage `json:"storage,omitempty"`
+
+	// resource pool to be used for cappx managed vms by default
+	ResourcePool string `json:"resourcePool,omitempty"`
 }
 
 // ProxmoxClusterStatus defines the observed state of ProxmoxCluster

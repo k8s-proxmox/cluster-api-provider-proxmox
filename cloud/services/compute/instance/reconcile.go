@@ -33,7 +33,6 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		return err
 	}
 
-	log.Info(fmt.Sprintf("Reconciled instance: bios-uuid=%s", *uuid))
 	if err := s.scope.SetProviderID(*uuid); err != nil {
 		return err
 	}
@@ -46,6 +45,13 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		return err
 	}
 	s.scope.SetConfigStatus(*config)
+
+	// add vm to resource pool
+	if err := s.reconcileResourcePool(ctx); err != nil {
+		return err
+	}
+
+	log.Info("Reconciled instance")
 	return nil
 }
 
