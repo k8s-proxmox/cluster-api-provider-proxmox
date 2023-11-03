@@ -7,6 +7,14 @@ import (
 	"github.com/sp-yduck/proxmox-go/api"
 )
 
+type InstanceStatus string
+
+var (
+	InstanceStatusPaused  = InstanceStatus(api.ProcessStatusPaused)
+	InstanceStatusRunning = InstanceStatus(api.ProcessStatusRunning)
+	InstanceStatusStopped = InstanceStatus(api.ProcessStatusStopped)
+)
+
 // ServerRef is used for configuring Proxmox client
 type ServerRef struct {
 	// endpoint is the address of the Proxmox-VE REST API endpoint.
@@ -87,6 +95,81 @@ type Hardware struct {
 	// +kubebuilder:validation:Pattern:=\+?\d+(\.\d+)?[KMGT]?
 	// +kubebuilder:default:="50G"
 	Disk string `json:"disk,omitempty"`
+
+	// network devices
+	// to do: multiple devices
+	// +kubebuilder:default:={model:virtio,bridge:vmbr0,firewall:true}
+	NetworkDevice NetworkDevice `json:"networkDevice"`
+}
+
+// Network Device
+type NetworkDevice struct {
+	// +kubebuilder:default:="virtio"
+	Model NetworkDeviceModel `json:"model"`
+
+	// +kubebuilder:default:="vmbr0"
+	Bridge NetworkDeviceBridge `json:"bridge"`
+
+	// +kubebuilder:default:=true
+	Firewall bool `json:"firewall,omitempty"`
+
+	LinkDown bool `json:"linkDown,omitempty"`
+
+	MacAddr string `json:"macAddr,omitempty"`
+
+	MTU int `json:"mtu,omitempty"`
+
+	Queues int `json:"queues,omitempty"`
+
+	// since float is highly discouraged, use string instead
+	// +kubebuilder:validation:Pattern:=[0-9]+(\.|)[0-9]*
+	Rate string `json:"rate,omitempty"`
+
+	Tag int `json:"tag,omitempty"`
+
+	// trunks: array of vlanid
+	Trunks []int `json:"trunks,omitempty"`
+}
+
+type (
+	// +kubebuilder:validation:Enum:=e1000;virtio;rtl8139;vmxnet3
+	NetworkDeviceModel string
+
+	// +kubebuilder:validation:Pattern:="vmbr[0-9]{1,4}"
+	NetworkDeviceBridge string
+)
+
+func (n *NetworkDevice) String() string {
+	config := []string{}
+	config = append(config, fmt.Sprintf("model=%s", string(n.Model)))
+	if n.Bridge != "" {
+		config = append(config, fmt.Sprintf("bridge=%s", string(n.Bridge)))
+	}
+	if n.Firewall {
+		config = append(config, fmt.Sprintf("firewall=%d", btoi(n.Firewall)))
+	}
+	if n.LinkDown {
+		config = append(config, fmt.Sprintf("link_down=%d", btoi(n.LinkDown)))
+	}
+	if n.MacAddr != "" {
+		config = append(config, fmt.Sprintf("macaddr=%s,%s=%s", n.MacAddr, string(n.Model), n.MacAddr))
+	}
+	if n.MTU != 0 {
+		config = append(config, fmt.Sprintf("mtu=%d", n.MTU))
+	}
+	if n.Queues != 0 {
+		config = append(config, fmt.Sprintf("queues=%d", n.Queues))
+	}
+	if n.Rate != "" {
+		config = append(config, fmt.Sprintf("rate=%s", n.Rate))
+	}
+	if n.Tag != 0 {
+		config = append(config, fmt.Sprintf("tag=%d", n.Tag))
+	}
+	if n.Trunks != nil {
+		config = append(config, fmt.Sprintf("trunks=%s", strings.Join(itoaSlice(n.Trunks), ";")))
+	}
+	return strings.Join(config, ",")
 }
 
 // Network
@@ -149,10 +232,19 @@ type Storage struct {
 	Path string `json:"path,omitempty"`
 }
 
-type InstanceStatus string
+// bool to int
+func btoi(x bool) int8 {
+	if x {
+		return 1
+	}
+	return 0
+}
 
-var (
-	InstanceStatusPaused  = InstanceStatus(api.ProcessStatusPaused)
-	InstanceStatusRunning = InstanceStatus(api.ProcessStatusRunning)
-	InstanceStatusStopped = InstanceStatus(api.ProcessStatusStopped)
-)
+// []int to []string
+func itoaSlice(a []int) []string {
+	b := []string{}
+	for _, x := range a {
+		b = append(b, fmt.Sprintf("%d", x))
+	}
+	return b
+}

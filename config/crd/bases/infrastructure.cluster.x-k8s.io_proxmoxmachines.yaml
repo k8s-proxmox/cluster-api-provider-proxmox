@@ -219,6 +219,14 @@ spec:
                   this Machine should be attached to, as defined in Cluster API.
                 type: string
               hardware:
+                default:
+                  cpu: 2
+                  disk: 50G
+                  memory: 4096
+                  networkDevice:
+                    bridge: vmbr0
+                    firewall: true
+                    model: virtio
                 description: Hardware
                 properties:
                   bios:
@@ -248,10 +256,58 @@ spec:
                     description: 'amount of RAM for the VM in MiB : 16 ~'
                     minimum: 16
                     type: integer
+                  networkDevice:
+                    default:
+                      bridge: vmbr0
+                      firewall: true
+                      model: virtio
+                    description: 'network devices to do: multiple devices'
+                    properties:
+                      bridge:
+                        default: vmbr0
+                        pattern: vmbr[0-9]{1,4}
+                        type: string
+                      firewall:
+                        default: true
+                        type: boolean
+                      linkDown:
+                        type: boolean
+                      macAddr:
+                        type: string
+                      model:
+                        default: virtio
+                        enum:
+                        - e1000
+                        - virtio
+                        - rtl8139
+                        - vmxnet3
+                        type: string
+                      mtu:
+                        type: integer
+                      queues:
+                        type: integer
+                      rate:
+                        description: since float is highly discouraged, use string
+                          instead
+                        pattern: '[0-9]+(\.|)[0-9]*'
+                        type: string
+                      tag:
+                        type: integer
+                      trunks:
+                        description: 'trunks: array of vlanid'
+                        items:
+                          type: integer
+                        type: array
+                    required:
+                    - bridge
+                    - model
+                    type: object
                   sockets:
                     description: The number of CPU sockets. Defaults to 1.
                     minimum: 1
                     type: integer
+                required:
+                - networkDevice
                 type: object
               image:
                 description: Image is the image to be provisioned
@@ -460,6 +516,7 @@ spec:
                 minimum: 0
                 type: integer
             required:
+            - hardware
             - image
             type: object
           status:
