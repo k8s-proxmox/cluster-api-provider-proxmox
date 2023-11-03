@@ -77,7 +77,7 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 	cicustom := fmt.Sprintf("user=%s:%s", snippetStorageName, userSnippetPath(vmName))
 	ide2 := fmt.Sprintf("file=%s:cloudinit,media=cdrom", imageStorageName)
 	scsi0 := fmt.Sprintf("%s:0,import-from=%s", imageStorageName, rawImageFilePath(s.scope.GetImage()))
-	net0 := "model=virtio,bridge=vmbr0,firewall=1"
+	net0 := hardware.NetworkDevice.String()
 
 	vmoptions := api.VirtualMachineCreateOptions{
 		ACPI:          boolToInt8(options.ACPI),

@@ -248,6 +248,44 @@ spec:
                     description: 'amount of RAM for the VM in MiB : 16 ~'
                     minimum: 16
                     type: integer
+                  networkDevice:
+                    description: 'network devices to do: multiple devices'
+                    properties:
+                      bridge:
+                        default: vmbr0
+                        pattern: vmbr[0-9]{1,4}
+                        type: string
+                      firewall:
+                        type: boolean
+                      linkDown:
+                        type: boolean
+                      macAddr:
+                        type: string
+                      model:
+                        default: virtio
+                        enum:
+                        - e1000
+                        - virtio
+                        - rtl8139
+                        - vmxnet3
+                        type: string
+                      mtu:
+                        type: integer
+                      queues:
+                        type: integer
+                      rate:
+                        description: since float is highly discouraged, use string
+                          instead
+                        pattern: '[0-9]+(\.|)[0-9]*'
+                        type: string
+                      tag:
+                        type: integer
+                      trunks:
+                        description: 'trunks: array of vlanid'
+                        items:
+                          type: integer
+                        type: array
+                    type: object
                   sockets:
                     description: The number of CPU sockets. Defaults to 1.
                     minimum: 1
