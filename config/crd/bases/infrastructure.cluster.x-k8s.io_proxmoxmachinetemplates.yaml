@@ -242,6 +242,7 @@ spec:
                           memory: 4096
                           networkDevice:
                             bridge: vmbr0
+                            firewall: true
                             model: virtio
                         description: Hardware
                         properties:
@@ -275,6 +276,7 @@ spec:
                           networkDevice:
                             default:
                               bridge: vmbr0
+                              firewall: true
                               model: virtio
                             description: 'network devices to do: multiple devices'
                             properties:
@@ -283,6 +285,7 @@ spec:
                                 pattern: vmbr[0-9]{1,4}
                                 type: string
                               firewall:
+                                default: true
                                 type: boolean
                               linkDown:
                                 type: boolean
