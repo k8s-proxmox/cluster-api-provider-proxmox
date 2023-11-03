@@ -23,7 +23,7 @@ func (s *Service) ensureStorageAvailable(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if supportsImage(storage) {
+		if !supportsImage(storage) {
 			return fmt.Errorf("storage %s does not support \"images\" type of content", storageName)
 		}
 	}
