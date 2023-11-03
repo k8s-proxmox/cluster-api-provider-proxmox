@@ -53,7 +53,8 @@ type ProxmoxMachineSpec struct {
 	CloudInit CloudInit `json:"cloudInit,omitempty"`
 
 	// Hardware
-	Hardware Hardware `json:"hardware,omitempty"`
+	// +kubebuilder:default:={cpu:2,disk:"50G",memory:4096,networkDevice:{model:virtio,bridge:vmbr0}}
+	Hardware Hardware `json:"hardware"`
 
 	// Network
 	Network Network `json:"network,omitempty"`

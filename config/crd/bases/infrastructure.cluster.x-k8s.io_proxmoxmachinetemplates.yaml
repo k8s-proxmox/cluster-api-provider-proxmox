@@ -236,6 +236,13 @@ spec:
                           API.
                         type: string
                       hardware:
+                        default:
+                          cpu: 2
+                          disk: 50G
+                          memory: 4096
+                          networkDevice:
+                            bridge: vmbr0
+                            model: virtio
                         description: Hardware
                         properties:
                           bios:
@@ -266,6 +273,9 @@ spec:
                             minimum: 16
                             type: integer
                           networkDevice:
+                            default:
+                              bridge: vmbr0
+                              model: virtio
                             description: 'network devices to do: multiple devices'
                             properties:
                               bridge:
@@ -302,11 +312,16 @@ spec:
                                 items:
                                   type: integer
                                 type: array
+                            required:
+                            - bridge
+                            - model
                             type: object
                           sockets:
                             description: The number of CPU sockets. Defaults to 1.
                             minimum: 1
                             type: integer
+                        required:
+                        - networkDevice
                         type: object
                       image:
                         description: Image is the image to be provisioned
@@ -522,6 +537,7 @@ spec:
                         minimum: 0
                         type: integer
                     required:
+                    - hardware
                     - image
                     type: object
                 required:
