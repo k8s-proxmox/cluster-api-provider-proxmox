@@ -42,7 +42,6 @@ func NewManager(params SchedulerParams) *Manager {
 
 // return new/existing scheduler
 func (m *Manager) GetOrCreateScheduler(client *proxmox.Service) *Scheduler {
-	m.params.Logger = m.params.Logger.WithValues("Name", "qemu-scheduler")
 	schedID, err := m.getSchedulerID(client)
 	if err != nil {
 		// create new scheduler without registering
@@ -50,16 +49,16 @@ func (m *Manager) GetOrCreateScheduler(client *proxmox.Service) *Scheduler {
 		sched := m.NewScheduler(client, WithTimeout(1*time.Minute))
 		return sched
 	}
-	m.params.Logger = m.params.Logger.WithValues("scheduler ID", *schedID)
 	sched, ok := m.table[*schedID]
 	if !ok {
 		// create and register new scheduler
 		m.params.Logger.V(5).Info("registering new scheduler")
 		sched := m.NewScheduler(client)
+		sched.logger = sched.logger.WithValues("scheduler ID", *schedID)
 		m.table[*schedID] = sched
 		return sched
 	}
-	m.params.Logger.V(5).Info("using existing scheduler")
+	sched.logger.V(5).Info("using existing scheduler")
 	return sched
 }
 
@@ -76,7 +75,7 @@ func (m *Manager) NewScheduler(client *proxmox.Service, opts ...SchedulerOption)
 		vmidPlugins:   plugins.NewVMIDPlugins(),
 
 		resultMap: make(map[string]chan *framework.CycleState),
-		logger:    m.params.Logger,
+		logger:    m.params.Logger.WithValues("Name", "qemu-scheduler"),
 
 		ctx:    ctx,
 		cancel: cancel,
