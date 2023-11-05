@@ -23,7 +23,7 @@ func (pl *CPUOvercommit) Name() string {
 }
 
 // filter by cpu overcommit ratio
-func (pl *CPUOvercommit) Filter(ctx context.Context, _ *framework.CycleState, config api.VirtualMachineCreateOptions, nodeInfo *framework.NodeInfo) *framework.Status {
+func (pl *CPUOvercommit) Filter(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodeInfo *framework.NodeInfo) *framework.Status {
 	cpu := sumCPUs(nodeInfo.QEMUs())
 	maxCPU := nodeInfo.Node().MaxCpu
 	sockets := config.Sockets
@@ -34,15 +34,19 @@ func (pl *CPUOvercommit) Filter(ctx context.Context, _ *framework.CycleState, co
 	if ratio > defaultCPUOvercommitRatio {
 		status := framework.NewStatus()
 		status.SetCode(1)
+		state.SetMessage(pl.Name(), "exceed cpu overcommit ratio")
 		return status
 	}
 	return &framework.Status{}
 }
 
+// sum cpus of all 'running' qemu
 func sumCPUs(qemus []*api.VirtualMachine) int {
 	var result int
 	for _, q := range qemus {
-		result += q.Cpus
+		if q.Status == api.ProcessStatusRunning {
+			result += q.Cpus
+		}
 	}
 	return result
 }
