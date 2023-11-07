@@ -23,22 +23,26 @@ func (pl *MemoryOvercommit) Name() string {
 }
 
 // filter by memory overcommit ratio
-func (pl *MemoryOvercommit) Filter(ctx context.Context, _ *framework.CycleState, config api.VirtualMachineCreateOptions, nodeInfo *framework.NodeInfo) *framework.Status {
+func (pl *MemoryOvercommit) Filter(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodeInfo *framework.NodeInfo) *framework.Status {
 	mem := sumMems(nodeInfo.QEMUs())
 	maxMem := nodeInfo.Node().MaxMem
 	ratio := float32(mem+1024*1024*config.Memory) / float32(maxMem)
 	if ratio >= defaultMemoryOvercommitRatio {
 		status := framework.NewStatus()
 		status.SetCode(1)
+		state.SetMessage(pl.Name(), "exceed memory overcommit ratio")
 		return status
 	}
 	return &framework.Status{}
 }
 
+// sum maxmem of all 'running' qemu
 func sumMems(qemus []*api.VirtualMachine) int {
 	var result int
 	for _, q := range qemus {
-		result += q.MaxMem
+		if q.Status == api.ProcessStatusRunning {
+			result += q.MaxMem
+		}
 	}
 	return result
 }
