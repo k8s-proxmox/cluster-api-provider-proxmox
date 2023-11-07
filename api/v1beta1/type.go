@@ -99,16 +99,16 @@ type Hardware struct {
 	// network devices
 	// to do: multiple devices
 	// +kubebuilder:default:={model:virtio,bridge:vmbr0,firewall:true}
-	NetworkDevice NetworkDevice `json:"networkDevice"`
+	NetworkDevice NetworkDevice `json:"networkDevice,omitempty"`
 }
 
 // Network Device
 type NetworkDevice struct {
 	// +kubebuilder:default:="virtio"
-	Model NetworkDeviceModel `json:"model"`
+	Model NetworkDeviceModel `json:"model,omitempty"`
 
 	// +kubebuilder:default:="vmbr0"
-	Bridge NetworkDeviceBridge `json:"bridge"`
+	Bridge NetworkDeviceBridge `json:"bridge,omitempty"`
 
 	// +kubebuilder:default:=true
 	Firewall bool `json:"firewall,omitempty"`
