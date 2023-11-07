@@ -54,7 +54,7 @@ type ProxmoxMachineSpec struct {
 
 	// Hardware
 	// +kubebuilder:default:={cpu:2,disk:"50G",memory:4096,networkDevice:{model:virtio,bridge:vmbr0,firewall:true}}
-	Hardware Hardware `json:"hardware"`
+	Hardware Hardware `json:"hardware,omitempty"`
 
 	// Network
 	Network Network `json:"network,omitempty"`
