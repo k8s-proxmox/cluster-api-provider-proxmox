@@ -16,13 +16,15 @@ import (
 var _ = Describe("NewManager", Label("unit", "scheduler"), func() {
 	It("should not error", func() {
 		params := scheduler.SchedulerParams{}
-		manager := scheduler.NewManager(params)
+		manager, err := scheduler.NewManager(params)
+		Expect(err).NotTo(HaveOccurred())
 		Expect(manager).NotTo(BeNil())
 	})
 })
 
 var _ = Describe("NewScheduler", Label("unit", "scheduler"), func() {
-	manager := scheduler.NewManager(scheduler.SchedulerParams{})
+	manager, err := scheduler.NewManager(scheduler.SchedulerParams{})
+	Expect(err).NotTo(HaveOccurred())
 
 	It("should not error", func() {
 		sched := manager.NewScheduler(proxmoxSvc)
@@ -31,7 +33,8 @@ var _ = Describe("NewScheduler", Label("unit", "scheduler"), func() {
 })
 
 var _ = Describe("GetOrCreateScheduler", Label("integration", "scheduler"), func() {
-	manager := scheduler.NewManager(scheduler.SchedulerParams{})
+	manager, err := scheduler.NewManager(scheduler.SchedulerParams{})
+	Expect(err).NotTo(HaveOccurred())
 
 	It("should not error", func() {
 		sched := manager.GetOrCreateScheduler(proxmoxSvc)
@@ -40,7 +43,8 @@ var _ = Describe("GetOrCreateScheduler", Label("integration", "scheduler"), func
 })
 
 var _ = Describe("Run (RunAsync) / IsRunning / Stop", Label("unit", "scheduler"), func() {
-	manager := scheduler.NewManager(scheduler.SchedulerParams{zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true))})
+	manager, err := scheduler.NewManager(scheduler.SchedulerParams{Logger: zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true))})
+	Expect(err).NotTo(HaveOccurred())
 
 	Context("with minimal scheduler", func() {
 		It("should not error", func() {
@@ -56,7 +60,8 @@ var _ = Describe("Run (RunAsync) / IsRunning / Stop", Label("unit", "scheduler")
 })
 
 var _ = Describe("WithTimeout", Label("integration", "scheduler"), func() {
-	manager := scheduler.NewManager(scheduler.SchedulerParams{})
+	manager, err := scheduler.NewManager(scheduler.SchedulerParams{})
+	Expect(err).NotTo(HaveOccurred())
 
 	It("should not error", func() {
 		sched := manager.NewScheduler(proxmoxSvc, scheduler.WithTimeout(2*time.Second))
@@ -70,7 +75,8 @@ var _ = Describe("WithTimeout", Label("integration", "scheduler"), func() {
 })
 
 var _ = Describe("CreateQEMU", Label("integration"), func() {
-	manager := scheduler.NewManager(scheduler.SchedulerParams{zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true))})
+	manager, err := scheduler.NewManager(scheduler.SchedulerParams{Logger: zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true))})
+	Expect(err).NotTo(HaveOccurred())
 	var result framework.SchedulerResult
 
 	AfterEach(func() {

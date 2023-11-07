@@ -35,9 +35,14 @@ type Manager struct {
 }
 
 // return manager with initialized scheduler-table
-func NewManager(params SchedulerParams) *Manager {
+func NewManager(params SchedulerParams) (*Manager, error) {
 	table := make(map[schedulerID]*Scheduler)
-	return &Manager{ctx: context.Background(), params: params, table: table}
+	config, err := plugins.GetPluginConfigFromFile(params.PluginConfigFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read plugin config: %v", err)
+	}
+	params.pluginconfigs = config
+	return &Manager{ctx: context.Background(), params: params, table: table}, nil
 }
 
 // return new/existing scheduler
@@ -70,9 +75,7 @@ func (m *Manager) NewScheduler(client *proxmox.Service, opts ...SchedulerOption)
 		client:          client,
 		schedulingQueue: queue.New(),
 
-		filterPlugins: plugins.NewNodeFilterPlugins(),
-		scorePlugins:  plugins.NewNodeScorePlugins(),
-		vmidPlugins:   plugins.NewVMIDPlugins(),
+		registry: plugins.NewRegistry(m.params.PluginConfigs()),
 
 		resultMap: make(map[string]chan *framework.CycleState),
 		logger:    m.params.Logger.WithValues("Name", "qemu-scheduler"),
@@ -122,9 +125,7 @@ type Scheduler struct {
 	client          *proxmox.Service
 	schedulingQueue *queue.SchedulingQueue
 
-	filterPlugins []framework.NodeFilterPlugin
-	scorePlugins  []framework.NodeScorePlugin
-	vmidPlugins   []framework.VMIDPlugin
+	registry plugins.PluginRegistry
 
 	// to do : cache
 
@@ -144,6 +145,14 @@ type Scheduler struct {
 
 type SchedulerParams struct {
 	Logger logr.Logger
+
+	// file path for pluginConfig
+	PluginConfigFile string
+	pluginconfigs    plugins.PluginConfigs
+}
+
+func (p *SchedulerParams) PluginConfigs() plugins.PluginConfigs {
+	return p.pluginconfigs
 }
 
 type schedulerID struct {
@@ -320,7 +329,7 @@ func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.Cycle
 	}
 	for _, nodeInfo := range nodeInfos {
 		status := framework.NewStatus()
-		for _, pl := range s.filterPlugins {
+		for _, pl := range s.registry.FilterPlugins() {
 			status = pl.Filter(ctx, state, config, nodeInfo)
 			if !status.IsSuccess() {
 				status.SetFailedPlugin(pl.Name())
@@ -344,7 +353,7 @@ func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleS
 		return nil, status
 	}
 	for index, nodeInfo := range nodeInfos {
-		for _, pl := range s.scorePlugins {
+		for _, pl := range s.registry.ScorePlugins() {
 			score, status := pl.Score(ctx, state, config, nodeInfo)
 			if !status.IsSuccess() {
 				return nil, status
@@ -379,7 +388,7 @@ func selectHighestScoreNode(scoreList framework.NodeScoreList) (string, error) {
 }
 
 func (s *Scheduler) RunVMIDPlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nextid int, usedID map[int]bool) (int, error) {
-	for _, pl := range s.vmidPlugins {
+	for _, pl := range s.registry.VMIDPlugins() {
 		key := pl.PluginKey()
 		value := ctx.Value(key)
 		if value != nil {
