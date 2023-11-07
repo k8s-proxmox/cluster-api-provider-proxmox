@@ -35,6 +35,7 @@ import (
 	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
+	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/resourcepool"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/storage"
 )
 
@@ -116,6 +117,7 @@ func (r *ProxmoxClusterReconciler) reconcile(ctx context.Context, clusterScope *
 
 	reconcilers := []cloud.Reconciler{
 		storage.NewService(clusterScope),
+		resourcepool.NewService(clusterScope),
 	}
 
 	for _, r := range reconcilers {
@@ -146,6 +148,7 @@ func (r *ProxmoxClusterReconciler) reconcileDelete(ctx context.Context, clusterS
 
 	reconcilers := []cloud.Reconciler{
 		storage.NewService(clusterScope),
+		resourcepool.NewService(clusterScope),
 	}
 
 	for _, r := range reconcilers {

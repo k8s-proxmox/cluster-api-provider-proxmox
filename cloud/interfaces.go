@@ -36,6 +36,7 @@ type ClusterGetter interface {
 	// FailureDomains() clusterv1.FailureDomains
 	ControlPlaneEndpoint() clusterv1.APIEndpoint
 	Storage() infrav1.Storage
+	ResourcePool() string
 }
 
 type ClusterSettter interface {
@@ -62,6 +63,7 @@ type MachineGetter interface {
 	GetInstanceStatus() *infrav1.InstanceStatus
 	GetClusterStorage() infrav1.Storage
 	GetStorage() string
+	GetResourcePool() string
 	GetCloudInit() infrav1.CloudInit
 	GetNetwork() infrav1.Network
 	GetHardware() infrav1.Hardware

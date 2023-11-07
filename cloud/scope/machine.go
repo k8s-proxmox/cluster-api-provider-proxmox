@@ -86,24 +86,6 @@ type MachineScope struct {
 	SchedulerManager *scheduler.Manager
 }
 
-func (m *MachineScope) CloudClient() *proxmox.Service {
-	return m.ClusterGetter.CloudClient()
-}
-
-func (m *MachineScope) GetScheduler(client *proxmox.Service) *scheduler.Scheduler {
-	sched := m.SchedulerManager.GetOrCreateScheduler(client)
-	sched.RunAsync()
-	return sched
-}
-
-func (m *MachineScope) GetClusterStorage() infrav1.Storage {
-	return m.ClusterGetter.Storage()
-}
-
-func (m *MachineScope) GetStorage() string {
-	return m.ProxmoxMachine.Spec.Storage
-}
-
 func (m *MachineScope) Name() string {
 	return m.ProxmoxMachine.Name
 }
@@ -116,21 +98,60 @@ func (m *MachineScope) Annotations() map[string]string {
 	return m.ProxmoxMachine.Annotations
 }
 
+func (m *MachineScope) CloudClient() *proxmox.Service {
+	return m.ClusterGetter.CloudClient()
+}
+
+func (m *MachineScope) GetScheduler(client *proxmox.Service) *scheduler.Scheduler {
+	sched := m.SchedulerManager.GetOrCreateScheduler(client)
+	sched.RunAsync()
+	return sched
+}
+
+// return ProxmoxCluster.spec.storage
+func (m *MachineScope) GetClusterStorage() infrav1.Storage {
+	return m.ClusterGetter.Storage()
+}
+
+func (m *MachineScope) GetVMID() *int {
+	return m.ProxmoxMachine.Spec.VMID
+}
+
 func (m *MachineScope) NodeName() string {
 	return m.ProxmoxMachine.Spec.Node
 }
 
-func (m *MachineScope) SetNodeName(name string) {
-	m.ProxmoxMachine.Spec.Node = name
+func (m *MachineScope) GetImage() infrav1.Image {
+	return m.ProxmoxMachine.Spec.Image
 }
 
-func (m *MachineScope) SetStorage(name string) {
-	m.ProxmoxMachine.Spec.Storage = name
+func (m *MachineScope) GetStorage() string {
+	return m.ProxmoxMachine.Spec.Storage
 }
 
-// func (m *MachineScope) Client() Compute {
-// 	return m.ClusterGetter.Client()
-// }
+// return ProxmoxCluster.spec.resourcePool if empty
+func (m *MachineScope) GetResourcePool() string {
+	if m.ProxmoxMachine.Spec.ResourcePool == "" {
+		m.ProxmoxMachine.Spec.ResourcePool = m.ClusterGetter.ResourcePool()
+	}
+	return m.ProxmoxMachine.Spec.ResourcePool
+}
+
+func (m *MachineScope) GetCloudInit() infrav1.CloudInit {
+	return m.ProxmoxMachine.Spec.CloudInit
+}
+
+func (m *MachineScope) GetNetwork() infrav1.Network {
+	return m.ProxmoxMachine.Spec.Network
+}
+
+func (m *MachineScope) GetHardware() infrav1.Hardware {
+	return m.ProxmoxMachine.Spec.Hardware
+}
+
+func (m *MachineScope) GetOptions() infrav1.Options {
+	return m.ProxmoxMachine.Spec.Options
+}
 
 func (m *MachineScope) GetBootstrapData() (string, error) {
 	if m.Machine.Spec.Bootstrap.DataSecretName == nil {
@@ -151,17 +172,8 @@ func (m *MachineScope) GetBootstrapData() (string, error) {
 	return string(value), nil
 }
 
-func (m *MachineScope) Close() error {
-	return m.PatchObject()
-}
-
 func (m *MachineScope) GetInstanceStatus() *infrav1.InstanceStatus {
 	return m.ProxmoxMachine.Status.InstanceStatus
-}
-
-// SetInstanceStatus sets the ProxmoxMachine instance status.
-func (m *MachineScope) SetInstanceStatus(v infrav1.InstanceStatus) {
-	m.ProxmoxMachine.Status.InstanceStatus = &v
 }
 
 func (m *MachineScope) GetBiosUUID() *string {
@@ -179,28 +191,12 @@ func (m *MachineScope) GetProviderID() string {
 	return ""
 }
 
-func (m *MachineScope) GetVMID() *int {
-	return m.ProxmoxMachine.Spec.VMID
+func (m *MachineScope) SetNodeName(name string) {
+	m.ProxmoxMachine.Spec.Node = name
 }
 
-func (m *MachineScope) GetImage() infrav1.Image {
-	return m.ProxmoxMachine.Spec.Image
-}
-
-func (m *MachineScope) GetCloudInit() infrav1.CloudInit {
-	return m.ProxmoxMachine.Spec.CloudInit
-}
-
-func (m *MachineScope) GetNetwork() infrav1.Network {
-	return m.ProxmoxMachine.Spec.Network
-}
-
-func (m *MachineScope) GetHardware() infrav1.Hardware {
-	return m.ProxmoxMachine.Spec.Hardware
-}
-
-func (m *MachineScope) GetOptions() infrav1.Options {
-	return m.ProxmoxMachine.Spec.Options
+func (m *MachineScope) SetStorage(name string) {
+	m.ProxmoxMachine.Spec.Storage = name
 }
 
 // SetProviderID sets the ProxmoxMachine providerID in spec.
@@ -221,6 +217,11 @@ func (m *MachineScope) SetConfigStatus(config api.VirtualMachineConfig) {
 	m.ProxmoxMachine.Status.Config = config
 }
 
+// SetInstanceStatus sets the ProxmoxMachine instance status.
+func (m *MachineScope) SetInstanceStatus(v infrav1.InstanceStatus) {
+	m.ProxmoxMachine.Status.InstanceStatus = &v
+}
+
 func (m *MachineScope) SetReady() {
 	m.ProxmoxMachine.Status.Ready = true
 }
@@ -231,6 +232,10 @@ func (m *MachineScope) SetFailureMessage(v error) {
 
 func (m *MachineScope) SetFailureReason(v capierrors.MachineStatusError) {
 	m.ProxmoxMachine.Status.FailureReason = &v
+}
+
+func (m *MachineScope) Close() error {
+	return m.PatchObject()
 }
 
 // PatchObject persists the cluster configuration and status.

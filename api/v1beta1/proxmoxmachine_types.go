@@ -41,6 +41,10 @@ type ProxmoxMachineSpec struct {
 	// cappx will use random storage if empty
 	Storage string `json:"storage,omitempty"`
 
+	// Resource Pool that vm will be added to.
+	// Use ProxmoxCluster.spec.resroucePool if empty
+	ResourcePool string `json:"resourcePool,omitempty"`
+
 	// +kubebuilder:validation:Minimum:=0
 	// VMID is proxmox qemu's id
 	VMID *int `json:"vmID,omitempty"`

@@ -13,6 +13,7 @@ type FakeClusterScope struct {
 	namespace            string
 	controlPlaneEndpoint clusterv1.APIEndpoint
 	storage              infrav1.Storage
+	resourcePool         string
 }
 
 func NewClusterScope(client *proxmox.Service) *FakeClusterScope {
@@ -41,6 +42,13 @@ func (f *FakeClusterScope) ControlPlaneEndpoint() clusterv1.APIEndpoint {
 
 func (f *FakeClusterScope) Storage() infrav1.Storage {
 	return f.storage
+}
+
+func (f *FakeClusterScope) ResourcePool() string {
+	if f.resourcePool == "" {
+		return f.name
+	}
+	return f.resourcePool
 }
 
 func (f *FakeClusterScope) CloudClient() *proxmox.Service {

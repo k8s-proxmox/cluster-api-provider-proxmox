@@ -67,6 +67,9 @@ spec:
                 - host
                 - port
                 type: object
+              resourcePool:
+                description: resource pool to be used for cappx managed vms by default
+                type: string
               serverRef:
                 description: ServerRef is used for configuring Proxmox client
                 properties:

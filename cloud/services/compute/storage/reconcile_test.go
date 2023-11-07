@@ -18,12 +18,19 @@ var _ = Describe("Delete", Label("integration", "storage"), func() {
 	BeforeEach(func() {
 		scope := fake.NewClusterScope(proxmoxSvc)
 		service = storage.NewService(scope)
+		err := service.Reconcile(context.Background())
+		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {})
 
 	Context("Reconcile on Delete Storage", func() {
 		It("should not error", func() {
+			// there should be storage
 			err := service.Delete(context.Background())
+			Expect(err).NotTo(HaveOccurred())
+
+			// there should no storage already
+			err = service.Delete(context.Background())
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})

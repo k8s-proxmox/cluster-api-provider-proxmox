@@ -90,6 +90,10 @@ func (s *ClusterScope) Namespace() string {
 	return s.Cluster.Namespace
 }
 
+func (s *ClusterScope) CloudClient() *proxmox.Service {
+	return s.ProxmoxServices.Compute
+}
+
 func (s *ClusterScope) ControlPlaneEndpoint() clusterv1.APIEndpoint {
 	return s.ProxmoxCluster.Spec.ControlPlaneEndpoint
 }
@@ -105,12 +109,13 @@ func (s *ClusterScope) Storage() infrav1.Storage {
 	return s.ProxmoxCluster.Spec.Storage
 }
 
-func (s *ClusterScope) CloudClient() *proxmox.Service {
-	return s.ProxmoxServices.Compute
-}
-
-func (s *ClusterScope) Close() error {
-	return s.PatchObject()
+// retrun default values if it's not specified
+func (s *ClusterScope) ResourcePool() string {
+	if s.ProxmoxCluster.Spec.ResourcePool == "" {
+		// use cluster name as default value
+		s.ProxmoxCluster.Spec.ResourcePool = s.Name()
+	}
+	return s.ProxmoxCluster.Spec.ResourcePool
 }
 
 func (s *ClusterScope) SetReady() {
@@ -123,6 +128,10 @@ func (s *ClusterScope) SetControlPlaneEndpoint(endpoint clusterv1.APIEndpoint) {
 
 func (s *ClusterScope) SetStorage(storage infrav1.Storage) {
 	s.ProxmoxCluster.Spec.Storage = storage
+}
+
+func (s *ClusterScope) Close() error {
+	return s.PatchObject()
 }
 
 // PatchObject persists the cluster configuration and status.
