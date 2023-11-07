@@ -102,6 +102,7 @@ func main() {
 	)
 	if err != nil {
 		setupLog.Error(err, "failed to start qemu-scheudler manager")
+		os.Exit(1)
 	}
 
 	if err = (&controller.ProxmoxMachineReconciler{
