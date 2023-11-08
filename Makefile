@@ -118,7 +118,7 @@ build-e2e-image: ## Build cappx image to be used for e2e test
 
 USE_EXISTING_CLUSTER := false
 .PHONY: e2e
-e2e: generate-e2e-templates build-e2e-image cleanup-e2e-artifacts ## Run e2e test
+e2e: generate-e2e-templates build-e2e-image cleanup-e2e-artifacts $(KUBECTL) ## Run e2e test
 	go test $(E2E_DIR)/... -v \
 	-timeout=$(GINKGO_TIMEOUT) \
 	--e2e.artifacts-folder=$(E2E_DIR) \
@@ -184,7 +184,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl diff -f -
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
