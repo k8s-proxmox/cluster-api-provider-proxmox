@@ -128,10 +128,10 @@ metadata:
 data:
   plugin-config.yaml: | 
     scores:
-      - Random:
-          enable: false
+      Random:
+        enable: false
     filters:
-      - CPUOvercommit:
-          enable: false
-      - MemoryOvercommit:
-          enable: false
+      CPUOvercommit:
+        enable: false
+      MemoryOvercommit:
+        enable: false
