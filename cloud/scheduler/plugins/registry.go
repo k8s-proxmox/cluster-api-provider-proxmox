@@ -15,12 +15,12 @@ import (
 )
 
 type PluginConfigs struct {
-	filterPlugins map[string]pluginConfig `yaml:"filters"`
-	scorePlugins  map[string]pluginConfig `yaml:"scores"`
-	vmidPlugins   map[string]pluginConfig `yaml:"vmids"`
+	FilterPlugins map[string]PluginConfig `yaml:"filters,omitempty"`
+	ScorePlugins  map[string]PluginConfig `yaml:"scores,omitempty"`
+	VMIDPlugins   map[string]PluginConfig `yaml:"vmids,omitempty"`
 }
 
-type pluginConfig struct {
+type PluginConfig struct {
 	Enable bool                   `yaml:"enable,omitempty"`
 	Config map[string]interface{} `yaml:"config,omitempty"`
 }
@@ -45,14 +45,14 @@ func (r *PluginRegistry) VMIDPlugins() []framework.VMIDPlugin {
 
 func NewRegistry(configs PluginConfigs) PluginRegistry {
 	r := PluginRegistry{
-		filterPlugins: NewNodeFilterPlugins(configs.filterPlugins),
-		scorePlugins:  NewNodeScorePlugins(configs.scorePlugins),
-		vmidPlugins:   NewVMIDPlugins(configs.vmidPlugins),
+		filterPlugins: NewNodeFilterPlugins(configs.FilterPlugins),
+		scorePlugins:  NewNodeScorePlugins(configs.ScorePlugins),
+		vmidPlugins:   NewVMIDPlugins(configs.VMIDPlugins),
 	}
 	return r
 }
 
-func NewNodeFilterPlugins(config map[string]pluginConfig) []framework.NodeFilterPlugin {
+func NewNodeFilterPlugins(config map[string]PluginConfig) []framework.NodeFilterPlugin {
 	pls := []framework.NodeFilterPlugin{
 		&nodename.NodeName{},
 		&overcommit.CPUOvercommit{},
@@ -70,7 +70,7 @@ func NewNodeFilterPlugins(config map[string]pluginConfig) []framework.NodeFilter
 	return plugins
 }
 
-func NewNodeScorePlugins(config map[string]pluginConfig) []framework.NodeScorePlugin {
+func NewNodeScorePlugins(config map[string]PluginConfig) []framework.NodeScorePlugin {
 	pls := []framework.NodeScorePlugin{
 		&random.Random{},
 		&noderesource.NodeResource{},
@@ -86,7 +86,7 @@ func NewNodeScorePlugins(config map[string]pluginConfig) []framework.NodeScorePl
 	return plugins
 }
 
-func NewVMIDPlugins(config map[string]pluginConfig) []framework.VMIDPlugin {
+func NewVMIDPlugins(config map[string]PluginConfig) []framework.VMIDPlugin {
 	pls := []framework.VMIDPlugin{
 		&idrange.Range{},
 		&regex.Regex{},
@@ -104,7 +104,7 @@ func NewVMIDPlugins(config map[string]pluginConfig) []framework.VMIDPlugin {
 
 // Read config file and unmarshal it to PluginConfig type
 func GetPluginConfigFromFile(path string) (PluginConfigs, error) {
-	config := PluginConfigs{}
+	var config PluginConfigs
 	if path == "" {
 		return config, nil
 	}

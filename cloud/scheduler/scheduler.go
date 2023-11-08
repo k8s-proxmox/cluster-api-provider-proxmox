@@ -42,6 +42,7 @@ func NewManager(params SchedulerParams) (*Manager, error) {
 		return nil, fmt.Errorf("failed to read plugin config: %v", err)
 	}
 	params.pluginconfigs = config
+	params.Logger.Info(fmt.Sprintf("load plugin config: %v", config))
 	return &Manager{ctx: context.Background(), params: params, table: table}, nil
 }
 

@@ -14,11 +14,29 @@ import (
 )
 
 var _ = Describe("NewManager", Label("unit", "scheduler"), func() {
-	It("should not error", func() {
-		params := scheduler.SchedulerParams{}
-		manager, err := scheduler.NewManager(params)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(manager).NotTo(BeNil())
+	Context("with empty params", func() {
+		It("should not error", func() {
+			params := scheduler.SchedulerParams{}
+			manager, err := scheduler.NewManager(params)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(manager).NotTo(BeNil())
+		})
+	})
+	Context("with only logger", func() {
+		It("should not error", func() {
+			params := scheduler.SchedulerParams{Logger: zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true))}
+			manager, err := scheduler.NewManager(params)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(manager).NotTo(BeNil())
+		})
+	})
+	Context("with plugin-config", func() {
+		It("should not error", func() {
+			params := scheduler.SchedulerParams{PluginConfigFile: ""}
+			manager, err := scheduler.NewManager(params)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(manager).NotTo(BeNil())
+		})
 	})
 })
 

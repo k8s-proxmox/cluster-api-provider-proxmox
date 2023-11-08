@@ -62,7 +62,7 @@ func main() {
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
-	flag.StringVar(&pluginConfig, "scheduler-plugin-config", "/etc/qemu-scheduler/plugin-config.yaml", "The config file path for qemu-scheduler plugins")
+	flag.StringVar(&pluginConfig, "scheduler-plugin-config", "", "The config file path for qemu-scheduler plugins")
 	opts := zap.Options{
 		Development: true,
 	}
