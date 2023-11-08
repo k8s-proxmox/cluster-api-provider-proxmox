@@ -21,8 +21,8 @@ type PluginConfigs struct {
 }
 
 type pluginConfig struct {
-	Disable bool                   `yaml:"disable,omitempty"`
-	Config  map[string]interface{} `yaml:"config,omitempty"`
+	Enable bool                   `yaml:"enable,omitempty"`
+	Config map[string]interface{} `yaml:"config,omitempty"`
 }
 
 type PluginRegistry struct {
@@ -62,7 +62,7 @@ func NewNodeFilterPlugins(config map[string]pluginConfig) []framework.NodeFilter
 	plugins := []framework.NodeFilterPlugin{}
 	for _, pl := range pls {
 		c, ok := config[pl.Name()]
-		if ok && c.Disable {
+		if ok && !c.Enable {
 			continue
 		}
 		plugins = append(plugins, pl)
@@ -78,7 +78,7 @@ func NewNodeScorePlugins(config map[string]pluginConfig) []framework.NodeScorePl
 	plugins := []framework.NodeScorePlugin{}
 	for _, pl := range pls {
 		c, ok := config[pl.Name()]
-		if ok && c.Disable {
+		if ok && !c.Enable {
 			continue
 		}
 		plugins = append(plugins, pl)
@@ -94,7 +94,7 @@ func NewVMIDPlugins(config map[string]pluginConfig) []framework.VMIDPlugin {
 	plugins := []framework.VMIDPlugin{}
 	for _, pl := range pls {
 		c, ok := config[pl.Name()]
-		if ok && c.Disable {
+		if ok && !c.Enable {
 			continue
 		}
 		plugins = append(plugins, pl)

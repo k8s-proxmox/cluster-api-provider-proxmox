@@ -8,7 +8,12 @@ Basic flow of the node selection process is `filter => score => select one node 
 
 ### Filter Plugins
 
-Filter plugins filter the node based on nodename, overcommit ratio etc.
+Filter plugins filter the node based on nodename, overcommit ratio etc. So that we can avoid to run qemus on not desired Proxmox nodes.
+
+- [NodeName plugin](./plugins/nodename/node_name.go) (pass the node matching specified node name)
+- [CPUOvercommit plugin](./plugins/overcommit/cpu_overcommit.go) (pass the node that has enough cpu against running vm)
+- [MemoryOvercommit plugin](./plugins/overcommit/memory_overcommit.go) (pass the node that has enough memory against running vm)
+- [NodeRegex plugin](./plugins/regex/node_regex.go) (pass the node matching specified regex)
 
 #### regex plugin
 
@@ -20,10 +25,16 @@ value(example): node[0-9]+
 
 ### Score Plugins
 
-Score plugins score the nodes based on resource etc.
+Score plugins score the nodes based on resource etc. So that we can run qemus on the most appropriate Proxmox node.
+
+- [NodeResource plugin](./plugins/noderesource/node_resrouce.go) (nodes with more resources have higher scores)
+- [Random plugin](./plugins/random/random.go) (just a reference implementation of score plugin)
 
 ## How to specify vmid
 qemu-scheduler reads context and find key registerd to scheduler. If the context has any value of the registerd key, qemu-scheduler uses the plugin that matchies the key.
+
+- [Range plugin](./plugins/idrange/idrange.go) (select minimum availabe vmid from the specified id range)
+- [VMIDRegex plugin](./plugins/regex/vmid_regex.go) (select minimum availabe vmid matching specified regex)
 
 ### Range Plugin
 You can specify vmid range with `(start id)-(end id)` format.
@@ -64,4 +75,21 @@ spec:
     metadata:
       annotations:
         node.qemu-scheduler/regex: node[0-9]+ # this annotation will be propagated to your ProxmoxMachine via MachineSet
+```
+
+## How to configure (or disable/enable) specific Plugins
+
+By default, all the plugins are enabled. You can disable specific plugins via plugin-config.
+```sh
+# example plugin-config.yaml
+
+# plugin type name (scores, filters, vmids)
+scores:
+  - Random: 
+      enable: false # disable
+filters:
+  - CPUOvercommit:
+      enable: false # disable
+  - MemoryOvercommit:
+      enable true   # enable (can be omitted)
 ```

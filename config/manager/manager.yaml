@@ -129,9 +129,9 @@ data:
   plugin-config.yaml: | 
     scores:
       - Random:
-          disable: true
-    # filters:
-      # - CPUOvercommit:
-      #     disable: true
-      # - MemoryOvercommit:
-      #     disable: true
+          enable: false
+    filters:
+      - CPUOvercommit:
+          enable: false
+      - MemoryOvercommit:
+          enable: false
