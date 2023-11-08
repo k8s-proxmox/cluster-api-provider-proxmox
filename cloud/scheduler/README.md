@@ -79,7 +79,7 @@ spec:
 
 ## How to configure (or disable/enable) specific Plugins
 
-By default, all the plugins are enabled. You can disable specific plugins via plugin-config.
+By default, all the plugins are enabled. You can disable specific plugins via plugin-config. for CAPPX, check example ConfigMap [here](../../config/manager/manager.yaml)
 ```sh
 # example plugin-config.yaml
 
@@ -91,5 +91,5 @@ filters:
   - CPUOvercommit:
       enable: false # disable
   - MemoryOvercommit:
-      enable true   # enable (can be omitted)
+      enable: true   # enable (can be omitted)
 ```
