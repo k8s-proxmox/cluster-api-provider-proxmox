@@ -28,7 +28,7 @@ value(example): node[0-9]+
 Score plugins score the nodes based on resource etc. So that we can run qemus on the most appropriate Proxmox node.
 
 - [NodeResource plugin](./plugins/noderesource/node_resrouce.go) (nodes with more resources have higher scores)
-- [Random plugin](./plugins/random/random.go) (just a reference implementation of score plugin)
+- [Random plugin](./plugins/random/random.go) (diabled by default. just a reference implementation of score plugin)
 
 ## How to specify vmid
 qemu-scheduler reads context and find key registerd to scheduler. If the context has any value of the registerd key, qemu-scheduler uses the plugin that matchies the key.
@@ -84,12 +84,12 @@ By default, all the plugins are enabled. You can disable specific plugins via pl
 # example plugin-config.yaml
 
 # plugin type name (scores, filters, vmids)
-scores:
-  - Random: 
-      enable: false # disable
 filters:
-  - CPUOvercommit:
-      enable: false # disable
-  - MemoryOvercommit:
-      enable: true   # enable (can be omitted)
+  CPUOvercommit:
+    enable: false # disable
+  MemoryOvercommit:
+    enable: true   # enable (can be omitted)
+vmids:
+  Regex:
+    enable: false # disable
 ```
