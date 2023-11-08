@@ -127,9 +127,6 @@ metadata:
   namespace: system
 data:
   plugin-config.yaml: | 
-    scores:
-      Random:
-        enable: false
     filters:
       CPUOvercommit:
         enable: false

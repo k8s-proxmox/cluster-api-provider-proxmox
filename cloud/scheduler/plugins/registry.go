@@ -10,7 +10,6 @@ import (
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/nodename"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/noderesource"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/overcommit"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/random"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/regex"
 )
 
@@ -72,7 +71,6 @@ func NewNodeFilterPlugins(config map[string]PluginConfig) []framework.NodeFilter
 
 func NewNodeScorePlugins(config map[string]PluginConfig) []framework.NodeScorePlugin {
 	pls := []framework.NodeScorePlugin{
-		&random.Random{},
 		&noderesource.NodeResource{},
 	}
 	plugins := []framework.NodeScorePlugin{}
