@@ -58,13 +58,13 @@ func (m *Manager) GetOrCreateScheduler(client *proxmox.Service) *Scheduler {
 	sched, ok := m.table[*schedID]
 	if !ok {
 		// create and register new scheduler
-		m.params.Logger.V(5).Info("registering new scheduler")
+		m.params.Logger.V(4).Info("registering new scheduler")
 		sched := m.NewScheduler(client)
-		sched.logger = sched.logger.WithValues("scheduler ID", *schedID)
+		sched.logger = sched.logger.WithValues("schedulerID", &schedID)
 		m.table[*schedID] = sched
 		return sched
 	}
-	sched.logger.V(5).Info("using existing scheduler")
+	sched.logger.V(4).Info("using existing scheduler")
 	return sched
 }
 
@@ -193,13 +193,13 @@ func (s *Scheduler) Stop() {
 // retrieve one qemuSpec from queue and try to create
 // new qemu according to the qemuSpec
 func (s *Scheduler) ScheduleOne(ctx context.Context) {
+	s.logger.Info("getting next qemu from scheduling queue")
 	qemu, shutdown := s.schedulingQueue.Get()
 	if shutdown {
 		return
 	}
 	config := qemu.Config()
 	qemuCtx := qemu.Context()
-	s.logger = s.logger.WithValues("qemu", config.Name)
 	s.logger.Info("scheduling qemu")
 
 	state := framework.NewCycleState()
@@ -257,6 +257,8 @@ func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCr
 
 // create new qemu with given spec and context
 func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.SchedulerResult, error) {
+	s.logger = s.logger.WithValues("qemu", config.Name)
+	s.logger.Info("adding qemu to scheduler queue")
 	// add qemu spec into the queue
 	s.schedulingQueue.Add(ctx, config)
 

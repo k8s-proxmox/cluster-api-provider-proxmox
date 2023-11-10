@@ -23,53 +23,58 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/klog/v2"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	cliflag "k8s.io/component-base/cli/flag"
+	"k8s.io/component-base/logs"
+	logsv1 "k8s.io/component-base/logs/api/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	infrastructurev1beta1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
 	controller "github.com/sp-yduck/cluster-api-provider-proxmox/controllers"
+	"github.com/spf13/pflag"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+
+	// flags
+	metricsAddr          string
+	enableLeaderElection bool
+	probeAddr            string
+	pluginConfig         string
+	logOptions           = logs.NewOptions()
 )
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(infrastructurev1beta1.AddToScheme(scheme))
-	utilruntime.Must(infrastructurev1beta1.AddToScheme(scheme))
-	_ = clusterv1.AddToScheme(scheme)
+	utilruntime.Must(clusterv1.AddToScheme(scheme))
+
 	//+kubebuilder:scaffold:scheme
 }
 
 func main() {
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	var pluginConfig string
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
-	flag.StringVar(&pluginConfig, "scheduler-plugin-config", "", "The config file path for qemu-scheduler plugins")
-	opts := zap.Options{
-		Development: true,
-	}
-	opts.BindFlags(flag.CommandLine)
-	flag.Parse()
+	InitFlags(pflag.CommandLine)
+	pflag.CommandLine.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	// Set log level 2 as default.
+	// if err := pflag.CommandLine.Set("v", "2"); err != nil {
+	// 	setupLog.Error(err, "failed to set log level: %v")
+	// 	os.Exit(1)
+	// }
+	pflag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	ctrl.SetLogger(klog.Background())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -96,7 +101,7 @@ func main() {
 	}
 	schedManager, err := scheduler.NewManager(
 		scheduler.SchedulerParams{
-			Logger:           zap.New(zap.UseFlagOptions(&opts)),
+			Logger:           klog.Background(),
 			PluginConfigFile: pluginConfig,
 		},
 	)
@@ -136,4 +141,15 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func InitFlags(fs *pflag.FlagSet) {
+	logsv1.AddFlags(logOptions, fs)
+
+	fs.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+	fs.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	fs.BoolVar(&enableLeaderElection, "leader-elect", false,
+		"Enable leader election for controller manager. "+
+			"Enabling this will ensure there is only one active controller manager.")
+	fs.StringVar(&pluginConfig, "scheduler-plugin-config", "", "The config file path for qemu-scheduler plugins")
 }

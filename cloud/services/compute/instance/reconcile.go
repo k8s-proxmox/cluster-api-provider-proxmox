@@ -33,7 +33,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		return err
 	}
 
-	log.Info(fmt.Sprintf("Reconciled instance: bios-uuid=%s", *uuid))
+	log.Info("updating instance status")
 	if err := s.scope.SetProviderID(*uuid); err != nil {
 		return err
 	}
@@ -41,6 +41,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	s.scope.SetNodeName(instance.Node)
 	s.scope.SetVMID(instance.VM.VMID)
 
+	log.Info("updating instance config status")
 	config, err := instance.GetConfig(ctx)
 	if err != nil {
 		return err
@@ -54,6 +55,7 @@ func (s *Service) Delete(ctx context.Context) error {
 	log := log.FromContext(ctx)
 	log.Info("Deleting instance resources")
 
+	log.Info("trying to get qemu")
 	instance, err := s.getQEMU(ctx)
 	if err != nil {
 		if !rest.IsNotFound(err) {
@@ -164,7 +166,7 @@ func (s *Service) createInstance(ctx context.Context) (*proxmox.VirtualMachine, 
 
 func ensureRunning(ctx context.Context, instance proxmox.VirtualMachine) error {
 	log := log.FromContext(ctx)
-	// ensure instance is running
+	log.Info("ensuring qemu is running")
 	switch instance.VM.Status {
 	case api.ProcessStatusRunning:
 		return nil
@@ -186,6 +188,7 @@ func ensureRunning(ctx context.Context, instance proxmox.VirtualMachine) error {
 
 func ensureStoppedOrPaused(ctx context.Context, instance proxmox.VirtualMachine) error {
 	log := log.FromContext(ctx)
+	log.Info("ensuring qemus is stopped or paused")
 	switch instance.VM.Status {
 	case api.ProcessStatusRunning:
 		if err := instance.Stop(ctx, api.VirtualMachineStopOption{}); err != nil {

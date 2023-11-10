@@ -6,10 +6,13 @@ import (
 	"strings"
 
 	"github.com/sp-yduck/proxmox-go/api"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // make sure storage exists and supports "images" type of content
 func (s *Service) ensureStorageAvailable(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	log.Info("ensuring storage is available")
 	storageName := s.scope.GetStorage()
 	if storageName == "" { // no storage specified, find available storage
 		storage, err := s.findVMStorage(ctx)
@@ -19,6 +22,7 @@ func (s *Service) ensureStorageAvailable(ctx context.Context) error {
 		storageName = storage.Storage
 		s.scope.SetStorage(storageName)
 	} else { // storage specified, check if it supports "images" type of content
+		log.Info("checking if specified storage supports image type of content")
 		storage, err := s.client.RESTClient().GetStorage(ctx, storageName)
 		if err != nil {
 			return err
@@ -32,6 +36,8 @@ func (s *Service) ensureStorageAvailable(ctx context.Context) error {
 
 // get one storage supporting "images" type of content
 func (s *Service) findVMStorage(ctx context.Context) (*api.Storage, error) {
+	log := log.FromContext(ctx)
+	log.Info("finding available storage")
 	storages, err := s.client.RESTClient().GetStorages(ctx)
 	if err != nil {
 		return nil, err
