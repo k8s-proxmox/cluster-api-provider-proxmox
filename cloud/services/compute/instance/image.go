@@ -20,14 +20,15 @@ const (
 // reconcileBootDevice
 func (s *Service) reconcileBootDevice(ctx context.Context, vm *proxmox.VirtualMachine) error {
 	log := log.FromContext(ctx)
-	log.Info("reconcile boot device")
+	log.Info("reconciling boot device")
 
 	// os image
 	if err := s.setCloudImage(ctx); err != nil {
 		return err
 	}
 
-	// volume
+	// boot disk
+	log.Info("resizing boot disk")
 	if err := vm.ResizeVolume(ctx, bootDvice, s.scope.GetHardware().Disk); err != nil {
 		return err
 	}

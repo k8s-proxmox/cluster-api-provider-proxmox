@@ -30,6 +30,9 @@ func (s *Service) reconcileCloudInit(ctx context.Context) error {
 
 // delete CloudConfig
 func (s *Service) deleteCloudConfig(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	log.Info("deleting cloud config file")
+
 	storageName := s.scope.GetClusterStorage().Name
 	path := userSnippetPath(s.scope.Name())
 	volumeID := fmt.Sprintf("%s:%s", storageName, path)

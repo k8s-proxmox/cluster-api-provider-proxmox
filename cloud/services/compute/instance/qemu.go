@@ -35,6 +35,8 @@ func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, e
 
 // get QEMU gets proxmox vm from vmid
 func (s *Service) getQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
+	log := log.FromContext(ctx)
+	log.Info("getting qemu from vmid")
 	vmid := s.scope.GetVMID()
 	if vmid != nil {
 		return s.client.VirtualMachine(ctx, *vmid)
@@ -44,12 +46,14 @@ func (s *Service) getQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) 
 
 func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, error) {
 	log := log.FromContext(ctx)
+	log.Info("creating qemu")
 
 	if err := s.ensureStorageAvailable(ctx); err != nil {
 		return nil, err
 	}
 
 	// create qemu
+	log.Info("making qemu spec")
 	vmoption := s.generateVMOptions()
 	// bind annotation key-values to context
 	schedCtx := framework.ContextWithMap(ctx, s.scope.Annotations())
