@@ -239,6 +239,7 @@ spec:
                   cpu:
                     default: 2
                     description: 'number of CPU cores : 1 ~'
+                    minimum: 1
                     type: integer
                   cpuLimit:
                     description: Limit of CPU usage. If the computer has 2 CPUs, it
