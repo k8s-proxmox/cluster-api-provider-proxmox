@@ -64,7 +64,7 @@ type Hardware struct {
 	Memory int `json:"memory,omitempty"`
 
 	// number of CPU cores : 1 ~
-	// +kubebuilder:validation:Mimimum:=1
+	// +kubebuilder:validation:Minimum:=1
 	// +kubebuilder:default:=2
 	CPU int `json:"cpu,omitempty"`
 
