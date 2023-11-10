@@ -1,4 +1,4 @@
-name: docker build
+name: CI
 
 on:
   push:
@@ -10,7 +10,18 @@ env:
   IMAGE_NAME: spyduck/cluster-api-provider-proxmox
 
 jobs:
+  # add public code coverage reports
+  coverage:
+    name: unit test coverage
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - run: "make unit-test-cover"
+    - uses: codecov/codecov-action@v2
+
+  # build and push to docker.io
   build:
+    name: docker build & push
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
