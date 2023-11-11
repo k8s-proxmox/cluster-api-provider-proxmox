@@ -32,14 +32,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
       # platform = linux/amd64,linux/arm64,linux/s390x,linux/ppc64le
       - name: Build and push Docker image
-        run: "make docker-buildx PLATFORMS=linux/amd64,linux/arm64,linux/s390x,linux/ppc64le IMG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}"
+        run: "make docker-buildx PLATFORMS=linux/amd64,linux/arm64,linux/s390x,linux/ppc64le IMG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}"
