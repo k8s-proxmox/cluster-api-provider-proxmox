@@ -17,7 +17,7 @@ jobs:
   coverage:
     name: unit test coverage
     runs-on: ubuntu-latest
-    if: github.event_name == "push" || contains(github.event.comment.body, "/unit-test")
+    if: github.event_name == 'push' || contains(github.event.comment.body, '/unit-test')
     steps:
     - uses: actions/checkout@master
     - run: "make unit-test-cover"
@@ -27,7 +27,7 @@ jobs:
   build:
     name: docker build & push
     runs-on: ubuntu-latest
-    if: github.event_name == "push" || contains(github.event.comment.body, "/buid-push")
+    if: github.event_name == 'push' || contains(github.event.comment.body, '/buid-push')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
   result:
     name: report to pr comment
     runs-on: ubunt-latest
-    if: github.event_name == "issue_comment" && ${{ github.event.issue.pull_request }}
+    if: github.event_name == 'issue_comment' && ${{ github.event.issue.pull_request }}
     steps:
       - run: |
           gh pr comment ${{ github.event.issue.number }} -b "[Actions: CI] Check result [here](https://github.com/sp-yduck/cluster-api-provider-proxmox/actions/runs/${{ github.run_number }})"
