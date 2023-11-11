@@ -10,6 +10,7 @@ on:
 env:
   REGISTRY: docker.io
   IMAGE_NAME: spyduck/cluster-api-provider-proxmox
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   # add public code coverage reports
@@ -40,3 +41,12 @@ jobs:
       # platform = linux/amd64,linux/arm64
       - name: Build and push Docker image
         run: "make docker-buildx IMG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${GITHUB_SHA::7}"
+
+  # report result to pr comment if event is pr comment
+  result:
+    name: report to pr comment
+    runs-on: ubunt-latest
+    if: github.event_name == "issue_comment" && ${{ github.event.issue.pull_request }}
+    steps:
+      - run: |
+          gh pr comment ${{ github.event.issue.number }} -b "[Actions: CI] Check result [here](https://github.com/sp-yduck/cluster-api-provider-proxmox/actions/runs/${{ github.run_number }})"
