@@ -348,10 +348,10 @@ func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.Cycle
 
 func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) (framework.NodeScoreList, *framework.Status) {
 	s.logger.Info("scoring proxmox node")
+	status := framework.NewStatus()
 	var scoresMap map[string](map[int]framework.NodeScore)
 	nodeInfos, err := framework.GetNodeInfoList(ctx, s.client)
 	if err != nil {
-		status := framework.NewStatus()
 		status.SetCode(1)
 		return nil, status
 	}
@@ -374,7 +374,7 @@ func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleS
 			result[i].Score += scoresMap[j][i].Score
 		}
 	}
-	return result, nil
+	return result, status
 }
 
 func selectHighestScoreNode(scoreList framework.NodeScoreList) (string, error) {
