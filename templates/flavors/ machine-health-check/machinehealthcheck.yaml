@@ -2,6 +2,7 @@ apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineHealthCheck
 metadata:
   name: ${CLUSTER_NAME}-unhealthy-5m
+  namespace: "${NAMESPACE}"
 spec:
   clusterName: '${CLUSTER_NAME}'
   nodeStartupTimeout: 5m
