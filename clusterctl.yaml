@@ -1,4 +1,4 @@
 providers:
   - name: proxmox
-    url: https://github.com/Rwatana/cluster-api-provider-proxmox/releases/latest/infrastructure-components.yaml
+    url: https://github.com/sp-yduck/cluster-api-provider-proxmox/releases/latest/infrastructure-components.yaml
     type: InfrastructureProvider
