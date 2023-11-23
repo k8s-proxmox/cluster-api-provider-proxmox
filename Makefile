@@ -69,6 +69,19 @@ vet: ## Run go vet against code.
 lint: golangci-lint ## Run golangci-lint
 	$(GOLANGCI_LINT) run
 
+KIND_CLUSTER_NAME := cappx
+.PHONY: kind-cluster
+kind-cluster: kind
+	kind create cluster --name=$(KIND_CLUSTER_NAME)
+
+.PHONY: tilt-up
+tilt-up: tilt
+	$(TILT) up
+
+.PHONY: tilt-down
+tilt-down: tilt
+	$(TILT) down
+
 CLUSTER_NAME := cappx-test
 
 .PHONY: create-workload-cluster
@@ -234,12 +247,16 @@ ENVSUBST ?= $(LOCALBIN)/envsubst
 KUBECTL ?= $(LOCALBIN)/kubectl
 GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 GOIMPORTS ?= $(LOCALBIN)/goimports
+TILT ?= $(LOCALBIN)/tilt
+KIND ?= $(LOCALBIN)/kind
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.0.0
 CONTROLLER_TOOLS_VERSION ?= v0.11.3
 ENVSUBST_VER ?= v1.4.2
 KUBECTL_VER := v1.25.10
+TILT_VER := 0.33.6
+KIND_VER := v0.20.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -287,3 +304,21 @@ $(GOLANGCI_LINT): $(LOCALBIN)
 goimports: $(GOIMPORTS)
 $(GOIMPORTS): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install golang.org/x/tools/cmd/goimports@latest
+
+TILT_DOWNLOAD_URL ?= https://github.com/tilt-dev/tilt/releases/download/v$(TILT_VER)/tilt.$(TILT_VER).linux.x86_64.tar.gz
+.PHONY: tilt
+tilt: $(TILT)
+$(TILT): $(LOCALBIN)
+	@if test -x $(LOCALBIN)/tilt && ! $(LOCALBIN)/tilt version | grep -q $(TILT_VER); then \
+		rm -rf $(LOCALBIN)/tilt; \
+	fi
+	test -s $(LOCALBIN)/tilt || (curl -fsSL $(TILT_DOWNLOAD_URL) | tar -xzv tilt && mv tilt $(LOCALBIN)/tilt)
+
+KIND_DOWNLOAD_URL ?= https://kind.sigs.k8s.io/dl/$(KIND_VER)/kind-linux-$(GOARCH)
+.PHONY: kind
+kind: $(KIND)
+$(KIND): $(LOCALBIN)
+	@if test -x $(LOCALBIN)/kind && ! $(LOCALBIN)/kind version | grep -q $(KIND_VER); then \
+		rm -rf $(LOCALBIN)/kind; \
+	fi
+	test -s $(LOCALBIN)/kind || (curl -Lo $(LOCALBIN)/kind $(KIND_DOWNLOAD_URL) && chmod +x $(LOCALBIN)/kind)
