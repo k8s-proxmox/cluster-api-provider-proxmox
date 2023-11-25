@@ -137,16 +137,6 @@ make e2e
 
 Are you interested in contributing to cluster-api-provider-proxmox? Do not hesitate to open GitHub issues.
 
-## command
-```
-
-
-```
-
-
-
-
-
 ## License
 
 Copyright 2023 Teppei Sudo.
