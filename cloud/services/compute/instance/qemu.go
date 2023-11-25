@@ -21,16 +21,35 @@ func (s *Service) reconcileQEMU(ctx context.Context) (*proxmox.VirtualMachine, e
 	log.Info("Reconciling QEMU")
 
 	qemu, err := s.getQEMU(ctx)
-	if err == nil { // if qemu is found, return it
-		return qemu, nil
-	}
-	if !rest.IsNotFound(err) {
-		log.Error(err, "failed to get qemu")
-		return nil, err
+	if err != nil {
+		if !rest.IsNotFound(err) {
+			log.Error(err, "failed to get qemu")
+			return nil, err
+		}
+
+		// no qemu found, try to create new one
+		log.V(3).Info("qemu wasn't found. new qemu will be created")
+		if exist, err := s.client.VirtualMachineExistsWithName(ctx, s.scope.Name()); exist || err != nil {
+			if exist {
+				// there should no qemu with same name. occuring an error
+				err = fmt.Errorf("qemu %s already exists", s.scope.Name())
+			}
+			log.Error(err, "stop creating new qemu to avoid replicating same qemu")
+			return nil, err
+		}
+		qemu, err = s.createQEMU(ctx)
+		if err != nil {
+			log.Error(err, "failed to create qemu")
+			return nil, err
+		}
 	}
 
-	// no qemu found, create new one
-	return s.createQEMU(ctx)
+	s.scope.SetVMID(qemu.VM.VMID)
+	s.scope.SetNodeName(qemu.Node)
+	if err := s.scope.PatchObject(); err != nil {
+		return nil, err
+	}
+	return qemu, nil
 }
 
 // get QEMU gets proxmox vm from vmid
@@ -60,12 +79,6 @@ func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, erro
 	result, err := s.scheduler.CreateQEMU(schedCtx, &vmoption)
 	if err != nil {
 		log.Error(err, "failed to create qemu instance")
-		return nil, err
-	}
-
-	s.scope.SetNodeName(result.Node())
-	s.scope.SetVMID(result.VMID())
-	if err := s.scope.PatchObject(); err != nil {
 		return nil, err
 	}
 	return result.Instance(), nil
