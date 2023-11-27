@@ -217,9 +217,8 @@ release-metadata: $(RELEASE_DIR)
 
 .PHONY: release-templates
 release-templates: $(RELEASE_DIR)
-	cp templates/cluster-template* $(RELEASE_DIR)/
-
-
+	$(KUSTOMIZE) build templates/flavors/machine-health-check > $(RELEASE_DIR)/cluster-template-mhc.yaml
+	$(KUSTOMIZE) build templates/flavors/quick-start > $(RELEASE_DIR)/cluster-template.yaml
 ##@ Build Dependencies
 
 ## Location to install dependencies to
