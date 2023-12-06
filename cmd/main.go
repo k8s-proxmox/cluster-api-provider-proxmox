@@ -35,9 +35,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
-	infrastructurev1beta1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
-	controller "github.com/sp-yduck/cluster-api-provider-proxmox/controllers"
+	infrastructurev1beta1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler"
+	controller "github.com/k8s-proxmox/cluster-api-provider-proxmox/controllers"
 	"github.com/spf13/pflag"
 	//+kubebuilder:scaffold:imports
 )

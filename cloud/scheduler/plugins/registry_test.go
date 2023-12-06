@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/plugins"
 )
 
 func TestPlugins(t *testing.T) {

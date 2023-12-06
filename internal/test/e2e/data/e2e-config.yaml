@@ -1,60 +1,60 @@
 images:
-# Use local dev images built source tree;
-- name: ghcr.io/sp-yduck/cluster-api-provider-proxmox:e2e
-  loadBehavior: tryLoad
+  # Use local dev images built source tree;
+  - name: ghcr.io/k8s-proxmox/cluster-api-provider-proxmox:e2e
+    loadBehavior: tryLoad
 
 providers:
-- name: cluster-api
-  type: CoreProvider
-  versions:
-    - name: v1.5.2
-      # Use manifest from source files
-      value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.5.2/core-components.yaml"
-      type: "url"
-      contract: v1beta1
-      files:
-        - sourcePath: "../data/shared/metadata.yaml"
-      replacements:
-        - old: "imagePullPolicy: Always"
-          new: "imagePullPolicy: IfNotPresent"
-- name: kubeadm
-  type: BootstrapProvider
-  versions:
-    - name: v1.5.2
-      # Use manifest from source files
-      value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.5.2/bootstrap-components.yaml"
-      type: "url"
-      contract: v1beta1
-      files:
-        - sourcePath: "../data/shared/metadata.yaml"
-      replacements:
-        - old: "imagePullPolicy: Always"
-          new: "imagePullPolicy: IfNotPresent"
-- name: kubeadm
-  type: ControlPlaneProvider
-  versions:
-    - name: v1.5.2
-      # Use manifest from source files
-      value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.5.2/control-plane-components.yaml"
-      type: "url"
-      contract: v1beta1
-      files:
-        - sourcePath: "../data/shared/metadata.yaml"
-      replacements:
-        - old: "imagePullPolicy: Always"
-          new: "imagePullPolicy: IfNotPresent"
-- name: proxmox
-  type: InfrastructureProvider
-  versions:
-  - name: v0.3.99
-    value: ../../../../config/default
-    contract: v1beta1
-    replacements:
-      - old: ghcr.io/sp-yduck/cluster-api-provider-proxmox:latest
-        new: ghcr.io/sp-yduck/cluster-api-provider-proxmox:e2e
-    files:
-    - sourcePath: ../../../../metadata.yaml
-    - sourcePath: ../data/infrastructure-proxmox/main/cluster-template.yaml
+  - name: cluster-api
+    type: CoreProvider
+    versions:
+      - name: v1.5.2
+        # Use manifest from source files
+        value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.5.2/core-components.yaml"
+        type: "url"
+        contract: v1beta1
+        files:
+          - sourcePath: "../data/shared/metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+  - name: kubeadm
+    type: BootstrapProvider
+    versions:
+      - name: v1.5.2
+        # Use manifest from source files
+        value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.5.2/bootstrap-components.yaml"
+        type: "url"
+        contract: v1beta1
+        files:
+          - sourcePath: "../data/shared/metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+  - name: kubeadm
+    type: ControlPlaneProvider
+    versions:
+      - name: v1.5.2
+        # Use manifest from source files
+        value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.5.2/control-plane-components.yaml"
+        type: "url"
+        contract: v1beta1
+        files:
+          - sourcePath: "../data/shared/metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+  - name: proxmox
+    type: InfrastructureProvider
+    versions:
+      - name: v0.3.99
+        value: ../../../../config/default
+        contract: v1beta1
+        replacements:
+          - old: ghcr.io/k8s-proxmox/cluster-api-provider-proxmox:latest
+            new: ghcr.io/k8s-proxmox/cluster-api-provider-proxmox:e2e
+        files:
+          - sourcePath: ../../../../metadata.yaml
+          - sourcePath: ../data/infrastructure-proxmox/main/cluster-template.yaml
 
 variables:
   KUBERNETES_VERSION: "v1.27.3"

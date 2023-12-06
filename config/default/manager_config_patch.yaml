@@ -7,5 +7,5 @@ spec:
   template:
     spec:
       containers:
-      - name: manager
-        image: ghcr.io/sp-yduck/cluster-api-provider-proxmox:latest
+        - name: manager
+          image: ghcr.io/k8s-proxmox/cluster-api-provider-proxmox:latest

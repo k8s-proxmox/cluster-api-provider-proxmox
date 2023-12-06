@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/cloudinit"
+	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/cloudinit"
 )
 
 const (

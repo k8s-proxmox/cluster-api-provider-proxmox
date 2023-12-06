@@ -7,9 +7,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/storage"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/internal/fake"
+	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/services/compute/storage"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/internal/fake"
 )
 
 var _ = Describe("Delete", Label("integration", "storage"), func() {

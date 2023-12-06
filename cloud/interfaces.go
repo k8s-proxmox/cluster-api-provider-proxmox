@@ -3,12 +3,12 @@ package cloud
 import (
 	"context"
 
-	"github.com/sp-yduck/proxmox-go/api"
-	"github.com/sp-yduck/proxmox-go/proxmox"
+	"github.com/k8s-proxmox/proxmox-go/api"
+	"github.com/k8s-proxmox/proxmox-go/proxmox"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
+	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler"
 )
 
 type Reconciler interface {
