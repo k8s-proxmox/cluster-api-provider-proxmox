@@ -3,7 +3,7 @@ package framework
 import (
 	"context"
 
-	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/k8s-proxmox/proxmox-go/api"
 )
 
 type Plugin interface {

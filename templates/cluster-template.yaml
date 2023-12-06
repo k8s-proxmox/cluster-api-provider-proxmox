@@ -4,7 +4,7 @@ metadata:
   name: "${CLUSTER_NAME}"
   namespace: "${NAMESPACE}"
   labels:
-    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
 spec:
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -19,19 +19,18 @@ spec:
     port: 6443
 
 ---
-
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: ProxmoxCluster
 metadata:
   name: "${CLUSTER_NAME}"
   namespace: "${NAMESPACE}"
   labels:
-    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
 spec:
   controlPlaneEndpoint:
     host: "${CONTROLPLANE_HOST}"
     port: 6443
-  serverRef: 
+  serverRef:
     endpoint: "${PROXMOX_URL}"
     secretRef:
       name: "${CLUSTER_NAME}"
@@ -40,14 +39,13 @@ spec:
     path: ""
 
 ---
-
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 kind: KubeadmControlPlane
 metadata:
   name: "${CLUSTER_NAME}"
   namespace: "${NAMESPACE}"
   labels:
-    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
 spec:
   kubeadmConfigSpec:
     clusterConfiguration:
@@ -70,65 +68,65 @@ spec:
         kubeletExtraArgs:
           cloud-provider: external
     files:
-    - content: |
-        apiVersion: v1
-        kind: Pod
-        metadata:
-          creationTimestamp: null
-          name: kube-vip
-          namespace: kube-system
-        spec:
-          containers:
-          - args:
-            - manager
-            env:
-            - name: cp_enable
-              value: "true"
-            - name: vip_interface
-              value: ${VIP_NETWORK_INTERFACE=""}
-            - name: address
-              value: ${CONTROLPLANE_HOST}
-            - name: port
-              value: "6443"
-            - name: vip_arp
-              value: "true"
-            - name: vip_leaderelection
-              value: "true"
-            - name: vip_leaseduration
-              value: "15"
-            - name: vip_renewdeadline
-              value: "10"
-            - name: vip_retryperiod
-              value: "2"
-            image: ghcr.io/kube-vip/kube-vip:v0.5.11
-            imagePullPolicy: IfNotPresent
+      - content: |
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            creationTimestamp: null
             name: kube-vip
-            resources: {}
-            securityContext:
-              capabilities:
-                add:
-                - NET_ADMIN
-                - NET_RAW
-            volumeMounts:
-            - mountPath: /etc/kubernetes/admin.conf
+            namespace: kube-system
+          spec:
+            containers:
+            - args:
+              - manager
+              env:
+              - name: cp_enable
+                value: "true"
+              - name: vip_interface
+                value: ${VIP_NETWORK_INTERFACE=""}
+              - name: address
+                value: ${CONTROLPLANE_HOST}
+              - name: port
+                value: "6443"
+              - name: vip_arp
+                value: "true"
+              - name: vip_leaderelection
+                value: "true"
+              - name: vip_leaseduration
+                value: "15"
+              - name: vip_renewdeadline
+                value: "10"
+              - name: vip_retryperiod
+                value: "2"
+              image: ghcr.io/kube-vip/kube-vip:v0.5.11
+              imagePullPolicy: IfNotPresent
+              name: kube-vip
+              resources: {}
+              securityContext:
+                capabilities:
+                  add:
+                  - NET_ADMIN
+                  - NET_RAW
+              volumeMounts:
+              - mountPath: /etc/kubernetes/admin.conf
+                name: kubeconfig
+            hostAliases:
+            - hostnames:
+              - kubernetes
+              ip: 127.0.0.1
+            hostNetwork: true
+            volumes:
+            - hostPath:
+                path: /etc/kubernetes/admin.conf
+                type: FileOrCreate
               name: kubeconfig
-          hostAliases:
-          - hostnames:
-            - kubernetes
-            ip: 127.0.0.1
-          hostNetwork: true
-          volumes:
-          - hostPath:
-              path: /etc/kubernetes/admin.conf
-              type: FileOrCreate
-            name: kubeconfig
-        status: {}
-      owner: root:root
-      path: /etc/kubernetes/manifests/kube-vip.yaml
+          status: {}
+        owner: root:root
+        path: /etc/kubernetes/manifests/kube-vip.yaml
     postKubeadmCommands:
-    - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
-    - "chmod +x /usr/local/bin/kubectl"
-    - "reboot now"
+      - "curl -L https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl"
+      - "chmod +x /usr/local/bin/kubectl"
+      - "reboot now"
     preKubeadmCommands: []
   machineTemplate:
     infrastructureRef:
@@ -139,14 +137,13 @@ spec:
   version: ${KUBERNETES_VERSION:=v1.27.3}
 
 ---
-
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: ProxmoxMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-controlplane
   namespace: "${NAMESPACE}"
   labels:
-    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
 spec:
   template:
     spec:
@@ -160,56 +157,55 @@ spec:
       cloudInit:
         user:
           packages:
-          - socat
-          - conntrack
+            - socat
+            - conntrack
           writeFiles:
-          - path: /etc/modules-load.d/k8s.conf
-            owner: root:root
-            permissions: "0640"
-            content: overlay\nbr_netfilter
-          - path: /etc/sysctl.d/k8s.conf
-            owner: root:root
-            permissions: "0640"
-            content: |
-              net.bridge.bridge-nf-call-iptables  = 1
-              net.bridge.bridge-nf-call-ip6tables = 1
-              net.ipv4.ip_forward                 = 1
-          runCmd: 
-          - "modprobe overlay"
-          - "modprobe br_netfilter"
-          - "sysctl --system"
-          - "mkdir -p /usr/local/bin"
-          - curl -L "https://github.com/containerd/containerd/releases/download/v1.7.2/containerd-1.7.2-linux-amd64.tar.gz" | tar Cxvz "/usr/local"
-          - curl -L "https://raw.githubusercontent.com/containerd/containerd/main/containerd.service" -o /etc/systemd/system/containerd.service
-          - "mkdir -p /etc/containerd"
-          - "containerd config default > /etc/containerd/config.toml"
-          - "sed 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml -i"
-          - "systemctl daemon-reload"
-          - "systemctl enable --now containerd"
-          - "mkdir -p /usr/local/sbin"
-          - curl -L "https://github.com/opencontainers/runc/releases/download/v1.1.7/runc.amd64" -o /usr/local/sbin/runc
-          - "chmod 755 /usr/local/sbin/runc"
-          - "mkdir -p /opt/cni/bin"
-          - curl -L "https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz" | tar -C "/opt/cni/bin" -xz
-          - curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.27.0/crictl-v1.27.0-linux-amd64.tar.gz" | tar -C "/usr/local/bin" -xz
-          - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubeadm -o /usr/local/bin/kubeadm
-          - chmod +x /usr/local/bin/kubeadm
-          - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubelet -o /usr/local/bin/kubelet
-          - chmod +x /usr/local/bin/kubelet
-          - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service
-          - mkdir -p /etc/systemd/system/kubelet.service.d
-          - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-          - "systemctl enable kubelet.service"
+            - path: /etc/modules-load.d/k8s.conf
+              owner: root:root
+              permissions: "0640"
+              content: overlay\nbr_netfilter
+            - path: /etc/sysctl.d/k8s.conf
+              owner: root:root
+              permissions: "0640"
+              content: |
+                net.bridge.bridge-nf-call-iptables  = 1
+                net.bridge.bridge-nf-call-ip6tables = 1
+                net.ipv4.ip_forward                 = 1
+          runCmd:
+            - "modprobe overlay"
+            - "modprobe br_netfilter"
+            - "sysctl --system"
+            - "mkdir -p /usr/local/bin"
+            - curl -L "https://github.com/containerd/containerd/releases/download/v1.7.2/containerd-1.7.2-linux-amd64.tar.gz" | tar Cxvz "/usr/local"
+            - curl -L "https://raw.githubusercontent.com/containerd/containerd/main/containerd.service" -o /etc/systemd/system/containerd.service
+            - "mkdir -p /etc/containerd"
+            - "containerd config default > /etc/containerd/config.toml"
+            - "sed 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml -i"
+            - "systemctl daemon-reload"
+            - "systemctl enable --now containerd"
+            - "mkdir -p /usr/local/sbin"
+            - curl -L "https://github.com/opencontainers/runc/releases/download/v1.1.7/runc.amd64" -o /usr/local/sbin/runc
+            - "chmod 755 /usr/local/sbin/runc"
+            - "mkdir -p /opt/cni/bin"
+            - curl -L "https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz" | tar -C "/opt/cni/bin" -xz
+            - curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.27.0/crictl-v1.27.0-linux-amd64.tar.gz" | tar -C "/usr/local/bin" -xz
+            - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubeadm -o /usr/local/bin/kubeadm
+            - chmod +x /usr/local/bin/kubeadm
+            - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubelet -o /usr/local/bin/kubelet
+            - chmod +x /usr/local/bin/kubelet
+            - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service
+            - mkdir -p /etc/systemd/system/kubelet.service.d
+            - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+            - "systemctl enable kubelet.service"
 
 ---
-
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
 metadata:
   name: ${CLUSTER_NAME}-md-0
   namespace: ${NAMESPACE}
   labels:
-    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
 spec:
   clusterName: "${CLUSTER_NAME}"
   replicas: ${WORKER_MACHINE_COUNT}
@@ -230,14 +226,13 @@ spec:
       version: ${KUBERNETES_VERSION:=v1.27.3}
 
 ---
-
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
   namespace: ${NAMESPACE}
   labels:
-    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
 spec:
   template:
     spec:
@@ -247,14 +242,13 @@ spec:
             cloud-provider: external
 
 ---
-
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: ProxmoxMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
   namespace: ${NAMESPACE}
   labels:
-    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
 spec:
   template:
     spec:
@@ -265,49 +259,48 @@ spec:
       cloudInit:
         user:
           packages:
-          - socat
-          - conntrack
+            - socat
+            - conntrack
           writeFiles:
-          - path: /etc/modules-load.d/k8s.conf
-            owner: root:root
-            permissions: "0640"
-            content: overlay\nbr_netfilter
-          - path: /etc/sysctl.d/k8s.conf
-            owner: root:root
-            permissions: "0640"
-            content: |
-              net.bridge.bridge-nf-call-iptables  = 1
-              net.bridge.bridge-nf-call-ip6tables = 1
-              net.ipv4.ip_forward                 = 1
-          runCmd: 
-          - "modprobe overlay"
-          - "modprobe br_netfilter"
-          - "sysctl --system"
-          - "mkdir -p /usr/local/bin"
-          - curl -L "https://github.com/containerd/containerd/releases/download/v1.7.2/containerd-1.7.2-linux-amd64.tar.gz" | tar Cxvz "/usr/local"
-          - curl -L "https://raw.githubusercontent.com/containerd/containerd/main/containerd.service" -o /etc/systemd/system/containerd.service
-          - "mkdir -p /etc/containerd"
-          - "containerd config default > /etc/containerd/config.toml"
-          - "sed 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml -i"
-          - "systemctl daemon-reload"
-          - "systemctl enable --now containerd"
-          - "mkdir -p /usr/local/sbin"
-          - curl -L "https://github.com/opencontainers/runc/releases/download/v1.1.7/runc.amd64" -o /usr/local/sbin/runc
-          - "chmod 755 /usr/local/sbin/runc"
-          - "mkdir -p /opt/cni/bin"
-          - curl -L "https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz" | tar -C "/opt/cni/bin" -xz
-          - curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.27.0/crictl-v1.27.0-linux-amd64.tar.gz" | tar -C "/usr/local/bin" -xz
-          - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubeadm -o /usr/local/bin/kubeadm
-          - chmod +x /usr/local/bin/kubeadm
-          - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubelet -o /usr/local/bin/kubelet
-          - chmod +x /usr/local/bin/kubelet
-          - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service
-          - mkdir -p /etc/systemd/system/kubelet.service.d
-          - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-          - "systemctl enable kubelet.service"
+            - path: /etc/modules-load.d/k8s.conf
+              owner: root:root
+              permissions: "0640"
+              content: overlay\nbr_netfilter
+            - path: /etc/sysctl.d/k8s.conf
+              owner: root:root
+              permissions: "0640"
+              content: |
+                net.bridge.bridge-nf-call-iptables  = 1
+                net.bridge.bridge-nf-call-ip6tables = 1
+                net.ipv4.ip_forward                 = 1
+          runCmd:
+            - "modprobe overlay"
+            - "modprobe br_netfilter"
+            - "sysctl --system"
+            - "mkdir -p /usr/local/bin"
+            - curl -L "https://github.com/containerd/containerd/releases/download/v1.7.2/containerd-1.7.2-linux-amd64.tar.gz" | tar Cxvz "/usr/local"
+            - curl -L "https://raw.githubusercontent.com/containerd/containerd/main/containerd.service" -o /etc/systemd/system/containerd.service
+            - "mkdir -p /etc/containerd"
+            - "containerd config default > /etc/containerd/config.toml"
+            - "sed 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml -i"
+            - "systemctl daemon-reload"
+            - "systemctl enable --now containerd"
+            - "mkdir -p /usr/local/sbin"
+            - curl -L "https://github.com/opencontainers/runc/releases/download/v1.1.7/runc.amd64" -o /usr/local/sbin/runc
+            - "chmod 755 /usr/local/sbin/runc"
+            - "mkdir -p /opt/cni/bin"
+            - curl -L "https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz" | tar -C "/opt/cni/bin" -xz
+            - curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.27.0/crictl-v1.27.0-linux-amd64.tar.gz" | tar -C "/usr/local/bin" -xz
+            - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubeadm -o /usr/local/bin/kubeadm
+            - chmod +x /usr/local/bin/kubeadm
+            - curl -L --remote-name-all https://dl.k8s.io/release/${KUBERNETES_VERSION:=v1.27.3}/bin/linux/amd64/kubelet -o /usr/local/bin/kubelet
+            - chmod +x /usr/local/bin/kubelet
+            - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service
+            - mkdir -p /etc/systemd/system/kubelet.service.d
+            - curl -sSL "https://raw.githubusercontent.com/kubernetes/release/v0.15.1/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:/usr/local/bin:g" | tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+            - "systemctl enable kubelet.service"
 
 ---
-
 apiVersion: v1
 stringData:
   PROXMOX_PASSWORD: ${PROXMOX_PASSWORD:=""}
@@ -319,29 +312,27 @@ metadata:
   name: "${CLUSTER_NAME}"
   namespace: "${NAMESPACE}"
   labels:
-    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
 type: Opaque
 
 ---
-
 apiVersion: addons.cluster.x-k8s.io/v1beta1
 kind: ClusterResourceSet
 metadata:
   name: ${CLUSTER_NAME}-crs-0
   namespace: "${NAMESPACE}"
   labels:
-    cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+    cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
 spec:
   clusterSelector:
     matchLabels:
-      cluster.x-k8s.io/cluster-name: '${CLUSTER_NAME}'
+      cluster.x-k8s.io/cluster-name: "${CLUSTER_NAME}"
   resources:
-  - kind: ConfigMap
-    name: cloud-controller-manager
+    - kind: ConfigMap
+      name: cloud-controller-manager
   strategy: Reconcile
 
 ---
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -387,7 +378,7 @@ data:
           serviceAccountName: proxmox-cloud-controller-manager
           containers:
           - name: cloud-controller-manager
-            image: ghcr.io/sp-yduck/cloud-provider-proxmox:latest
+            image: ghcr.io/k8s-proxmox/cloud-provider-proxmox:latest
             command:
             - /usr/local/bin/cloud-controller-manager
             - --cloud-provider=proxmox

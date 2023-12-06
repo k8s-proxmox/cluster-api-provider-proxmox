@@ -32,11 +32,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scope"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/instance"
+	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scope"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/services/compute/instance"
 )
 
 // ProxmoxMachineReconciler reconciles a ProxmoxMachine object

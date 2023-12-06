@@ -20,14 +20,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/k8s-proxmox/proxmox-go/proxmox"
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox-go/proxmox"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/services/compute/storage"
+	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/services/compute/storage"
 )
 
 type ClusterScopeParams struct {

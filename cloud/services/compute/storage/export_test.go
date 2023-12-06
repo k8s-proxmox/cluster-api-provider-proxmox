@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/k8s-proxmox/proxmox-go/api"
 )
 
 func GenerateVMStorageOptions(scope Scope) api.StorageCreateOptions {

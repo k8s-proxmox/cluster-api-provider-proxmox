@@ -3,10 +3,10 @@ package overcommit
 import (
 	"context"
 
-	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/k8s-proxmox/proxmox-go/api"
 
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/names"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/framework"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/plugins/names"
 )
 
 type MemoryOvercommit struct{}

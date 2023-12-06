@@ -19,9 +19,9 @@ package scope
 import (
 	"context"
 
+	"github.com/k8s-proxmox/proxmox-go/api"
+	"github.com/k8s-proxmox/proxmox-go/proxmox"
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox-go/api"
-	"github.com/sp-yduck/proxmox-go/proxmox"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
@@ -31,9 +31,9 @@ import (
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/providerid"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
+	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/providerid"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler"
 )
 
 type MachineScopeParams struct {

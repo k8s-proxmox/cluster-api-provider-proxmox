@@ -7,8 +7,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/idrange"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/framework"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/plugins/idrange"
 )
 
 func TestIDRange(t *testing.T) {

@@ -3,10 +3,10 @@ package instance
 import (
 	"context"
 
-	"github.com/sp-yduck/proxmox-go/proxmox"
+	"github.com/k8s-proxmox/proxmox-go/proxmox"
 
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler"
 )
 
 type Scope interface {
