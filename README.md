@@ -1,17 +1,20 @@
 # cluster-api-provider-proxmox (CAPPX)
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/sp-yduck/cluster-api-provider-proxmox?sort=semver)](https://github.com/sp-yduck/cluster-api-provider-proxmox/releases/latest) [![Go Report Card](https://goreportcard.com/badge/github.com/sp-yduck/cluster-api-provider-proxmox)](https://goreportcard.com/report/github.com/sp-yduck/cluster-api-provider-proxmox) [![CI](https://github.com/sp-yduck/cluster-api-provider-proxmox/actions/workflows/ci.yaml/badge.svg)](https://github.com/sp-yduck/cluster-api-provider-proxmox/actions/workflows/ci.yaml) [![GitHub license](https://img.shields.io/github/license/sp-yduck/cluster-api-provider-proxmox)](https://github.com/sp-yduck/cluster-api-provider-proxmox/blob/main/LICENSE)
-----
+
+## [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/k8s-proxmox/cluster-api-provider-proxmox?sort=semver)](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/releases/latest) [![Go Report Card](https://goreportcard.com/badge/github.com/k8s-proxmox/cluster-api-provider-proxmox)](https://goreportcard.com/report/github.com/k8s-proxmox/cluster-api-provider-proxmox) [![CI](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/actions/workflows/ci.yaml/badge.svg)](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/actions/workflows/ci.yaml) [![GitHub license](https://img.shields.io/github/license/k8s-proxmox/cluster-api-provider-proxmox)](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/blob/main/LICENSE)
 
 cluster-api-provider-proxmox is a Cluster API [infrastructure provider](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html) implementation for [Proxmox VE](https://pve.proxmox.com/wiki/Main_Page).
 
 ## Description
+
 cluster-api-provider-proxmox provides only infrastructure controller (`ProxmoxCluster` and `ProxmoxMachine`). To bootstrap your cluster/machine you need to provide [Control Plane provider](https://cluster-api.sigs.k8s.io/developer/architecture/controllers/control-plane.html#crd-contracts) and [Bootstrap provider](https://cluster-api.sigs.k8s.io/developer/providers/bootstrap.html). For example [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
 
 ## Quick Start
+
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
 ### with KubeadmControlplane/Bootstrap
+
 1. Initialize Management cluster
 
 for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#initialize-the-management-cluster
@@ -19,11 +22,13 @@ for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#ini
 ```sh
 # install cluster-api components
 export EXP_CLUSTER_RESOURCE_SET=true
-clusterctl init --infrastructure=proxmox:v0.3.3 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml
+clusterctl init --infrastructure=proxmox:v0.3.3 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml
 ```
-**Note:** container images are available at [ghcr.io/sp-yduck/cluster-api-provider-proxmox:\<tag\>](https://github.com/sp-yduck/cluster-api-provider-proxmox/pkgs/container/cluster-api-provider-proxmox)
+
+**Note:** container images are available at [ghcr.io/k8s-proxmox/cluster-api-provider-proxmox:\<tag\>](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/pkgs/container/cluster-api-provider-proxmox)
 
 2. Create your first workload cluster
+
 ```sh
 # export env variables
 export CONTROLPLANE_HOST=X.X.X.X                   # control-plane vip
@@ -32,7 +37,7 @@ export PROXMOX_PASSWORD=password
 export PROXMOX_USER=user@pam
 
 # generate manifests (available flags: --target-namespace, --kubernetes-version, --control-plane-machine-count, --worker-machine-count)
-clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.3.3 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.3.3 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
 vi cappx-test.yaml
@@ -44,6 +49,7 @@ kubectl apply -f cappx-test.yaml
 3. Access your first workload cluster !!
 
 Usually it takes 2~10 mins to complete bootstrapping the nodes.
+
 ```sh
 # get workload cluster's kubeconfig
 clusterctl get kubeconfig cappx-test > kubeconfig.yaml
@@ -53,15 +59,14 @@ kubectl --kubeconfig=kubeconfig.yaml get node
 ```
 
 4. Tear down your workload cluster
+
 ```sh
 kubectl delete cluster cappx-test
 ```
 
 ## Fetures
 
-- No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`. CAPPX bootstrap your vm from scratch.
-
-- Supports mutiple image format. CAPPX uses VNC websocket for downloading/installing node images so it can support multiple image format not only ISO (Proxmox API can only support ISO)
+- No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`. CAPPX bootstrap your vm from scratch. (Supports `iso` type of image format.)
 
 - Supports custom cloud-config (user data). CAPPX uses VNC websockert for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
 
@@ -69,11 +74,11 @@ kubectl delete cluster cappx-test
 
 ### Node Images
 
-CAPPX is compatible with `iso`, `qcow2`, `qed`, `raw`, `vdi`, `vpc`, `vmdk` format of image. You can build your own node image and use it for `ProxmoxMachine`.
+CAPPX is compatible with `iso` format of image. You can build your own node image and use it for `ProxmoxMachine`.
 
 CAPPX relies on a few prerequisites which have to be already installed in the used operating system images, e.g. a container runtime, kubelet, kubeadm,.. .
 
-To build your custom node image, you can use [kubernetes-sigs/image-builder](https://github.com/kubernetes-sigs/image-builder) project. 
+To build your custom node image, you can use [kubernetes-sigs/image-builder](https://github.com/kubernetes-sigs/image-builder) project.
 
 Also there are some available out-of-box images published other communities such as [Metal3](https://github.com/metal3-io). For example https://artifactory.nordix.org/ui/native/metal3/images/. Example MD can be found [metal3-ubuntu2204-k8s127.yaml](examples/machine_deployment/metal3-ubuntu2204-k8s127.yaml).
 
@@ -91,11 +96,12 @@ CAPPX is tested with `pve-manager/7.4-3/9002ab8a (running kernel: 5.15.102-1-pve
 | ---------------------- | :------------------: | :-----------------: |
 | CAPPX v1beta1 `(v0.x)` |          ?           |          ✓          |
 
-### ControlPlane & Bootstrap provider 
+### ControlPlane & Bootstrap provider
 
 CAPPX is tested with [KubeadmControlPlane](https://github.com/kubernetes-sigs/cluster-api/tree/main/controlplane/kubeadm) and [KubeadmBootstrap](https://github.com/kubernetes-sigs/cluster-api/tree/main/bootstrap/kubeadm).
 
 ## How it works
+
 This project aims to follow the Cluster API [Provider contract](https://cluster-api.sigs.k8s.io/developer/providers/contracts.html).
 
 ### ProxmoxCluster
@@ -109,12 +115,15 @@ ProxmoxMachine controller follows the [typical infra-machine logic](https://clus
 ## Development
 
 ### Testing
+
 #### Unit Testing
+
 ```sh
 make unit-test
 ```
 
 #### Unit and Integration Testing
+
 ```sh
 export PROXMOX_URL=https://X.X.X.X:8006/api2/json
 export PROXMOX_PASSWORD=password
@@ -124,6 +133,7 @@ make test
 ```
 
 #### E2E Testing
+
 ```sh
 export CONTROLPLANE_HOST=X.X.X.X
 export PROXMOX_URL=https://X.X.X.X:8006/api2/json
@@ -152,4 +162,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-

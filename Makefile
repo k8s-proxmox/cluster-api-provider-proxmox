@@ -1,7 +1,7 @@
 
 # Image URL to use all building/pushing image targets
 REGISTRY := ghcr.io
-PROJECT := sp-yduck/cluster-api-provider-proxmox
+PROJECT := k8s-proxmox/cluster-api-provider-proxmox
 RELEASE_TAG := latest
 IMG ?= $(REGISTRY)/$(PROJECT):$(RELEASE_TAG)
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
@@ -152,7 +152,7 @@ unit-test-cover: ## Run unit tests and generate coverage report
 	go tool cover -html=coverage.out -o coverage.html
 
 E2E_DIR = $(shell pwd)/internal/test/e2e
-E2E_IMG := ghcr.io/sp-yduck/cluster-api-provider-proxmox:e2e
+E2E_IMG := ghcr.io/k8s-proxmox/cluster-api-provider-proxmox:e2e
 .PHONY: generate-e2e-templates
 generate-e2e-templates: $(KUSTOMIZE) ## Generate cluster-templates for e2e
 	cp templates/cluster-template* $(E2E_DIR)/data/infrastructure-proxmox/templates

@@ -20,14 +20,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/k8s-proxmox/proxmox-go/proxmox"
 	"github.com/pkg/errors"
-	"github.com/sp-yduck/proxmox-go/proxmox"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
 )
 
 type ProxmoxServices struct {

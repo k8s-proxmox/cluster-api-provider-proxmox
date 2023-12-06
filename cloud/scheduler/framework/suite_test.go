@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/k8s-proxmox/proxmox-go/proxmox"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/sp-yduck/proxmox-go/proxmox"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )

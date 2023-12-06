@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/k8s-proxmox/proxmox-go/api"
 )
 
 type SchedulingQueue struct {

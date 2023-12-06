@@ -1,8 +1,8 @@
 package framework
 
 import (
-	"github.com/sp-yduck/proxmox-go/api"
-	"github.com/sp-yduck/proxmox-go/proxmox"
+	"github.com/k8s-proxmox/proxmox-go/api"
+	"github.com/k8s-proxmox/proxmox-go/proxmox"
 )
 
 type CycleState struct {
