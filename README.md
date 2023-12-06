@@ -56,6 +56,18 @@ clusterctl get kubeconfig cappx-test > kubeconfig.yaml
 
 # get node command for workload cluster
 kubectl --kubeconfig=kubeconfig.yaml get node
+### example output: this is your first workload cluster !!
+## NAME                            STATUS     ROLES           AGE     VERSION
+## cappx-test-controlplane-qc9vw   NotReady   control-plane   6m53s   v1.27.3
+```
+
+3-a. [OPTIONAL] Apply your favorite CNI to your workload cluster
+
+Until you apply CNI to your cluster, all the node is NotReady. After this step, all your nodes will become Ready :)
+
+```sh
+# use weave-cni for this example
+kubectl --kubeconfig=kubeconfig.yaml apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 ```
 
 4. Tear down your workload cluster
