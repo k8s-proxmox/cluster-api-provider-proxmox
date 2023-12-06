@@ -31,7 +31,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
 

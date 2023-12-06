@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/sp-yduck/proxmox-go/api"
-	"github.com/sp-yduck/proxmox-go/proxmox"
+	"github.com/k8s-proxmox/proxmox-go/api"
+	"github.com/k8s-proxmox/proxmox-go/proxmox"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/queue"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/framework"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/plugins"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/queue"
 )
 
 var (

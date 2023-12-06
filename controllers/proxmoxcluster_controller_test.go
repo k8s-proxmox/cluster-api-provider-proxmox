@@ -9,7 +9,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "github.com/sp-yduck/cluster-api-provider-proxmox/api/v1beta1"
+	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
 )
 
 var _ = Describe("ProxmoxClusterReconciler", Label("unit", "controllers"), func() {

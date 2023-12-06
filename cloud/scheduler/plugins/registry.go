@@ -5,12 +5,12 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/idrange"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/nodename"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/noderesource"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/overcommit"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/plugins/regex"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/framework"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/plugins/idrange"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/plugins/nodename"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/plugins/noderesource"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/plugins/overcommit"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/plugins/regex"
 )
 
 type PluginConfigs struct {

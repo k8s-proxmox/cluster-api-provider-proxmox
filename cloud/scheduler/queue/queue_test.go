@@ -7,8 +7,8 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/queue"
-	"github.com/sp-yduck/proxmox-go/api"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/queue"
+	"github.com/k8s-proxmox/proxmox-go/api"
 )
 
 func TestQueue(t *testing.T) {

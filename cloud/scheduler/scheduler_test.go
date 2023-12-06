@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
+	"github.com/k8s-proxmox/proxmox-go/api"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/sp-yduck/proxmox-go/api"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler"
-	"github.com/sp-yduck/cluster-api-provider-proxmox/cloud/scheduler/framework"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/framework"
 )
 
 var _ = Describe("NewManager", Label("unit", "scheduler"), func() {
