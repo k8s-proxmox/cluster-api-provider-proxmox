@@ -66,9 +66,7 @@ kubectl delete cluster cappx-test
 
 ## Fetures
 
-- No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`. CAPPX bootstrap your vm from scratch.
-
-- Supports mutiple image format. CAPPX uses VNC websocket for downloading/installing node images so it can support multiple image format not only ISO (Proxmox API can only support ISO)
+- No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`. CAPPX bootstrap your vm from scratch. (Supports `iso` type of image format.)
 
 - Supports custom cloud-config (user data). CAPPX uses VNC websockert for bootstrapping nodes so it can applies custom cloud-config that can not be achieved by only Proxmox API.
 
@@ -76,7 +74,7 @@ kubectl delete cluster cappx-test
 
 ### Node Images
 
-CAPPX is compatible with `iso`, `qcow2`, `qed`, `raw`, `vdi`, `vpc`, `vmdk` format of image. You can build your own node image and use it for `ProxmoxMachine`.
+CAPPX is compatible with `iso` format of image. You can build your own node image and use it for `ProxmoxMachine`.
 
 CAPPX relies on a few prerequisites which have to be already installed in the used operating system images, e.g. a container runtime, kubelet, kubeadm,.. .
 
