@@ -22,7 +22,7 @@ for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#ini
 ```sh
 # install cluster-api components
 export EXP_CLUSTER_RESOURCE_SET=true
-clusterctl init --infrastructure=proxmox:v0.3.3 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml
+clusterctl init --infrastructure=proxmox:v0.3.4 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml
 ```
 
 **Note:** container images are available at [ghcr.io/k8s-proxmox/cluster-api-provider-proxmox:\<tag\>](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/pkgs/container/cluster-api-provider-proxmox)
@@ -37,7 +37,7 @@ export PROXMOX_PASSWORD=password
 export PROXMOX_USER=user@pam
 
 # generate manifests (available flags: --target-namespace, --kubernetes-version, --control-plane-machine-count, --worker-machine-count)
-clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.3.3 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.3.4 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
 vi cappx-test.yaml
@@ -56,6 +56,18 @@ clusterctl get kubeconfig cappx-test > kubeconfig.yaml
 
 # get node command for workload cluster
 kubectl --kubeconfig=kubeconfig.yaml get node
+### example output: this is your first workload cluster !!
+## NAME                            STATUS     ROLES           AGE     VERSION
+## cappx-test-controlplane-qc9vw   NotReady   control-plane   6m53s   v1.27.3
+```
+
+3-a. [OPTIONAL] Apply your favorite CNI to your workload cluster
+
+Until you apply CNI to your cluster, all the node is NotReady. After this step, all your nodes will become Ready :)
+
+```sh
+# use weave-cni for this example
+kubectl --kubeconfig=kubeconfig.yaml apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 ```
 
 4. Tear down your workload cluster
@@ -79,8 +91,6 @@ CAPPX is compatible with `iso` format of image. You can build your own node imag
 CAPPX relies on a few prerequisites which have to be already installed in the used operating system images, e.g. a container runtime, kubelet, kubeadm,.. .
 
 To build your custom node image, you can use [kubernetes-sigs/image-builder](https://github.com/kubernetes-sigs/image-builder) project.
-
-Also there are some available out-of-box images published other communities such as [Metal3](https://github.com/metal3-io). For example https://artifactory.nordix.org/ui/native/metal3/images/. Example MD can be found [metal3-ubuntu2204-k8s127.yaml](examples/machine_deployment/metal3-ubuntu2204-k8s127.yaml).
 
 If it isn't possible to pre-install those prerequisites in the image, you can always deploy and execute some custom scripts through the `ProxmoxMachine.spec.cloudInit` or `KubeadmConfig`. Example MD can be found [ubuntu2204.yaml](examples/machine_deployment/ubuntu2204.yaml).
 
