@@ -57,6 +57,7 @@ type MachineGetter interface {
 	NodeName() string
 	GetBiosUUID() *string
 	GetImage() infrav1.Image
+	GetCloneSpec() infrav1.CloneSpec
 	GetProviderID() string
 	GetBootstrapData() (string, error)
 	GetInstanceStatus() *infrav1.InstanceStatus

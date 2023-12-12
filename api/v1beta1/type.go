@@ -56,6 +56,17 @@ type Image struct {
 	ChecksumType *string `json:"checksumType,omitempty"`
 }
 
+type CloneSpec struct {
+	// +kubebuilder:validation:Minimum:=0
+	// TemplateID is the id of the template qemu to be cloned
+	TemplateID *int `json:"templateID"`
+
+	// +kubebuilder:default=true
+	// FullClone *bool `json:"fullClone,omitempty"`
+
+	// SnapName *string `json:"snapName,omitempty"`
+}
+
 // Hardware
 type Hardware struct {
 	// amount of RAM for the VM in MiB : 16 ~

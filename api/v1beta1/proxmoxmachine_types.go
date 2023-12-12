@@ -46,7 +46,11 @@ type ProxmoxMachineSpec struct {
 	VMID *int `json:"vmID,omitempty"`
 
 	// Image is the image to be provisioned
-	Image Image `json:"image"`
+	// Ignored when CloneSpec is specified
+	Image Image `json:"image,omitempty"`
+
+	// CloneSpec is spec used to clone a qemu
+	CloneSpec CloneSpec `json:"cloneSpec,omitempty"`
 
 	// CloudInit defines options related to the bootstrapping systems where
 	// CloudInit is used.

@@ -67,6 +67,16 @@ spec:
           spec:
             description: ProxmoxMachineSpec defines the desired state of ProxmoxMachine
             properties:
+              cloneSpec:
+                description: CloneSpec is spec used to clone a qemu
+                properties:
+                  templateID:
+                    description: TemplateID is the id of the template qemu to be cloned
+                    minimum: 0
+                    type: integer
+                required:
+                - templateID
+                type: object
               cloudInit:
                 description: CloudInit defines options related to the bootstrapping
                   systems where CloudInit is used.
@@ -306,7 +316,8 @@ spec:
                     type: integer
                 type: object
               image:
-                description: Image is the image to be provisioned
+                description: Image is the image to be provisioned Ignored when CloneSpec
+                  is specified
                 properties:
                   checksum:
                     description: Checksum Always better to specify checksum otherwise
@@ -511,8 +522,6 @@ spec:
                 description: VMID is proxmox qemu's id
                 minimum: 0
                 type: integer
-            required:
-            - image
             type: object
           status:
             description: ProxmoxMachineStatus defines the observed state of ProxmoxMachine

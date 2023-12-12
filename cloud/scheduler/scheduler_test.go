@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/k8s-proxmox/proxmox-go/api"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler"
 	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/framework"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/internal/fake"
 )
 
 var _ = Describe("NewManager", Label("unit", "scheduler"), func() {
@@ -110,9 +110,7 @@ var _ = Describe("CreateQEMU", Label("integration"), func() {
 			sched := manager.NewScheduler(proxmoxSvc)
 			sched.RunAsync()
 			var err error
-			result, err = sched.CreateQEMU(context.Background(), &api.VirtualMachineCreateOptions{
-				Name: "qemu-scheduler-test-createqemu",
-			})
+			result, err = sched.CreateQEMU(&fake.QEMUSpec{})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result).ToNot(BeNil())
 			Expect(result.Node()).To(Equal(result.Instance().Node))

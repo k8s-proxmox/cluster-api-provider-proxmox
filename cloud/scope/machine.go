@@ -187,6 +187,10 @@ func (m *MachineScope) GetImage() infrav1.Image {
 	return m.ProxmoxMachine.Spec.Image
 }
 
+func (m *MachineScope) GetCloneSpec() infrav1.CloneSpec {
+	return m.ProxmoxMachine.Spec.CloneSpec
+}
+
 func (m *MachineScope) GetCloudInit() infrav1.CloudInit {
 	return m.ProxmoxMachine.Spec.CloudInit
 }

@@ -198,7 +198,7 @@ func (s *Scheduler) ScheduleOne(ctx context.Context) {
 	if shutdown {
 		return
 	}
-	config := qemu.Config()
+	config := qemu.CreateSpec()
 	qemuCtx := qemu.Context()
 	s.logger.Info("scheduling qemu")
 
@@ -222,7 +222,7 @@ func (s *Scheduler) ScheduleOne(ctx context.Context) {
 	}
 
 	// actually create qemu
-	vm, err := s.client.CreateVirtualMachine(ctx, node, vmid, *config)
+	vm, err := createOrCloneVirtualMachine(s.client, node, vmid, qemu)
 	if err != nil {
 		state.UpdateState(true, err, framework.SchedulerResult{})
 		return
@@ -232,8 +232,31 @@ func (s *Scheduler) ScheduleOne(ctx context.Context) {
 	state.UpdateState(true, nil, result)
 }
 
+func createOrCloneVirtualMachine(client *proxmox.Service, node string, vmid int, qemu queue.QEMUSpec) (*proxmox.VirtualMachine, error) {
+	if qemu.CloneSpec() != nil {
+		baseVM, err := client.VirtualMachine(qemu.Context(), qemu.CloneSpec().VMID)
+		if err != nil {
+			return nil, err
+		}
+		cloneSpec := qemu.CloneSpec()
+		cloneSpec.Target = node
+		vm, err := baseVM.Clone(qemu.Context(), vmid, *cloneSpec)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := vm.SetConfigAsync(qemu.Context(), *qemu.Config()); err != nil {
+			return nil, err
+		}
+		return vm, nil
+	}
+	return client.CreateVirtualMachine(qemu.Context(), node, vmid, *qemu.CreateSpec())
+}
+
 // wait until CycleState is put into channel and then return it
-func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.CycleState, error) {
+func (s *Scheduler) WaitStatus(spec queue.QEMUSpec) (framework.CycleState, error) {
+	ctx := spec.Context()
+	config := spec.CreateSpec()
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 	var done chan *framework.CycleState
@@ -256,15 +279,15 @@ func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCr
 }
 
 // create new qemu with given spec and context
-func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.SchedulerResult, error) {
-	s.logger = s.logger.WithValues("qemu", config.Name)
+func (s *Scheduler) CreateQEMU(spec queue.QEMUSpec) (framework.SchedulerResult, error) {
+	s.logger = s.logger.WithValues("qemu", spec.Name())
 	s.logger.Info("adding qemu to scheduler queue")
 	// add qemu spec into the queue
-	s.schedulingQueue.Add(ctx, config)
+	s.schedulingQueue.Add(spec)
 
 	// wait until the scheduller finishes its job
 	var err error
-	status, err := s.WaitStatus(ctx, config)
+	status, err := s.WaitStatus(spec)
 	if err != nil {
 		return status.Result(), err
 	}

@@ -1,14 +1,14 @@
 package queue_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
 	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/queue"
-	"github.com/k8s-proxmox/proxmox-go/api"
+	"github.com/k8s-proxmox/cluster-api-provider-proxmox/internal/fake"
 )
 
 func TestQueue(t *testing.T) {
@@ -27,7 +27,7 @@ var _ = Describe("Add", Label("unit", "queue"), func() {
 	q := queue.New()
 
 	It("should not error", func() {
-		q.Add(context.Background(), &api.VirtualMachineCreateOptions{Name: "foo"})
+		q.Add(&fake.QEMUSpec{})
 	})
 })
 
@@ -40,10 +40,10 @@ var _ = Describe("Get", Label("unit", "queue"), func() {
 
 	Context("normal", func() {
 		It("should run properly", func() {
-			c := &api.VirtualMachineCreateOptions{Name: "foo"}
-			q.Add(context.Background(), c)
+			spec := &fake.QEMUSpec{}
+			q.Add(spec)
 			qemu, shutdown := q.Get()
-			Expect(qemu.Config()).To(Equal(c))
+			Expect(qemu).To(Equal(spec))
 			Expect(shutdown).To(BeFalse())
 		})
 	})

@@ -73,10 +73,8 @@ func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, erro
 
 	// create qemu
 	log.Info("making qemu spec")
-	vmoption := s.generateVMOptions()
-	// bind annotation key-values to context
-	schedCtx := framework.ContextWithMap(ctx, s.scope.Annotations())
-	result, err := s.scheduler.CreateQEMU(schedCtx, &vmoption)
+	spec := s.generateQemuSpec(ctx)
+	result, err := s.scheduler.CreateQEMU(spec)
 	if err != nil {
 		log.Error(err, "failed to create qemu instance")
 		return nil, err
@@ -122,24 +120,74 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 		Node:          s.scope.NodeName(),
 		OnBoot:        boolToInt8(options.OnBoot),
 		OSType:        api.OSType(options.OSType),
-		Protection:    boolToInt8(options.Protection),
-		Reboot:        int(boolToInt8(options.Reboot)),
-		Scsi:          api.Scsi{Scsi0: scsi0},
-		ScsiHw:        api.VirtioScsiPci,
-		SearchDomain:  network.SearchDomain,
-		Serial:        api.Serial{Serial0: "socket"},
-		Shares:        options.Shares,
-		Sockets:       hardware.Sockets,
-		Tablet:        boolToInt8(options.Tablet),
-		Tags:          options.Tags.String(),
-		TDF:           boolToInt8(options.TimeDriftFix),
-		Template:      boolToInt8(options.Template),
-		VCPUs:         options.VCPUs,
-		VMGenID:       options.VMGenerationID,
-		VMID:          s.scope.GetVMID(),
-		VGA:           "serial0",
+		// Pool: pool,
+		Protection:   boolToInt8(options.Protection),
+		Reboot:       int(boolToInt8(options.Reboot)),
+		Scsi:         api.Scsi{Scsi0: scsi0},
+		ScsiHw:       api.VirtioScsiPci,
+		SearchDomain: network.SearchDomain,
+		Serial:       api.Serial{Serial0: "socket"},
+		Shares:       options.Shares,
+		Sockets:      hardware.Sockets,
+		Storage:      imageStorageName,
+		Tablet:       boolToInt8(options.Tablet),
+		Tags:         options.Tags.String(),
+		TDF:          boolToInt8(options.TimeDriftFix),
+		Template:     boolToInt8(options.Template),
+		VCPUs:        options.VCPUs,
+		VMGenID:      options.VMGenerationID,
+		VMID:         s.scope.GetVMID(),
+		VGA:          "serial0",
 	}
 	return vmoptions
+}
+
+type QEMUSpec struct {
+	Ctx          context.Context
+	CloneOption  api.VirtualMachineCloneOption
+	config       api.VirtualMachineConfig
+	CreateOption api.VirtualMachineCreateOptions
+}
+
+func (s *Service) generateQemuSpec(ctx context.Context) *QEMUSpec {
+	// bind annotation key-values to context
+	schedCtx := framework.ContextWithMap(ctx, s.scope.Annotations())
+	createOption := s.generateVMOptions()
+	clone := s.scope.GetCloneSpec()
+	cloneOption := api.VirtualMachineCloneOption{}
+	config := createOptionToConfig(createOption)
+	if clone.TemplateID != nil {
+		cloneOption = api.VirtualMachineCloneOption{
+			VMID:    *clone.TemplateID,
+			BWLimit: createOption.BWLimit,
+			Full:    boolToInt8(true),
+			Name:    s.scope.Name(),
+			Pool:    createOption.Pool,
+			Storage: createOption.Storage,
+		}
+		cloneOption.Description += fmt.Sprintf("\n\n*Cloned from %d", *clone.TemplateID)
+	}
+	return &QEMUSpec{Ctx: schedCtx, CloneOption: cloneOption, config: config, CreateOption: createOption}
+}
+
+func (q *QEMUSpec) Name() string {
+	return q.CreateOption.Name
+}
+
+func (q *QEMUSpec) Context() context.Context {
+	return q.Ctx
+}
+
+func (q *QEMUSpec) CloneSpec() *api.VirtualMachineCloneOption {
+	return &q.CloneOption
+}
+
+func (q *QEMUSpec) Config() *api.VirtualMachineConfig {
+	return &q.config
+}
+
+func (q *QEMUSpec) CreateSpec() *api.VirtualMachineCreateOptions {
+	return &q.CreateOption
 }
 
 func boolToInt8(b bool) int8 {
@@ -147,4 +195,49 @@ func boolToInt8(b bool) int8 {
 		return 1
 	}
 	return 0
+}
+
+func createOptionToConfig(opts api.VirtualMachineCreateOptions) api.VirtualMachineConfig {
+	return api.VirtualMachineConfig{
+		ACPI:          opts.ACPI,
+		Agent:         opts.Agent,
+		Arch:          opts.Arch,
+		Balloon:       opts.Balloon,
+		BIOS:          opts.BIOS,
+		Boot:          opts.Boot,
+		CiCustom:      opts.CiCustom,
+		Cores:         opts.Cores,
+		CpuLimit:      opts.CpuLimit,
+		Description:   opts.Description,
+		HugePages:     opts.HugePages,
+		Ide:           opts.Ide,
+		IPConfig:      opts.IPConfig,
+		KeepHugePages: opts.KeepHugePages,
+		KVM:           opts.KVM,
+		LocalTime:     opts.LocalTime,
+		Lock:          opts.Lock,
+		Memory:        opts.Memory,
+		Name:          opts.Name,
+		NameServer:    opts.NameServer,
+		Net:           opts.Net,
+		Numa:          opts.Numa,
+		Node:          opts.Node,
+		OnBoot:        opts.OnBoot,
+		OSType:        opts.OSType,
+		Protection:    opts.Protection,
+		Reboot:        opts.Reboot,
+		Scsi:          opts.Scsi,
+		ScsiHw:        opts.ScsiHw,
+		SearchDomain:  opts.SearchDomain,
+		Serial:        opts.Serial,
+		Shares:        opts.Shares,
+		Sockets:       opts.Sockets,
+		Tablet:        opts.Tablet,
+		Tags:          opts.Tags,
+		TDF:           opts.TDF,
+		Template:      opts.Template,
+		VCPUs:         opts.VCPUs,
+		VMGenID:       opts.VMGenID,
+		VGA:           opts.VGA,
+	}
 }

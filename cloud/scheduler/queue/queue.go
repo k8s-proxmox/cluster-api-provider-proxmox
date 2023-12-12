@@ -8,27 +8,30 @@ import (
 )
 
 type SchedulingQueue struct {
-	activeQ      []*qemuSpec
+	activeQ      []QEMUSpec
 	lock         *sync.Cond
 	shuttingDown bool
 }
 
 func New() *SchedulingQueue {
 	return &SchedulingQueue{
-		activeQ: []*qemuSpec{},
+		activeQ: []QEMUSpec{},
 		lock:    sync.NewCond(&sync.Mutex{}),
 	}
 }
 
 // qemu create option and context.
 // each scheduling plugins retrieves values from this context
-type qemuSpec struct {
-	ctx    context.Context
-	config *api.VirtualMachineCreateOptions
+type QEMUSpec interface {
+	Name() string
+	Context() context.Context
+	CloneSpec() *api.VirtualMachineCloneOption
+	Config() *api.VirtualMachineConfig
+	CreateSpec() *api.VirtualMachineCreateOptions
 }
 
 // add new qemuSpec to queue
-func (s *SchedulingQueue) Add(ctx context.Context, config *api.VirtualMachineCreateOptions) {
+func (s *SchedulingQueue) Add(qemu QEMUSpec) {
 	s.lock.L.Lock()
 	defer s.lock.L.Unlock()
 
@@ -36,7 +39,7 @@ func (s *SchedulingQueue) Add(ctx context.Context, config *api.VirtualMachineCre
 		return
 	}
 
-	s.activeQ = append(s.activeQ, &qemuSpec{ctx: ctx, config: config})
+	s.activeQ = append(s.activeQ, qemu)
 	s.lock.Signal()
 }
 
@@ -47,8 +50,8 @@ func (s *SchedulingQueue) Add(ctx context.Context, config *api.VirtualMachineCre
 // 	return len(s.activeQ)
 // }
 
-// return nex qemuSpec
-func (s *SchedulingQueue) Get() (spec *qemuSpec, shutdown bool) {
+// return next QEMUSpec
+func (s *SchedulingQueue) Get() (spec QEMUSpec, shutdown bool) {
 	s.lock.L.Lock()
 	defer s.lock.L.Unlock()
 	for len(s.activeQ) == 0 && !s.shuttingDown {
@@ -72,12 +75,4 @@ func (s *SchedulingQueue) ShutDown() {
 	defer s.lock.L.Unlock()
 	s.shuttingDown = true
 	s.lock.Broadcast()
-}
-
-func (s *qemuSpec) Config() *api.VirtualMachineCreateOptions {
-	return s.config
-}
-
-func (s *qemuSpec) Context() context.Context {
-	return s.ctx
 }
