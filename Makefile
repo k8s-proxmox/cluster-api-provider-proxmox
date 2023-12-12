@@ -11,6 +11,29 @@ ENVTEST_K8S_VERSION = 1.26.1
 LOCALBIN ?= $(shell pwd)/bin
 export PATH := $(abspath $(LOCALBIN)):$(PATH)
 
+## Location to install dependencies to
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+## Tool Binaries
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
+ENVTEST ?= $(LOCALBIN)/setup-envtest
+ENVSUBST ?= $(LOCALBIN)/envsubst
+KUBECTL ?= $(LOCALBIN)/kubectl
+GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
+GOIMPORTS ?= $(LOCALBIN)/goimports
+TILT ?= $(LOCALBIN)/tilt
+KIND ?= $(LOCALBIN)/kind
+
+## Tool Versions
+KUSTOMIZE_VERSION ?= v5.0.0
+CONTROLLER_TOOLS_VERSION ?= v0.11.3
+ENVSUBST_VER ?= v1.4.2
+KUBECTL_VER := v1.25.10
+TILT_VER := 0.33.6
+KIND_VER := v0.20.0
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -68,6 +91,29 @@ vet: ## Run go vet against code.
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint
 	$(GOLANGCI_LINT) run
+
+KIND_CLUSTER_NAME := cappx
+.PHONY: kind-cluster
+kind-cluster: kind
+	@if kind get nodes --name=$(KIND_CLUSTER_NAME) | grep -q cappx; then \
+		echo "kind cluster $(KIND_CLUSTER_NAME) already exists"; \
+	else \
+		kind create cluster --name=$(KIND_CLUSTER_NAME); \
+	fi
+
+.PHONY: kind-delete-cluster
+kind-delete-cluster: kind
+	@if kind get nodes --name=$(KIND_CLUSTER_NAME) | grep -q cappx; then \
+		kind delete cluster --name=$(KIND_CLUSTER_NAME); \
+	fi
+
+.PHONY: tilt-up
+tilt-up: tilt kind-cluster envsubst kustomize
+	$(TILT) up
+
+.PHONY: tilt-down
+tilt-down: tilt envsubst kustomize
+	$(TILT) down
 
 CLUSTER_NAME := cappx-test
 
@@ -222,25 +268,6 @@ release-templates: $(RELEASE_DIR)
 
 ##@ Build Dependencies
 
-## Location to install dependencies to
-$(LOCALBIN):
-	mkdir -p $(LOCALBIN)
-
-## Tool Binaries
-KUSTOMIZE ?= $(LOCALBIN)/kustomize
-CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
-ENVTEST ?= $(LOCALBIN)/setup-envtest
-ENVSUBST ?= $(LOCALBIN)/envsubst
-KUBECTL ?= $(LOCALBIN)/kubectl
-GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
-GOIMPORTS ?= $(LOCALBIN)/goimports
-
-## Tool Versions
-KUSTOMIZE_VERSION ?= v5.0.0
-CONTROLLER_TOOLS_VERSION ?= v0.11.3
-ENVSUBST_VER ?= v1.4.2
-KUBECTL_VER := v1.25.10
-
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary. If wrong version is installed, it will be removed before downloading.
@@ -287,3 +314,21 @@ $(GOLANGCI_LINT): $(LOCALBIN)
 goimports: $(GOIMPORTS)
 $(GOIMPORTS): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install golang.org/x/tools/cmd/goimports@latest
+
+TILT_DOWNLOAD_URL ?= https://github.com/tilt-dev/tilt/releases/download/v$(TILT_VER)/tilt.$(TILT_VER).linux.x86_64.tar.gz
+.PHONY: tilt
+tilt: $(TILT)
+$(TILT): $(LOCALBIN)
+	@if test -x $(LOCALBIN)/tilt && ! $(LOCALBIN)/tilt version | grep -q $(TILT_VER); then \
+		rm -rf $(LOCALBIN)/tilt; \
+	fi
+	test -s $(LOCALBIN)/tilt || (curl -fsSL $(TILT_DOWNLOAD_URL) | tar -xzv tilt && mv tilt $(LOCALBIN)/tilt)
+
+KIND_DOWNLOAD_URL ?= https://kind.sigs.k8s.io/dl/$(KIND_VER)/kind-linux-$(GOARCH)
+.PHONY: kind
+kind: $(KIND)
+$(KIND): $(LOCALBIN)
+	@if test -x $(LOCALBIN)/kind && ! $(LOCALBIN)/kind version | grep -q $(KIND_VER); then \
+		rm -rf $(LOCALBIN)/kind; \
+	fi
+	test -s $(LOCALBIN)/kind || (curl -Lo $(LOCALBIN)/kind $(KIND_DOWNLOAD_URL) && chmod +x $(LOCALBIN)/kind)

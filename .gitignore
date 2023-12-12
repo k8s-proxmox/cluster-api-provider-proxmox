@@ -35,3 +35,6 @@ internal/test/e2e/clusters
 internal/test/e2e/kind
 internal/test/e2e/repository
 internal/test/e2e/data/infrastructure-proxmox/*/cluster-template.yaml
+
+# tilt
+.tiltbuild

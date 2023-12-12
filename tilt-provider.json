@@ -1,0 +1,18 @@
+{
+    "name": "proxmox",
+    "config": {
+        "image": "ghcr.io/sp-yduck/cluster-api-provider-proxmox",
+        "live_reload_deps": [
+            "api",
+            "cloud",
+            "cmd/main.go",
+            "config",
+            "controllers",
+            "go.mod",
+            "go.sum"
+        ],
+        "label": "CAPPX",
+        "manager_name": "cappx-controller-manager",
+        "go_main": "cmd/main.go"
+    }
+}
