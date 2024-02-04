@@ -247,6 +247,9 @@ spec:
                       Defaults to 0.
                     minimum: 0
                     type: integer
+                  cpuType:
+                    description: Emulated CPU Type. Defaults to kvm64
+                    type: string
                   disk:
                     default: 50G
                     description: hard disk size

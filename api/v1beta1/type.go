@@ -68,8 +68,8 @@ type Hardware struct {
 	// +kubebuilder:default:=2
 	CPU int `json:"cpu,omitempty"`
 
-	// emulated cpu type
-	// CPUType string `json:"cpuType,omitempty"`
+	// Emulated CPU Type. Defaults to kvm64
+	CPUType string `json:"cpuType,omitempty"`
 
 	// +kubebuilder:validation:Minimum:=1
 	// The number of CPU sockets. Defaults to 1.
