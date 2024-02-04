@@ -105,6 +105,7 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 		Boot:          fmt.Sprintf("order=%s", bootDvice),
 		CiCustom:      cicustom,
 		Cores:         hardware.CPU,
+		Cpu:           hardware.CPUType,
 		CpuLimit:      hardware.CPULimit,
 		Description:   options.Description,
 		HugePages:     options.HugePages.String(),
