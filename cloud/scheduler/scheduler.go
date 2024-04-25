@@ -221,14 +221,7 @@ func (s *Scheduler) ScheduleOne(ctx context.Context) {
 		return
 	}
 
-	// actually create qemu
-	vm, err := s.client.CreateVirtualMachine(ctx, node, vmid, *config)
-	if err != nil {
-		state.UpdateState(true, err, framework.SchedulerResult{})
-		return
-	}
-
-	result := framework.NewSchedulerResult(vmid, node, vm)
+	result := framework.NewSchedulerResult(vmid, node)
 	state.UpdateState(true, nil, result)
 }
 

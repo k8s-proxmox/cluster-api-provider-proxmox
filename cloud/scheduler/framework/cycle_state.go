@@ -1,10 +1,5 @@
 package framework
 
-import (
-	"github.com/k8s-proxmox/proxmox-go/api"
-	"github.com/k8s-proxmox/proxmox-go/proxmox"
-)
-
 type CycleState struct {
 	completed bool
 	err       error
@@ -13,9 +8,8 @@ type CycleState struct {
 }
 
 type SchedulerResult struct {
-	vmid     int
-	node     string
-	instance *proxmox.VirtualMachine
+	vmid int
+	node string
 }
 
 func NewCycleState() CycleState {
@@ -46,18 +40,14 @@ func (c *CycleState) Messages() map[string]string {
 	return c.messages
 }
 
-func (c *CycleState) QEMU() *api.VirtualMachine {
-	return c.result.instance.VM
-}
-
 func (c *CycleState) UpdateState(completed bool, err error, result SchedulerResult) {
 	c.completed = completed
 	c.err = err
 	c.result = result
 }
 
-func NewSchedulerResult(vmid int, node string, instance *proxmox.VirtualMachine) SchedulerResult {
-	return SchedulerResult{vmid: vmid, node: node, instance: instance}
+func NewSchedulerResult(vmid int, node string) SchedulerResult {
+	return SchedulerResult{vmid: vmid, node: node}
 }
 
 func (c *CycleState) Result() SchedulerResult {
@@ -70,8 +60,4 @@ func (r *SchedulerResult) Node() string {
 
 func (r *SchedulerResult) VMID() int {
 	return r.vmid
-}
-
-func (r *SchedulerResult) Instance() *proxmox.VirtualMachine {
-	return r.instance
 }
