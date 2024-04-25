@@ -78,10 +78,25 @@ func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, erro
 	schedCtx := framework.ContextWithMap(ctx, s.scope.Annotations())
 	result, err := s.scheduler.CreateQEMU(schedCtx, &vmoption)
 	if err != nil {
-		log.Error(err, "failed to create qemu instance")
+		log.Error(err, "failed to schedule qemu instance")
 		return nil, err
 	}
-	return result.Instance(), nil
+	node, vmid := result.Node(), result.VMID()
+	s.scope.SetNodeName(node)
+	s.scope.SetVMID(vmid)
+
+	// os image
+	if err := s.setCloudImage(ctx); err != nil {
+		return nil, err
+	}
+
+	// actually create qemu
+	vm, err := s.client.CreateVirtualMachine(ctx, node, vmid, vmoption)
+	if err != nil {
+		return nil, err
+	}
+
+	return vm, nil
 }
 
 func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
