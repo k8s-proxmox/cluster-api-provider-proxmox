@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/go-logr/logr v1.3.0
 	github.com/imdario/mergo v0.3.13
-	github.com/k8s-proxmox/proxmox-go v0.0.0-alpha25
+	github.com/k8s-proxmox/proxmox-go v0.0.0-alpha28
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
 	github.com/pkg/errors v0.9.1
