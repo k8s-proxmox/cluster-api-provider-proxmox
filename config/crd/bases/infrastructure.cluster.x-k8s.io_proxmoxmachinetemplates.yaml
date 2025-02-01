@@ -3,8 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.3
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: proxmoxmachinetemplates.infrastructure.cluster.x-k8s.io
 spec:
   group: infrastructure.cluster.x-k8s.io
@@ -22,14 +21,19 @@ spec:
           API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -39,53 +43,55 @@ spec:
               template:
                 properties:
                   metadata.omitempty:
-                    description: "ObjectMeta is metadata that all persisted resources
-                      must have, which includes all objects users must create. This
-                      is a copy of customizable fields from metav1.ObjectMeta. \n
-                      ObjectMeta is embedded in `Machine.Spec`, `MachineDeployment.Template`
-                      and `MachineSet.Template`, which are not top-level Kubernetes
-                      objects. Given that metav1.ObjectMeta has lots of special cases
-                      and read-only fields which end up in the generated CRD validation,
-                      having it as a subset simplifies the API and some issues that
-                      can impact user experience. \n During the [upgrade to controller-tools@v2](https://github.com/kubernetes-sigs/cluster-api/pull/1054)
-                      for v1alpha2, we noticed a failure would occur running Cluster
-                      API test suite against the new CRDs, specifically `spec.metadata.creationTimestamp
-                      in body must be of type string: \"null\"`. The investigation
-                      showed that `controller-tools@v2` behaves differently than its
-                      previous version when handling types from [metav1](k8s.io/apimachinery/pkg/apis/meta/v1)
-                      package. \n In more details, we found that embedded (non-top
-                      level) types that embedded `metav1.ObjectMeta` had validation
-                      properties, including for `creationTimestamp` (metav1.Time).
-                      The `metav1.Time` type specifies a custom json marshaller that,
-                      when IsZero() is true, returns `null` which breaks validation
-                      because the field isn't marked as nullable. \n In future versions,
-                      controller-tools@v2 might allow overriding the type and validation
-                      for embedded types. When that happens, this hack should be revisited."
+                    description: |-
+                      ObjectMeta is metadata that all persisted resources must have, which includes all objects
+                      users must create. This is a copy of customizable fields from metav1.ObjectMeta.
+
+                      ObjectMeta is embedded in `Machine.Spec`, `MachineDeployment.Template` and `MachineSet.Template`,
+                      which are not top-level Kubernetes objects. Given that metav1.ObjectMeta has lots of special cases
+                      and read-only fields which end up in the generated CRD validation, having it as a subset simplifies
+                      the API and some issues that can impact user experience.
+
+                      During the [upgrade to controller-tools@v2](https://github.com/kubernetes-sigs/cluster-api/pull/1054)
+                      for v1alpha2, we noticed a failure would occur running Cluster API test suite against the new CRDs,
+                      specifically `spec.metadata.creationTimestamp in body must be of type string: "null"`.
+                      The investigation showed that `controller-tools@v2` behaves differently than its previous version
+                      when handling types from [metav1](k8s.io/apimachinery/pkg/apis/meta/v1) package.
+
+                      In more details, we found that embedded (non-top level) types that embedded `metav1.ObjectMeta`
+                      had validation properties, including for `creationTimestamp` (metav1.Time).
+                      The `metav1.Time` type specifies a custom json marshaller that, when IsZero() is true, returns `null`
+                      which breaks validation because the field isn't marked as nullable.
+
+                      In future versions, controller-tools@v2 might allow overriding the type and validation for embedded
+                      types. When that happens, this hack should be revisited.
                     properties:
                       annotations:
                         additionalProperties:
                           type: string
-                        description: 'Annotations is an unstructured key value map
-                          stored with a resource that may be set by external tools
-                          to store and retrieve arbitrary metadata. They are not queryable
-                          and should be preserved when modifying objects. More info:
-                          http://kubernetes.io/docs/user-guide/annotations'
+                        description: |-
+                          Annotations is an unstructured key value map stored with a resource that may be
+                          set by external tools to store and retrieve arbitrary metadata. They are not
+                          queryable and should be preserved when modifying objects.
+                          More info: http://kubernetes.io/docs/user-guide/annotations
                         type: object
                       labels:
                         additionalProperties:
                           type: string
-                        description: 'Map of string keys and values that can be used
-                          to organize and categorize (scope and select) objects. May
-                          match selectors of replication controllers and services.
-                          More info: http://kubernetes.io/docs/user-guide/labels'
+                        description: |-
+                          Map of string keys and values that can be used to organize and categorize
+                          (scope and select) objects. May match selectors of replication controllers
+                          and services.
+                          More info: http://kubernetes.io/docs/user-guide/labels
                         type: object
                     type: object
                   spec:
                     description: ProxmoxMachineSpec defines the desired state of ProxmoxMachine
                     properties:
                       cloudInit:
-                        description: CloudInit defines options related to the bootstrapping
-                          systems where CloudInit is used.
+                        description: |-
+                          CloudInit defines options related to the bootstrapping systems where
+                          CloudInit is used.
                         properties:
                           user:
                             properties:
@@ -247,8 +253,9 @@ spec:
                         description: Hardware
                         properties:
                           bios:
-                            description: Select BIOS implementation. Defaults to seabios.
-                              seabios or ovmf. Defaults to seabios.
+                            description: |-
+                              Select BIOS implementation. Defaults to seabios. seabios or ovmf.
+                              Defaults to seabios.
                             enum:
                             - seabios
                             - ovmf
@@ -259,9 +266,9 @@ spec:
                             minimum: 1
                             type: integer
                           cpuLimit:
-                            description: Limit of CPU usage. If the computer has 2
-                              CPUs, it has total of '2' CPU time. Value '0' indicates
-                              no CPU limit. Defaults to 0.
+                            description: |-
+                              Limit of CPU usage. If the computer has 2 CPUs, it has total of '2' CPU time.
+                              Value '0' indicates no CPU limit. Defaults to 0.
                             minimum: 0
                             type: integer
                           cpuType:
@@ -282,7 +289,9 @@ spec:
                               bridge: vmbr0
                               firewall: true
                               model: virtio
-                            description: 'network devices to do: multiple devices'
+                            description: |-
+                              network devices
+                              to do: multiple devices
                             properties:
                               bridge:
                                 default: vmbr0
@@ -329,10 +338,11 @@ spec:
                         description: Image is the image to be provisioned
                         properties:
                           checksum:
-                            description: Checksum Always better to specify checksum
-                              otherwise cappx will download same image for every time.
-                              If checksum is specified, cappx will try to avoid downloading
-                              existing image.
+                            description: |-
+                              Checksum
+                              Always better to specify checksum otherwise cappx will download
+                              same image for every time. If checksum is specified, cappx will try
+                              to avoid downloading existing image.
                             type: string
                           checksumType:
                             description: ChecksumType
@@ -343,7 +353,8 @@ spec:
                             - md5sum
                             type: string
                           url:
-                            description: URL is a location of an image to deploy.
+                            description: |-
+                              URL is a location of an image to deploy.
                               supported formats are iso/qcow2/qed/raw/vdi/vpc/vmdk.
                             pattern: .*\.(iso|img|qcow2|qed|raw|vdi|vpc|vmdk)$
                             type: string
@@ -399,9 +410,9 @@ spec:
                             minimum: 0
                             type: integer
                           description:
-                            description: Description for the VM. Shown in the web-interface
-                              VM's summary. This is saved as comment inside the configuration
-                              file.
+                            description: |-
+                              Description for the VM. Shown in the web-interface VM's summary.
+                              This is saved as comment inside the configuration file.
                             type: string
                           hugePages:
                             description: enable/disable hugepages memory. 0 or 2 or
@@ -412,18 +423,18 @@ spec:
                             - 1024
                             type: integer
                           keepHugePages:
-                            description: Use together with hugepages. If enabled,
-                              hugepages will not not be deleted after VM shutdown
-                              and can be used for subsequent starts. Defaults to false.
+                            description: |-
+                              Use together with hugepages. If enabled, hugepages will not not be deleted
+                              after VM shutdown and can be used for subsequent starts. Defaults to false.
                             type: boolean
                           kvm:
                             description: Enable/disable KVM hardware virtualization.
                               Defaults to true.
                             type: boolean
                           localTime:
-                            description: Set the real time clock (RTC) to local time.
-                              This is enabled by default if the `ostype` indicates
-                              a Microsoft Windows OS.
+                            description: |-
+                              Set the real time clock (RTC) to local time.
+                              This is enabled by default if the `ostype` indicates a Microsoft Windows OS.
                             type: boolean
                           lock:
                             description: Lock/unlock the VM.
@@ -446,9 +457,9 @@ spec:
                               system bootup.
                             type: boolean
                           osType:
-                            description: Specify guest operating system. This is used
-                              to enable special optimization/features for specific
-                              operating systems.
+                            description: |-
+                              Specify guest operating system. This is used to enable special
+                              optimization/features for specific operating systems.
                             enum:
                             - other
                             - wxp
@@ -465,31 +476,31 @@ spec:
                             - solaris
                             type: string
                           protection:
-                            description: Sets the protection flag of the VM. This
-                              will disable the remove VM and remove disk operations.
+                            description: |-
+                              Sets the protection flag of the VM.
+                              This will disable the remove VM and remove disk operations.
                               Defaults to false.
                             type: boolean
                           reboot:
-                            description: Allow reboot. If set to 'false' the VM exit
-                              on reboot. Defaults to true.
+                            description: |-
+                              Allow reboot. If set to 'false' the VM exit on reboot.
+                              Defaults to true.
                             type: boolean
                           shares:
-                            description: Amount of memory shares for auto-ballooning.
-                              The larger the number is, the more memory this VM gets.
-                              Number is relative to weights of all other running VMs.
-                              Using zero disables auto-ballooning. Auto-ballooning
-                              is done by pvestatd. 0 ~ 5000. Defaults to 1000.
+                            description: |-
+                              Amount of memory shares for auto-ballooning. The larger the number is, the more memory this VM gets.
+                              Number is relative to weights of all other running VMs. Using zero disables auto-ballooning.
+                              Auto-ballooning is done by pvestatd. 0 ~ 5000. Defaults to 1000.
                             maximum: 5000
                             minimum: 0
                             type: integer
                           tablet:
-                            description: Enable/disable the USB tablet device. This
-                              device is usually needed to allow absolute mouse positioning
-                              with VNC. Else the mouse runs out of sync with normal
-                              VNC clients. If you're running lots of console-only
-                              guests on one host, you may consider disabling this
-                              to save some context switches. This is turned off by
-                              default if you use spice (`qm set <vmid> --vga qxl`).
+                            description: |-
+                              Enable/disable the USB tablet device. This device is usually needed to allow
+                              absolute mouse positioning with VNC. Else the mouse runs out of sync with normal VNC clients.
+                              If you're running lots of console-only guests on one host,
+                              you may consider disabling this to save some context switches.
+                              This is turned off by default if you use spice (`qm set <vmid> --vga qxl`).
                               Defaults to true.
                             type: boolean
                           tags:
@@ -510,19 +521,14 @@ spec:
                             minimum: 0
                             type: integer
                           vmGenerationID:
-                            description: 'The VM generation ID (vmgenid) device exposes
-                              a 128-bit integer value identifier to the guest OS.
-                              This allows to notify the guest operating system when
-                              the virtual machine is executed with a different configuration
+                            description: |-
+                              The VM generation ID (vmgenid) device exposes a 128-bit integer value identifier to the guest OS.
+                              This allows to notify the guest operating system when the virtual machine is executed with a different configuration
                               (e.g. snapshot execution or creation from a template).
-                              The guest operating system notices the change, and is
-                              then able to react as appropriate by marking its copies
-                              of distributed databases as dirty, re-initializing its
-                              random number generator, etc. Note that auto-creation
-                              only works when done through API/CLI create or update
-                              methods, but not when manually editing the config file.
-                              regex: (?:[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}|[01]).
-                              Defaults to 1 (autogenerated)'
+                              The guest operating system notices the change, and is then able to react as appropriate by marking its copies of distributed databases as dirty,
+                              re-initializing its random number generator, etc.
+                              Note that auto-creation only works when done through API/CLI create or update methods, but not when manually editing the config file.
+                              regex: (?:[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}|[01]). Defaults to 1 (autogenerated)
                             pattern: (?:[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}|[01])
                             type: string
                         type: object
@@ -530,9 +536,10 @@ spec:
                         description: ProviderID
                         type: string
                       storage:
-                        description: Storage is name of proxmox storage used by this
-                          node. The storage must support "images(VM Disks)" type of
-                          content. cappx will use random storage if empty
+                        description: |-
+                          Storage is name of proxmox storage used by this node.
+                          The storage must support "images(VM Disks)" type of content.
+                          cappx will use random storage if empty
                         type: string
                       vmID:
                         description: VMID is proxmox qemu's id
