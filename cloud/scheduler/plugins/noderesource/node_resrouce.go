@@ -29,6 +29,6 @@ func (pl *NodeResource) Score(ctx context.Context, state *framework.CycleState, 
 	u := cpu / float32(maxCPU) * float32(mem/maxMem)
 	score := int64(1 / u)
 	status := framework.NewStatus()
-	status.SetCode(1)
+	status.SetCode(0)
 	return score, status
 }
