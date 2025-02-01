@@ -7,7 +7,7 @@ toolchain go1.22.10
 require (
 	github.com/go-logr/logr v1.4.2
 	github.com/imdario/mergo v0.3.13
-	github.com/k8s-proxmox/proxmox-go v0.0.0-alpha28
+	github.com/k8s-proxmox/proxmox-go v0.0.0-alpha30
 	github.com/onsi/ginkgo/v2 v2.19.1
 	github.com/onsi/gomega v1.34.0
 	github.com/pkg/errors v0.9.1

@@ -76,7 +76,7 @@ func (s *Service) deleteStorage(ctx context.Context) error {
 		return err
 	}
 
-	nodes, err := s.client.Nodes(ctx)
+	nodes, err := s.client.GetNodes(ctx)
 	if err != nil {
 		return err
 	}

@@ -8,8 +8,9 @@ type CycleState struct {
 }
 
 type SchedulerResult struct {
-	vmid int
-	node string
+	vmid    int
+	node    string
+	storage string
 }
 
 func NewCycleState() CycleState {
@@ -46,8 +47,8 @@ func (c *CycleState) UpdateState(completed bool, err error, result SchedulerResu
 	c.result = result
 }
 
-func NewSchedulerResult(vmid int, node string) SchedulerResult {
-	return SchedulerResult{vmid: vmid, node: node}
+func NewSchedulerResult(vmid int, node string, storage string) SchedulerResult {
+	return SchedulerResult{vmid: vmid, node: node, storage: storage}
 }
 
 func (c *CycleState) Result() SchedulerResult {
@@ -60,4 +61,8 @@ func (r *SchedulerResult) Node() string {
 
 func (r *SchedulerResult) VMID() int {
 	return r.vmid
+}
+
+func (r *SchedulerResult) Storage() string {
+	return r.storage
 }

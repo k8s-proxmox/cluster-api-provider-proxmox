@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -221,7 +222,15 @@ func (s *Scheduler) ScheduleOne(ctx context.Context) {
 		return
 	}
 
-	result := framework.NewSchedulerResult(vmid, node)
+	// select vm storage to be used for vm image
+	// must be done after node selection as some storages may not be available on some nodes
+	storage, err := s.SelectStorage(qemuCtx, *config, node)
+	if err != nil {
+		state.UpdateState(true, err, framework.SchedulerResult{})
+		return
+	}
+
+	result := framework.NewSchedulerResult(vmid, node, storage)
 	state.UpdateState(true, nil, result)
 }
 
@@ -250,8 +259,8 @@ func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCr
 
 // create new qemu with given spec and context
 func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.SchedulerResult, error) {
-	s.logger = s.logger.WithValues("qemu", config.Name)
-	s.logger.Info("adding qemu to scheduler queue")
+	log := s.logger.WithValues("qemu", config.Name)
+	log.Info("adding qemu to scheduler queue")
 	// add qemu spec into the queue
 	s.schedulingQueue.Add(ctx, config)
 
@@ -262,16 +271,16 @@ func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCr
 		return status.Result(), err
 	}
 	if status.Error() != nil {
-		s.logger.Error(status.Error(), fmt.Sprintf("failed to create qemu: %v", status.Messages()))
+		log.Error(status.Error(), fmt.Sprintf("failed to create qemu: %v", status.Messages()))
 		return status.Result(), status.Error()
 	}
-	s.logger.Info(fmt.Sprintf("%v", status.Messages()))
+	log.Info(fmt.Sprintf("%v", status.Messages()))
 	return status.Result(), nil
 }
 
 func (s *Scheduler) SelectNode(ctx context.Context, config api.VirtualMachineCreateOptions) (string, error) {
 	s.logger.Info("finding proxmox node matching qemu")
-	nodes, err := s.client.Nodes(ctx)
+	nodes, err := s.client.GetNodes(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -316,6 +325,33 @@ func (s *Scheduler) SelectVMID(ctx context.Context, config api.VirtualMachineCre
 	return s.RunVMIDPlugins(ctx, nil, config, nextid, *usedID)
 }
 
+func (s *Scheduler) SelectStorage(ctx context.Context, config api.VirtualMachineCreateOptions, nodeName string) (string, error) {
+	s.logger.Info("finding proxmox storage to be used for qemu")
+	if config.Storage != "" {
+		// to do: raise error if storage is not available on the node
+		return config.Storage, nil
+	}
+
+	node, err := s.client.Node(ctx, nodeName)
+	if err != nil {
+		return "", err
+	}
+	storages, err := node.GetStorages(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	// current logic is just selecting the first storage
+	// that is active and supports "images" type of content
+	for _, storage := range storages {
+		if strings.Contains(storage.Content, "images") && storage.Active == 1 {
+			return storage.Storage, nil
+		}
+	}
+
+	return "", fmt.Errorf("no storage available for VM image on node %s", nodeName)
+}
+
 func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) ([]*api.Node, error) {
 	s.logger.Info("filtering proxmox node")
 	feasibleNodes := make([]*api.Node, 0, len(nodes))
@@ -342,7 +378,7 @@ func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.Cycle
 func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) (framework.NodeScoreList, *framework.Status) {
 	s.logger.Info("scoring proxmox node")
 	status := framework.NewStatus()
-	var scoresMap map[string](map[int]framework.NodeScore)
+	scoresMap := make(map[string](map[int]framework.NodeScore))
 	nodeInfos, err := framework.GetNodeInfoList(ctx, s.client)
 	if err != nil {
 		status.SetCode(1)
