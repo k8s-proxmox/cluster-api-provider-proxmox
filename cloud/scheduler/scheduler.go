@@ -326,7 +326,8 @@ func (s *Scheduler) SelectVMID(ctx context.Context, config api.VirtualMachineCre
 }
 
 func (s *Scheduler) SelectStorage(ctx context.Context, config api.VirtualMachineCreateOptions, nodeName string) (string, error) {
-	s.logger.Info("finding proxmox storage to be used for qemu")
+	log := s.logger.WithValues("qemu", config.Name).WithValues("node", nodeName)
+	log.Info("finding proxmox storage to be used for qemu")
 	if config.Storage != "" {
 		// to do: raise error if storage is not available on the node
 		return config.Storage, nil
@@ -334,10 +335,12 @@ func (s *Scheduler) SelectStorage(ctx context.Context, config api.VirtualMachine
 
 	node, err := s.client.Node(ctx, nodeName)
 	if err != nil {
+		log.Error(err, "failed to get node")
 		return "", err
 	}
 	storages, err := node.GetStorages(ctx)
 	if err != nil {
+		log.Error(err, "failed to get storages")
 		return "", err
 	}
 
@@ -375,12 +378,12 @@ func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.Cycle
 	return feasibleNodes, nil
 }
 
-func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) (framework.NodeScoreList, *framework.Status) {
+func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) (map[string]framework.NodeScore, *framework.Status) {
 	s.logger.Info("scoring proxmox node")
 	status := framework.NewStatus()
-	scoresMap := make(map[string](map[int]framework.NodeScore))
+	scoresMap := make(map[string](map[string]framework.NodeScore))
 	for _, pl := range s.registry.ScorePlugins() {
-		scoresMap[pl.Name()] = make(map[int]framework.NodeScore)
+		scoresMap[pl.Name()] = make(map[string]framework.NodeScore)
 	}
 	nodeInfos, err := framework.GetNodeInfoList(ctx, s.client)
 	if err != nil {
@@ -388,7 +391,7 @@ func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleS
 		s.logger.Error(err, "failed to get node info list")
 		return nil, status
 	}
-	for index, nodeInfo := range nodeInfos {
+	for _, nodeInfo := range nodeInfos {
 		for _, pl := range s.registry.ScorePlugins() {
 			score, status := pl.Score(ctx, state, config, nodeInfo)
 			if !status.IsSuccess() {
@@ -396,23 +399,24 @@ func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleS
 				s.logger.Error(status.Error(), fmt.Sprintf("failed to score node %s", nodeInfo.Node().Node))
 				return nil, status
 			}
-			scoresMap[pl.Name()][index] = framework.NodeScore{
+			scoresMap[pl.Name()][nodeInfo.Node().Node] = framework.NodeScore{
 				Name:  nodeInfo.Node().Node,
 				Score: score,
 			}
 		}
 	}
-	result := make(framework.NodeScoreList, 0, len(nodes))
-	for i := range nodes {
-		result = append(result, framework.NodeScore{Name: nodes[i].Node, Score: 0})
-		for j := range scoresMap {
-			result[i].Score += scoresMap[j][i].Score
+	result := make(map[string]framework.NodeScore)
+	for _, node := range nodes {
+		result[node.Node] = framework.NodeScore{Name: node.Node, Score: 0}
+		for plugin := range scoresMap {
+			r := result[node.Node]
+			r.Score += scoresMap[plugin][node.Node].Score
 		}
 	}
 	return result, status
 }
 
-func selectHighestScoreNode(scoreList framework.NodeScoreList) (string, error) {
+func selectHighestScoreNode(scoreList map[string]framework.NodeScore) (string, error) {
 	if len(scoreList) == 0 {
 		return "", fmt.Errorf("empty node score list")
 	}
