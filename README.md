@@ -22,7 +22,7 @@ for more information : https://cluster-api.sigs.k8s.io/user/quick-start.html#ini
 ```sh
 # install cluster-api components
 export EXP_CLUSTER_RESOURCE_SET=true
-clusterctl init --infrastructure=proxmox:v0.3.5 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml
+clusterctl init --infrastructure=proxmox:v0.3.6 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml
 ```
 
 **Note:** container images are available at [ghcr.io/k8s-proxmox/cluster-api-provider-proxmox:\<tag\>](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/pkgs/container/cluster-api-provider-proxmox)
@@ -37,7 +37,7 @@ export PROXMOX_PASSWORD=password
 export PROXMOX_USER=user@pam
 
 # generate manifests (available flags: --target-namespace, --kubernetes-version, --control-plane-machine-count, --worker-machine-count)
-clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.3.5 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.3.6 --config https://raw.githubusercontent.com/k8s-proxmox/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
 vi cappx-test.yaml
