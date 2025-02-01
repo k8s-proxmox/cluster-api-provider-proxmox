@@ -23,31 +23,32 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/klog/v2"
 
+	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/component-base/logs"
 	logsv1 "k8s.io/component-base/logs/api/v1"
+	"k8s.io/klog/v2"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/util/flags"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
 	infrastructurev1beta1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
 	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler"
 	controller "github.com/k8s-proxmox/cluster-api-provider-proxmox/controllers"
-	"github.com/spf13/pflag"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme         = runtime.NewScheme()
+	setupLog       = ctrl.Log.WithName("setup")
+	managerOptions = flags.ManagerOptions{}
 
 	// flags
-	metricsAddr          string
 	enableLeaderElection bool
 	probeAddr            string
 	pluginConfig         string
@@ -74,12 +75,16 @@ func main() {
 	// }
 	pflag.Parse()
 
+	_, metricsOptions, err := flags.GetManagerOptions(managerOptions)
+	if err != nil {
+		setupLog.Error(err, "Unable to start manager: invalid flags")
+	}
+
 	ctrl.SetLogger(klog.Background())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
+		Metrics:                *metricsOptions,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "36404136.cluster.x-k8s.io",
@@ -146,10 +151,11 @@ func main() {
 func InitFlags(fs *pflag.FlagSet) {
 	logsv1.AddFlags(logOptions, fs)
 
-	fs.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	fs.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	fs.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 	fs.StringVar(&pluginConfig, "scheduler-plugin-config", "", "The config file path for qemu-scheduler plugins")
+
+	flags.AddManagerOptions(fs, &managerOptions)
 }

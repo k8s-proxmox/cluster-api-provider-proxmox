@@ -24,9 +24,8 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -165,11 +164,11 @@ func (m *MachineScope) SetInstanceStatus(v infrav1.InstanceStatus) {
 }
 
 func (m *MachineScope) GetBiosUUID() *string {
-	parsed, err := noderefutil.NewProviderID(m.GetProviderID()) //nolint: staticcheck
+	parsed, err := NewProviderID(m.GetProviderID()) //nolint: staticcheck
 	if err != nil {
 		return nil
 	}
-	return pointer.String(parsed.ID()) //nolint: staticcheck
+	return ptr.To(parsed.ID()) //nolint: staticcheck
 }
 
 func (m *MachineScope) GetProviderID() string {
@@ -209,7 +208,7 @@ func (m *MachineScope) SetProviderID(uuid string) error {
 	if err != nil {
 		return err
 	}
-	m.ProxmoxMachine.Spec.ProviderID = pointer.String(providerid.String())
+	m.ProxmoxMachine.Spec.ProviderID = ptr.To(providerid.String())
 	return nil
 }
 
@@ -226,7 +225,7 @@ func (m *MachineScope) SetReady() {
 }
 
 func (m *MachineScope) SetFailureMessage(v error) {
-	m.ProxmoxMachine.Status.FailureMessage = pointer.String(v.Error())
+	m.ProxmoxMachine.Status.FailureMessage = ptr.To(v.Error())
 }
 
 func (m *MachineScope) SetFailureReason(v capierrors.MachineStatusError) {

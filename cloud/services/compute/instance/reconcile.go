@@ -8,7 +8,7 @@ import (
 	"github.com/k8s-proxmox/proxmox-go/proxmox"
 	"github.com/k8s-proxmox/proxmox-go/rest"
 	"github.com/pkg/errors"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	infrav1 "github.com/k8s-proxmox/cluster-api-provider-proxmox/api/v1beta1"
@@ -132,7 +132,7 @@ func getBiosUUIDFromVM(ctx context.Context, vm *proxmox.VirtualMachine) (*string
 		log.Error(err, "failed to convert SMBios to UUID")
 		return nil, err
 	}
-	return pointer.String(uuid), nil
+	return ptr.To(uuid), nil
 }
 
 // reconciles qemu, cloud-config, os image and storage
