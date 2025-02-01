@@ -342,7 +342,7 @@ func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.Cycle
 func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) (framework.NodeScoreList, *framework.Status) {
 	s.logger.Info("scoring proxmox node")
 	status := framework.NewStatus()
-	var scoresMap map[string](map[int]framework.NodeScore)
+	scoresMap := make(map[string](map[int]framework.NodeScore))
 	nodeInfos, err := framework.GetNodeInfoList(ctx, s.client)
 	if err != nil {
 		status.SetCode(1)
