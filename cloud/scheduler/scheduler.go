@@ -379,15 +379,21 @@ func (s *Scheduler) RunScorePlugins(ctx context.Context, state *framework.CycleS
 	s.logger.Info("scoring proxmox node")
 	status := framework.NewStatus()
 	scoresMap := make(map[string](map[int]framework.NodeScore))
+	for _, pl := range s.registry.ScorePlugins() {
+		scoresMap[pl.Name()] = make(map[int]framework.NodeScore)
+	}
 	nodeInfos, err := framework.GetNodeInfoList(ctx, s.client)
 	if err != nil {
 		status.SetCode(1)
+		s.logger.Error(err, "failed to get node info list")
 		return nil, status
 	}
 	for index, nodeInfo := range nodeInfos {
 		for _, pl := range s.registry.ScorePlugins() {
 			score, status := pl.Score(ctx, state, config, nodeInfo)
 			if !status.IsSuccess() {
+				status.SetCode(1)
+				s.logger.Error(status.Error(), fmt.Sprintf("failed to score node %s", nodeInfo.Node().Node))
 				return nil, status
 			}
 			scoresMap[pl.Name()][index] = framework.NodeScore{
