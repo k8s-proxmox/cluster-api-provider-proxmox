@@ -250,8 +250,8 @@ func (s *Scheduler) WaitStatus(ctx context.Context, config *api.VirtualMachineCr
 
 // create new qemu with given spec and context
 func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCreateOptions) (framework.SchedulerResult, error) {
-	s.logger = s.logger.WithValues("qemu", config.Name)
-	s.logger.Info("adding qemu to scheduler queue")
+	log := s.logger.WithValues("qemu", config.Name)
+	log.Info("adding qemu to scheduler queue")
 	// add qemu spec into the queue
 	s.schedulingQueue.Add(ctx, config)
 
@@ -262,10 +262,10 @@ func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCr
 		return status.Result(), err
 	}
 	if status.Error() != nil {
-		s.logger.Error(status.Error(), fmt.Sprintf("failed to create qemu: %v", status.Messages()))
+		log.Error(status.Error(), fmt.Sprintf("failed to create qemu: %v", status.Messages()))
 		return status.Result(), status.Error()
 	}
-	s.logger.Info(fmt.Sprintf("%v", status.Messages()))
+	log.Info(fmt.Sprintf("%v", status.Messages()))
 	return status.Result(), nil
 }
 
