@@ -37,7 +37,7 @@ func (s *Service) deleteCloudConfig(ctx context.Context) error {
 	path := userSnippetPath(s.scope.Name())
 	volumeID := fmt.Sprintf("%s:%s", storageName, path)
 
-	node, err := s.client.Node(ctx, s.scope.NodeName())
+	node, err := s.client.GetNode(ctx, s.scope.NodeName())
 	if err != nil {
 		return err
 	}
