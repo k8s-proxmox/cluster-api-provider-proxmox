@@ -58,7 +58,7 @@ type NodeInfo struct {
 }
 
 func GetNodeInfoList(ctx context.Context, client *proxmox.Service) ([]*NodeInfo, error) {
-	nodes, err := client.Nodes(ctx)
+	nodes, err := client.GetNodes(ctx)
 	if err != nil {
 		return nil, err
 	}

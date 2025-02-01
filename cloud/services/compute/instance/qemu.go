@@ -67,10 +67,6 @@ func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, erro
 	log := log.FromContext(ctx)
 	log.Info("creating qemu")
 
-	if err := s.ensureStorageAvailable(ctx); err != nil {
-		return nil, err
-	}
-
 	// create qemu
 	log.Info("making qemu spec")
 	vmoption := s.generateVMOptions()
@@ -81,9 +77,13 @@ func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, erro
 		log.Error(err, "failed to schedule qemu instance")
 		return nil, err
 	}
-	node, vmid := result.Node(), result.VMID()
+	node, vmid, storage := result.Node(), result.VMID(), result.Storage()
 	s.scope.SetNodeName(node)
 	s.scope.SetVMID(vmid)
+
+	// inject storage
+	s.injectVMOption(&vmoption, storage)
+	s.scope.SetStorage(storage)
 
 	// os image
 	if err := s.setCloudImage(ctx); err != nil {
@@ -163,4 +163,15 @@ func boolToInt8(b bool) int8 {
 		return 1
 	}
 	return 0
+}
+
+func (s *Service) injectVMOption(vmOption *api.VirtualMachineCreateOptions, storage string) *api.VirtualMachineCreateOptions {
+	// storage is finalized after node scheduling so we need to inject storage name here
+	ide2 := fmt.Sprintf("file=%s:cloudinit,media=cdrom", storage)
+	scsi0 := fmt.Sprintf("%s:0,import-from=%s", storage, rawImageFilePath(s.scope.GetImage()))
+	vmOption.Scsi.Scsi0 = scsi0
+	vmOption.Ide.Ide2 = ide2
+	vmOption.Storage = storage
+
+	return vmOption
 }

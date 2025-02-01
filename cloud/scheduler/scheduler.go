@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -221,7 +222,15 @@ func (s *Scheduler) ScheduleOne(ctx context.Context) {
 		return
 	}
 
-	result := framework.NewSchedulerResult(vmid, node)
+	// select vm storage to be used for vm image
+	// must be done after node selection as some storages may not be available on some nodes
+	storage, err := s.SelectStorage(qemuCtx, *config, node)
+	if err != nil {
+		state.UpdateState(true, err, framework.SchedulerResult{})
+		return
+	}
+
+	result := framework.NewSchedulerResult(vmid, node, storage)
 	state.UpdateState(true, nil, result)
 }
 
@@ -271,7 +280,7 @@ func (s *Scheduler) CreateQEMU(ctx context.Context, config *api.VirtualMachineCr
 
 func (s *Scheduler) SelectNode(ctx context.Context, config api.VirtualMachineCreateOptions) (string, error) {
 	s.logger.Info("finding proxmox node matching qemu")
-	nodes, err := s.client.Nodes(ctx)
+	nodes, err := s.client.GetNodes(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -314,6 +323,33 @@ func (s *Scheduler) SelectVMID(ctx context.Context, config api.VirtualMachineCre
 		return 0, err
 	}
 	return s.RunVMIDPlugins(ctx, nil, config, nextid, *usedID)
+}
+
+func (s *Scheduler) SelectStorage(ctx context.Context, config api.VirtualMachineCreateOptions, nodeName string) (string, error) {
+	s.logger.Info("finding proxmox storage to be used for qemu")
+	if config.Storage != "" {
+		// to do: raise error if storage is not available on the node
+		return config.Storage, nil
+	}
+
+	node, err := s.client.Node(ctx, nodeName)
+	if err != nil {
+		return "", err
+	}
+	storages, err := node.GetStorages(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	// current logic is just selecting the first storage
+	// that is active and supports "images" type of content
+	for _, storage := range storages {
+		if strings.Contains(storage.Content, "images") && storage.Active == 1 {
+			return storage.Storage, nil
+		}
+	}
+
+	return "", fmt.Errorf("no storage available for VM image on node %s", nodeName)
 }
 
 func (s *Scheduler) RunFilterPlugins(ctx context.Context, state *framework.CycleState, config api.VirtualMachineCreateOptions, nodes []*api.Node) ([]*api.Node, error) {
