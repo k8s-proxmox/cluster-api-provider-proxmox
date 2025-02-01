@@ -1,8 +1,8 @@
 resources:
-  - manager.yaml
+- manager.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
-  - name: controller
-    newName: ghcr.io/k8s-proxmox/cluster-api-provider-proxmox
-    newTag: latest
+- name: controller
+  newName: ghcr.io/k8s-proxmox/cluster-api-provider-proxmox
+  newTag: v0.4.1
