@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/queue"
 	"github.com/k8s-proxmox/proxmox-go/api"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 func TestQueue(t *testing.T) {
