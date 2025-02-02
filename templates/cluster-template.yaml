@@ -82,6 +82,8 @@ spec:
               env:
               - name: cp_enable
                 value: "true"
+              - name: cp_namespace
+                value: kube-system
               - name: vip_interface
                 value: ${VIP_NETWORK_INTERFACE=""}
               - name: address
@@ -90,6 +92,10 @@ spec:
                 value: "6443"
               - name: vip_arp
                 value: "true"
+              - name: vip_cidr
+                value: "32"
+              - name: vip_ddns
+                value: "false"
               - name: vip_leaderelection
                 value: "true"
               - name: vip_leaseduration
@@ -98,7 +104,7 @@ spec:
                 value: "10"
               - name: vip_retryperiod
                 value: "2"
-              image: ghcr.io/kube-vip/kube-vip:v0.5.11
+              image: ghcr.io/kube-vip/kube-vip:v0.8.9
               imagePullPolicy: IfNotPresent
               name: kube-vip
               resources: {}
@@ -107,6 +113,7 @@ spec:
                   add:
                   - NET_ADMIN
                   - NET_RAW
+                  - SYS_TIME
               volumeMounts:
               - mountPath: /etc/kubernetes/admin.conf
                 name: kubeconfig
