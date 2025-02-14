@@ -1,5 +1,7 @@
 # cluster-api-provider-proxmox (CAPPX)
 
+⚠️ **Note:** Ongoing development has moved to the [IONOS Proxmox Provider](https://github.com/ionos-cloud/cluster-api-provider-proxmox).
+
 ## [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/k8s-proxmox/cluster-api-provider-proxmox?sort=semver)](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/releases/latest) [![Go Report Card](https://goreportcard.com/badge/github.com/k8s-proxmox/cluster-api-provider-proxmox)](https://goreportcard.com/report/github.com/k8s-proxmox/cluster-api-provider-proxmox) [![CI](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/actions/workflows/ci.yaml/badge.svg)](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/actions/workflows/ci.yaml) [![GitHub license](https://img.shields.io/github/license/k8s-proxmox/cluster-api-provider-proxmox)](https://github.com/k8s-proxmox/cluster-api-provider-proxmox/blob/main/LICENSE)
 
 cluster-api-provider-proxmox is a Cluster API [infrastructure provider](https://cluster-api.sigs.k8s.io/developer/providers/cluster-infrastructure.html) implementation for [Proxmox VE](https://pve.proxmox.com/wiki/Main_Page).
