@@ -24,7 +24,7 @@ func (s *Service) reconcileBootDevice(ctx context.Context, vm *proxmox.VirtualMa
 
 	// boot disk
 	log.Info("resizing boot disk")
-	if err := vm.ResizeVolume(ctx, bootDvice, s.scope.GetHardware().Disk); err != nil {
+	if err := vm.ResizeVolume(ctx, bootDvice, s.scope.GetHardware().RootDisk); err != nil {
 		return err
 	}
 

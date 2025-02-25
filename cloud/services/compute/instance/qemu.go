@@ -3,6 +3,7 @@ package instance
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/k8s-proxmox/cluster-api-provider-proxmox/cloud/scheduler/framework"
 	"github.com/k8s-proxmox/proxmox-go/api"
@@ -13,6 +14,7 @@ import (
 
 const (
 	bootDvice = "scsi0"
+	
 )
 
 // reconciles QEMU instance
@@ -96,7 +98,37 @@ func (s *Service) createQEMU(ctx context.Context) (*proxmox.VirtualMachine, erro
 		return nil, err
 	}
 
+	// Resize disks immediately after creation
+	if err := s.resizeExtraDisks(ctx, vm); err != nil {
+		log.Error(err, "Failed to resize extra disks")
+	}
+
 	return vm, nil
+}
+
+func (s *Service) resizeExtraDisks(ctx context.Context, vm *proxmox.VirtualMachine) error {
+	log := log.FromContext(ctx)
+	log.Info("Resizing additional disks for VM", "vmid", vm.VM.VMID)
+
+	extraDisks := s.scope.GetHardware().ExtraDisks
+	if len(extraDisks) == 0 {
+		return nil // No extra disks, nothing to do
+	}
+
+	for i, disk := range extraDisks {
+		diskName := fmt.Sprintf("scsi%d", i+1) // scsi1, scsi2, scsi3...
+		log.Info("Resizing disk", "vmid", vm.VM.VMID, "disk", diskName, "size", disk.Size)
+
+		// Use `ResizeVolume` to resize the disk
+		err := vm.ResizeVolume(ctx, diskName, disk.Size)
+		if err != nil {
+			log.Error(err, "Failed to resize disk", "disk", diskName)
+			return err
+		}
+	}
+
+	log.Info("Successfully resized all extra disks", "vmid", vm.VM.VMID)
+	return nil
 }
 
 func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
@@ -108,8 +140,29 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 	options := s.scope.GetOptions()
 	cicustom := fmt.Sprintf("user=%s:%s", snippetStorageName, userSnippetPath(vmName))
 	ide2 := fmt.Sprintf("file=%s:cloudinit,media=cdrom", imageStorageName)
-	scsi0 := fmt.Sprintf("%s:0,import-from=%s", imageStorageName, rawImageFilePath(s.scope.GetImage()))
 	net0 := hardware.NetworkDevice.String()
+	// Assign primary SCSI disk
+	scsiDisks := api.Scsi{}
+	scsiDisks.Scsi0 = fmt.Sprintf("%s:0,import-from=%s", imageStorageName, rawImageFilePath(s.scope.GetImage()))
+	// Assign additional disks manually
+	extraDisks := s.scope.GetHardware().ExtraDisks
+	if len(extraDisks) > 5 {
+		log.FromContext(context.TODO()).Error(fmt.Errorf("too many extra disks"), "Only 6 extra disks are supported, ignoring extra disks")
+		extraDisks = extraDisks[:5] // Trim to max 5 extra disks
+	}
+
+	// Assign extra disks
+	scsiStruct := reflect.ValueOf(&scsiDisks).Elem()
+	for i, disk := range extraDisks {
+		fieldName := fmt.Sprintf("Scsi%d", i+1) // Scsi1, Scsi2, ...
+		field := scsiStruct.FieldByName(fieldName)
+		if field.IsValid() && field.CanSet() {
+			field.SetString(fmt.Sprintf("%s:%d,format=%s,size=%s", disk.Storage, i+1, disk.Format, disk.Size))
+			// field.SetString(fmt.Sprintf("%s:%d,size=%s", disk.Storage, i+1, disk.Size))
+		} else {
+			log.FromContext(context.TODO()).Error(fmt.Errorf("invalid SCSI field"), "Failed to set extra disk", "field", fieldName)
+		}
+	}
 
 	vmoptions := api.VirtualMachineCreateOptions{
 		ACPI:          boolToInt8(options.ACPI),
@@ -140,7 +193,7 @@ func (s *Service) generateVMOptions() api.VirtualMachineCreateOptions {
 		OSType:        api.OSType(options.OSType),
 		Protection:    boolToInt8(options.Protection),
 		Reboot:        int(boolToInt8(options.Reboot)),
-		Scsi:          api.Scsi{Scsi0: scsi0},
+		Scsi:          scsiDisks,
 		ScsiHw:        api.VirtioScsiPci,
 		SearchDomain:  network.SearchDomain,
 		Serial:        api.Serial{Serial0: "socket"},
@@ -168,10 +221,33 @@ func boolToInt8(b bool) int8 {
 func (s *Service) injectVMOption(vmOption *api.VirtualMachineCreateOptions, storage string) *api.VirtualMachineCreateOptions {
 	// storage is finalized after node scheduling so we need to inject storage name here
 	ide2 := fmt.Sprintf("file=%s:cloudinit,media=cdrom", storage)
-	scsi0 := fmt.Sprintf("%s:0,import-from=%s", storage, rawImageFilePath(s.scope.GetImage()))
-	vmOption.Scsi.Scsi0 = scsi0
 	vmOption.Ide.Ide2 = ide2
 	vmOption.Storage = storage
+	// Assign primary root disk
+	vmOption.Scsi.Scsi0 = fmt.Sprintf("%s:0,import-from=%s", storage, rawImageFilePath(s.scope.GetImage()))
 
+	// Assign Extra Disks (Scsi1, Scsi2, ... up to Scsi5)
+	extraDisks := s.scope.GetHardware().ExtraDisks
+	if len(extraDisks) > 5 {
+		log.FromContext(context.TODO()).Error(fmt.Errorf("too many extra disks"), "Only 5 extra disks are supported, ignoring excess")
+		extraDisks = extraDisks[:5] // Limit to 5 extra disks
+	}
+
+	// Set each disk explicitly
+	if len(extraDisks) > 0 {
+		vmOption.Scsi.Scsi1 = fmt.Sprintf("%s:1,size=%s", extraDisks[0].Storage, extraDisks[0].Size)
+	}
+	if len(extraDisks) > 1 {
+		vmOption.Scsi.Scsi2 = fmt.Sprintf("%s:2,size=%s", extraDisks[1].Storage, extraDisks[1].Size)
+	}
+	if len(extraDisks) > 2 {
+		vmOption.Scsi.Scsi3 = fmt.Sprintf("%s:3,size=%s", extraDisks[2].Storage, extraDisks[2].Size)
+	}
+	if len(extraDisks) > 3 {
+		vmOption.Scsi.Scsi4 = fmt.Sprintf("%s:4,size=%s", extraDisks[3].Storage, extraDisks[3].Size)
+	}
+	if len(extraDisks) > 4 {
+		vmOption.Scsi.Scsi5 = fmt.Sprintf("%s:5,size=%s", extraDisks[4].Storage, extraDisks[4].Size)
+	}
 	return vmOption
 }

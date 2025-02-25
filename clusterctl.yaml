@@ -1,4 +1,4 @@
 providers:
   - name: proxmox
-    url: https://github.com/k8s-proxmox/cluster-api-provider-proxmox/releases/latest/infrastructure-components.yaml
+    url: https://github.com/mojaloop/cluster-api-provider-proxmox/releases/latest/infrastructure-components.yaml
     type: InfrastructureProvider
