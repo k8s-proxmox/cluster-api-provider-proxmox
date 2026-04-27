@@ -76,7 +76,7 @@ kubectl --kubeconfig=kubeconfig.yaml apply -f https://github.com/weaveworks/weav
 kubectl delete cluster cappx-test
 ```
 
-## Fetures
+## Features
 
 - No need to prepare vm templates. You can specify any vm image in `ProxmoxMachine.Spec.Image`. CAPPX bootstrap your vm from scratch. (Supports `iso` type of image format.)
 
